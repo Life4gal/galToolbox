@@ -1,0 +1,9 @@
+#ifndef GAL_TOOLBOX_DYNAMIC_BITSET_HPP
+#define GAL_TOOLBOX_DYNAMIC_BITSET_HPP
+
+namespace gal::toolbox
+{
+
+}
+
+#endif//GAL_TOOLBOX_DYNAMIC_BITSET_HPP

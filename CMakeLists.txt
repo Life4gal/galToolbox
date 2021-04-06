@@ -6,13 +6,14 @@ project(
 		LANGUAGES CXX
 )
 
-file(GLOB_RECURSE galToolBoxHeader CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-file(GLOB_RECURSE galToolBoxSource CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE
+	galToolBoxSrc
+	"${CMAKE_CURRENT_SOURCE_DIR}/dynamic_bitset/dynamic_bitset.hpp"
+)
 
 add_library(
 		${PROJECT_NAME}
-		${galToolBoxHeader}
-		${galToolBoxSource}
+		${galToolBoxSrc}
 )
 
 set_target_properties(
@@ -24,8 +25,8 @@ set_target_properties(
 target_include_directories(
 		${PROJECT_NAME}
 		PUBLIC
-		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-		$<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+		$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+		$<INSTALL_INTERFACE:${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 
 # for dependencies
@@ -45,5 +46,5 @@ packageProject(
 		INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
 		INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
 		VERSION_HEADER "${VERSION_HEADER_LOCATION}"
-		DEPENDENCIES "galStarterTemplate"
+		DEPENDENCIES "galToolBox"
 )
