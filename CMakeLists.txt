@@ -9,6 +9,7 @@ project(
 file(GLOB_RECURSE
 	galToolBoxSrc
 	"${CMAKE_CURRENT_SOURCE_DIR}/dynamic_bitset/dynamic_bitset.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/concepts/concepts.hpp"
 )
 
 add_library(
