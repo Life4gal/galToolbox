@@ -74,7 +74,7 @@ namespace gal::toolbox::dynamic_bitset {
 				other = t;
 			}
 
-//		private:
+			//		private:
 			// the value to reference
 			T& value;
 			// current offset
@@ -170,13 +170,8 @@ namespace gal::toolbox::dynamic_bitset {
 	 * hold a real container and manage it's operations
 	 */
 	template<typename T, template<typename> typename Container>
-	requires std::is_default_constructible_v<Container<T>>&&
-			std::is_copy_constructible_v<Container<T>>&&
-					std::is_move_constructible_v<Container<T>>&&
-							is_indexable<Container<T>>&&
-									has_mem_func_size<Container<T>>&&
-											is_resizable_and_settable<T, Container>&&
-													is_iterable<Container<T>> class dynamic_bitset {
+	requires std::is_default_constructible_v<Container<T>>&& std::is_copy_constructible_v<Container<T>>&& std::is_move_constructible_v<Container<T>>&&
+			is_indexable<Container<T>>&& has_mem_func_size<Container<T>>&& is_resizable_and_settable<T, Container>&& is_iterable<Container<T>> class dynamic_bitset {
 		using real_value_type = T;
 		constexpr static auto type_bit_size = detail::bits_of_type<real_value_type>();
 
@@ -202,6 +197,13 @@ namespace gal::toolbox::dynamic_bitset {
 		constexpr explicit dynamic_bitset(size_t n) noexcept(std::is_nothrow_constructible_v<container_type, size_t>) : container(n) {}
 
 		constexpr dynamic_bitset(size_t n, real_value_type value) noexcept(std::is_nothrow_constructible_v<container_type, size_t, real_value_type>) : container(n, value) {}
+
+		/*
+		 * maybe this won't work :)
+		 */
+		template<typename... Args>
+		requires std::is_constructible_v<container_type, Args...> constexpr explicit dynamic_bitset(Args&&... args) noexcept(std::is_nothrow_constructible_v<container_type, Args...>)
+			: container(std::forward<Args...>(args...)) {}
 
 		/*
 		* returns the number of bits that fit in the container

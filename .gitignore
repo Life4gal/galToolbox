@@ -32,3 +32,6 @@ xcuserdata/
 /.vs/
 /CMakeSettings.json
 /cpm_modules
+
+/exec/cmake-build-debug/
+/exec/cmake-build-release/

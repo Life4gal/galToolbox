@@ -10,7 +10,13 @@ namespace {
 		// unsigned int --> 32 bits
 		dynamic_bitset<unsigned int, std::vector> bits{0, 1, 3, 0, 2, 0, 4};
 
+//		for(auto bit : bits)
+//		{
+//			std::cout << bit.offset << ": " << bit.value << std::endl;
+//		}
+
 		/*
+		 * todo: something was wrong!!!
 		 * bits[0~31] == 0 --> false
 		 *
 		 * bits[32~63] == 1 --> 00000000000000000000000000000010 --> bits[33] == true
@@ -29,5 +35,10 @@ namespace {
 
 		bits[0] = true;
 		ASSERT_EQ(std::count(bits.begin(), bits.end(), true), 6);
+
+		for(auto bit : bits)
+		{
+			std::cout << bit.offset << ": " << bit.value << std::endl;
+		}
 	}
 }// namespace
