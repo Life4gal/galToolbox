@@ -6,15 +6,24 @@ project(
 		LANGUAGES CXX
 )
 
-file(GLOB_RECURSE
-	galToolBoxSrc
-	"${CMAKE_CURRENT_SOURCE_DIR}/dynamic_bitset/dynamic_bitset.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/concepts/concepts.hpp"
+file(
+		GLOB_RECURSE
+		galToolBoxConcept
+		CONFIGURE_DEPENDS
+		"${CMAKE_CURRENT_SOURCE_DIR}/concepts/*.hpp"
+)
+
+file(
+		GLOB_RECURSE
+		galToolBoxDynamicBitset
+		CONFIGURE_DEPENDS
+		"${CMAKE_CURRENT_SOURCE_DIR}/dynamic_bitset/*.hpp"
 )
 
 add_library(
 		${PROJECT_NAME}
-		${galToolBoxSrc}
+		${galToolBoxConcept}
+		${galToolBoxDynamicBitset}
 )
 
 set_target_properties(

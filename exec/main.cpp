@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
 int main(int argc, char **argv) {
 	testing::InitGoogleTest(&argc, argv);

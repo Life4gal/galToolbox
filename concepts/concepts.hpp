@@ -45,7 +45,7 @@ namespace gal::toolbox::concepts {
 			c.resize(0);
 		};
 
-		template<typename T, template<typename> typename Container>
+		template<typename T, template<typename...> typename Container>
 		concept is_resizable_and_settable = requires(Container<T> c) {
 			c.resize(0, T{});
 		};

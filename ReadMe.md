@@ -4,7 +4,7 @@
 > gcc version: gcc version 11.0.1 (experimental) (GCC) 
 
 ### environment
-> CLion 2020.3.3
+![CLion](asset/clion.png)
 
 ### install/update gcc11
 
