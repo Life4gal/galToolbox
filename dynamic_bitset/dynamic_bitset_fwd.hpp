@@ -8,7 +8,7 @@
 #endif
 
 namespace gal::toolbox::dynamic_bitset {
-	template<typename T = unsigned int, typename Allocator = std::allocator<T>, template<typename, typename> typename Container = GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>
+	template<typename T, typename Allocator, template<typename, typename> typename Container>
 	requires std::is_integral_v<T> &&
 			requires {
 		typename Container<T, Allocator>::value_type;
@@ -26,7 +26,10 @@ namespace gal::toolbox::dynamic_bitset {
 		c.push_back({});
 		c.pop_back();
 	}
-	class dynamic_bitset;
+	class basic_dynamic_bitset;
+
+	template<typename T = unsigned int, typename Allocator = std::allocator<unsigned int>, template<typename, typename> typename Container = GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>
+	using dynamic_bitset = basic_dynamic_bitset<T, Allocator, Container>;
 }// namespace gal::toolbox::dynamic_bitset
 
 #endif//GAL_TOOLBOX_DYNAMIC_BITSET_FWD_HPP
