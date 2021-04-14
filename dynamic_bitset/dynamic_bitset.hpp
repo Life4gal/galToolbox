@@ -31,16 +31,11 @@ namespace gal::toolbox::dynamic_bitset {
 			constexpr static auto bits_of_type = ref_container::bits_of_type;
 
 			// note offset should less than bits_of_type
-			constexpr bit_ref(value_type& value, size_type offset) noexcept
+			[[maybe_unused]] constexpr bit_ref(value_type& value, size_type offset) noexcept
 				: value(value),
 				  mask(value_type{1} << offset) {
 				GAL_ASSERT(offset < bits_of_type);
 			}
-
-			constexpr void do_set_value() noexcept { value |= mask; }
-			constexpr void do_reset_value() noexcept { value &= ~mask; }
-			constexpr void do_flip() noexcept { value ^= mask; }
-			constexpr void do_assign(bool v) noexcept(noexcept(do_set_value()) && noexcept(do_reset_value())) { v ? do_set_value() : do_reset_value(); }
 
 		public:
 			auto operator&() = delete; /* NOLINT, let IDE stop prompting us that 'Do not overload unary operator&, it is dangerous' */
@@ -53,51 +48,51 @@ namespace gal::toolbox::dynamic_bitset {
 				return !this->operator bool();
 			}
 
-			constexpr bit_ref& flip() noexcept(noexcept(do_flip())) {
-				do_flip();
+			constexpr bit_ref& flip() noexcept {
+				value ^= mask;
 				return *this;
 			}
 
-			constexpr bit_ref& operator=(bool v) noexcept(noexcept(do_assign(v))) {
-				do_assign(v);
-				return *this;
-			}
-
-			constexpr bit_ref& operator=(const bit_ref& other) noexcept(noexcept(do_assign(other))) {
-				do_assign(other);
-				return *this;
-			}
-
-			constexpr bit_ref& operator|=(bool v) noexcept(noexcept(do_reset_value(v))) {
+			constexpr bit_ref& operator=(bool v) noexcept {
 				if (v) {
-					do_set_value();
+					value |= mask;
+				} else {
+					value &= ~mask;
 				}
 				return *this;
 			}
 
-			constexpr bit_ref& operator&=(bool v) noexcept(noexcept(do_reset_value())) {
+			constexpr bit_ref& operator=(const bit_ref& other) noexcept {
+				this->operator=(other.operator bool());
+				return *this;
+			}
+
+			constexpr bit_ref& operator|=(bool v) noexcept {
+				if (v) {
+					value |= mask;
+				}
+				return *this;
+			}
+
+			constexpr bit_ref& operator&=(bool v) noexcept {
 				if (!v) {
-					do_reset_value();
+					value &= ~mask;
 				}
 				return *this;
 			}
 
-			constexpr bit_ref& operator^=(bool v) noexcept(noexcept(do_flip())) {
+			constexpr bit_ref& operator^=(bool v) noexcept {
 				if (v) {
-					do_flip();
+					value ^= mask;
 				}
 				return *this;
 			}
 
-			constexpr bit_ref& operator-=(bool v) noexcept(noexcept(do_reset_value())) {
+			constexpr bit_ref& operator-=(bool v) noexcept {
 				if (v) {
-					do_reset_value();
+					value &= ~mask;
 				}
 				return *this;
-			}
-
-			constexpr auto operator<=>(const bit_ref& other) noexcept {
-				return value <=> other.value;
 			}
 
 		private:
@@ -128,6 +123,10 @@ namespace gal::toolbox::dynamic_bitset {
 	public:
 		using container_type = Container<T, Allocator>;
 		using value_type = typename container_type::value_type;
+
+		using value_type_ref_if_cheaper = value_type;
+		// using value_type_ref_if_cheaper = const value_type&;
+
 		using size_type = typename container_type::size_type;
 		using allocator_type = typename container_type::allocator_type;
 
@@ -141,56 +140,144 @@ namespace gal::toolbox::dynamic_bitset {
 		container_type container;
 		size_type total_size;
 
+		/**
+		 * @brief Get the block where the current position is
+		 * @param pos the pos of bit is
+		 * @return index
+		 */
 		static size_type block_index(size_type pos) noexcept { return pos / bits_of_type; }
+		/**
+		 * @brief Get the bit of the current position (in the block where the current position is)
+		 * @param pos the pos of the bit is
+		 * @return index
+		 */
 		static size_type bit_index(size_type pos) noexcept { return pos % bits_of_type; }
+		/**
+		 * @brief Get the bit mask of the current position (in the block where the current position is)
+		 * @param pos the pos of bit is
+		 * @return mask
+		 */
 		static value_type bit_mask(size_type pos) noexcept(noexcept(bit_index(pos))) { return value_type{1} << bit_index(pos); }
+		/**
+		 * @brief Get the bit mask from first to last
+		 * @param first begin for get mask
+		 * @param last end for get mask
+		 * @return mask
+		 */
 		static value_type bit_mask(size_type first, size_type last) noexcept {
+			GAL_ASSERT(first <= last);
+			GAL_ASSERT(last < bits_of_type);
 			auto res = (last == bits_of_type - 1) ? static_cast<value_type>(~0) : ((value_type{1} << (last + 1)) - 1);
 			return res ^ ((value_type{1} << first) - 1);
 		}
-		static value_type set_block_bits(value_type block, size_type first, size_type last, bool value) noexcept(noexcept(bit_mask(first, last))) {
-			if (value) {
+		/**
+		 * @brief Set the block's set by the bit mask from first to last and set (wont change itself)
+		 * @param block current block
+		 * @param first begin for get mask
+		 * @param last end for get mask
+		 * @param set set or reset
+		 * @return block after set
+		 */
+		static value_type set_block_bits(value_type_ref_if_cheaper block, size_type first, size_type last, bool set) noexcept(noexcept(bit_mask(first, last))) {
+			if (set) {
 				return block | bit_mask(first, last);
 			} else {
 				return block & static_cast<value_type>(~bit_mask(first, last));
 			}
 		}
 
-		// Functions for operations on ranges
-		static value_type set_block_partial(value_type block, size_type first, size_type last) noexcept(noexcept(set_block_bits(block, first, last))) {
-			return set_block_bits(block, first, last);
+		/**
+		 * @brief Set the block's value by the bit mask from first to last (wont change itself)
+		 * @param block current block
+		 * @param first begin for get mask
+		 * @param last end for get mask
+		 * @return block after set
+		 */
+		static value_type set_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last) noexcept(noexcept(set_block_bits(block, first, last))) {
+			return set_block_bits(block, first, last, true);
 		}
-		static value_type set_block_full() noexcept {
+		/**
+		 * @brief Set the block's value to full (wont change itself)
+		 * @return ~0
+		 */
+		static value_type set_block_full(/* value_type_ref_if_cheaper block */) noexcept {
 			return static_cast<value_type>(~0);
 		}
-		static value_type reset_block_partial(value_type block, size_type first, size_type last) noexcept(noexcept(set_block_bits(block, first, last, false))) {
+		/**
+		 * @brief Reset the block's value by the bit mask from first to last (wont change itself)
+		 * @param block current block
+		 * @param first begin for get mask
+		 * @param last ebd for get mask
+		 * @return block after reset
+		 */
+		static value_type reset_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last) noexcept(noexcept(set_block_bits(block, first, last, false))) {
 			return set_block_bits(block, first, last, false);
 		}
-		static value_type reset_block_full() noexcept {
+		/**
+		 * @brief Reset the block's value to full (wont change itself)
+		 * @return 0
+		 */
+		static value_type reset_block_full(/* value_type_ref_if_cheaper block */) noexcept {
 			return 0;
 		}
-		static value_type flip_block_partial(value_type block, size_type first, size_type last) noexcept(noexcept(bit_mask(first, last))) {
+		/**
+		 * @brief Flip the block's value by the bit mask from first to last (wont change itself)
+		 * @param block current block
+		 * @param first begin for get mask
+		 * @param last end for get mask
+		 * @return block after flip
+		 */
+		static value_type flip_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last) noexcept(noexcept(bit_mask(first, last))) {
 			return block ^ bit_mask(first, last);
 		}
-		static value_type flip_block_full(value_type block) noexcept {
+		/**
+		 * @brief Flip the block's value to full (wont change itself)
+		 * @param block current block
+		 * @return block after flip
+		 */
+		static value_type flip_block_full(value_type_ref_if_cheaper block) noexcept {
 			return ~block;
 		}
 
 	public:
+		/**
+		 * @brief default ctor
+		 */
 		constexpr basic_dynamic_bitset() noexcept(std::is_nothrow_default_constructible_v<container_type>)
 			: container(),
 			  total_size() {}
 
+		/**
+		 * @brief ctor from alloc
+		 * @param alloc the allocator of container
+		 */
 		constexpr explicit basic_dynamic_bitset(const allocator_type& alloc) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>)
 			: container(alloc),
 			  total_size() {}
 
+		/**
+		 * @brief ctor from size, maybe need exchange the arg order of value and alloc
+		 * @param size how many bits we want(will) to hold
+		 * @param value the value to init
+		 * @param alloc the allocator of container
+		 */
 		constexpr explicit basic_dynamic_bitset(size_type size, value_type value = {}, const allocator_type& alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(init_from_value_type(size, value)))
 			: container(alloc),
 			  total_size() {
 			init_from_value_type(size, value);
 		}
 
+		/**
+		 * @brief ctor from str[pos~pos+n]
+		 * @tparam Char char_type of str
+		 * @tparam Traits trait_type of str
+		 * @tparam Alloc allocator_type of str
+		 * @param str str
+		 * @param pos begin pos
+		 * @param n how many char we used
+		 * @param size container size we need (better make sure size >= n)
+		 * @param alloc the allocator of container
+		 */
 		template<typename Char, typename Traits, typename Alloc>
 		constexpr basic_dynamic_bitset(const std::basic_string<Char, Traits, Alloc>& str,
 									   typename std::basic_string<Char, Traits, Alloc>::size_type pos,
@@ -206,59 +293,108 @@ namespace gal::toolbox::dynamic_bitset {
 					size);
 		}
 
+		/**
+		 * @brief ctor from str[str~end]
+		 * @tparam Char char_type of str
+		 * @tparam Traits trait_type of str
+		 * @tparam Alloc allocator_type of str
+		 * @param str str
+		 * @param pos begin pos
+		 * @param alloc the allocator of container
+		 */
 		template<typename Char, typename Traits, typename Alloc>
 		constexpr explicit basic_dynamic_bitset(const std::basic_string<Char, Traits, Alloc>& str,
 												typename std::basic_string<Char, Traits, Alloc>::size_type pos = {},
 												const allocator_type& alloc = {}) noexcept(noexcept(basic_dynamic_bitset(str, pos, std::basic_string<Char, Traits, Alloc>::npos, npos, alloc)))
 			: basic_dynamic_bitset(str, pos, std::basic_string<Char, Traits, Alloc>::npos, npos, alloc) {}
 
+		/**
+		 * @brief ctor from range (at least input_iterator)
+		 * @tparam ContainerInputIterator iterator type of range
+		 * @param first begin iterator
+		 * @param last end iterator
+		 * @param alloc the allocator of container
+		 */
 		template<typename ContainerInputIterator>
 		requires std::input_iterator<ContainerInputIterator> && requires(container_type c) {
 			c.insert(c.end(), ContainerInputIterator{}, ContainerInputIterator{});
 		}
-		constexpr basic_dynamic_bitset(ContainerInputIterator first, ContainerInputIterator last, const allocator_type& alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(init_from_range(first, last)))
+		constexpr basic_dynamic_bitset(ContainerInputIterator first, ContainerInputIterator last, const allocator_type& alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(append_from_range(container.begin(), first, last)))
 			: container(alloc),
 			  total_size() {
-			init_from_range(first, last);
+			append_from_range(container.begin(), first, last);
 		}
 
+		/**
+		 * @brief append extra data from range iterator (at least input_iterator)
+		 * @tparam ContainerInputIterator iterator type of range
+		 * @param first begin iterator
+		 * @param last end iterator
+		 * @return the allocator of container
+		 */
 		template<typename ContainerInputIterator>
 		requires std::input_iterator<ContainerInputIterator> && requires(container_type c) {
 			c.insert(c.end(), ContainerInputIterator{}, ContainerInputIterator{});
 		}
-		constexpr void reinit(ContainerInputIterator first, ContainerInputIterator last) noexcept(noexcept(init_from_range(first, last))) {
-			GAL_ASSERT(total_size == 0);
-			init_from_range(first, last);
+		void append_from_range(ContainerInputIterator pos, ContainerInputIterator first, ContainerInputIterator end) noexcept(noexcept(container.insert(pos, first, end)) && noexcept(container.size())) {
+			container.insert(pos, first, end);
+			total_size += container.size() * bits_of_type;
 		}
 
-		constexpr basic_dynamic_bitset(std::initializer_list<value_type>&& args, const allocator_type& alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, decltype(args)>&& noexcept(init_from_range(args.begin(), args.end())))
+		/**
+		 * @brief ctor from initializer_list
+		 * @param args args for init
+		 * @param alloc the allocator of container
+		 */
+		constexpr basic_dynamic_bitset(std::initializer_list<value_type>&& args, const allocator_type& alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, decltype(args)>&& noexcept(append_from_range(args.begin(), args.end())))
 			: container(alloc),
 			  total_size() {
-			init_from_range(args.begin(), args.end());
+			append_from_range(args.begin(), args.end());
 		}
 
+		/**
+		 * @brief dtor
+		 */
 		~basic_dynamic_bitset() {
 			GAL_ASSERT(check_invariants());
 		}
 
+		/**
+		 * @brief copy ctor
+		 * @param other
+		 */
 		constexpr basic_dynamic_bitset(const basic_dynamic_bitset& other) noexcept(std::is_nothrow_copy_constructible_v<container_type>)
 			: container(other.container),
 			  total_size(other.total_size) {}
 
+		/**
+		 * @brief copy assign operator
+		 * @param other another dynamic_bitset for copy
+		 * @return self
+		 */
 		basic_dynamic_bitset& operator=(const basic_dynamic_bitset& other) noexcept(std::is_nothrow_copy_assignable_v<container_type>) {
 			container = other.container;
 			total_size = other.total_size;
 			return *this;
 		}
 
+		/**
+		 * @brief move ctor
+		 * @param other another dynamic_bitset for move
+		 */
 		basic_dynamic_bitset(basic_dynamic_bitset&& other) noexcept(std::is_nothrow_move_constructible_v<container_type>)
 			: container(std::move(other.container)),
 			  total_size(std::move(other.total_size)) {
 			// Required so that check_invariants() works.
-			GAL_ASSERT((other.container = container_type{}).empty());
+			GAL_ASSERT((other.container = container_type{}).empty());// NOLINT
 			other.total_size = 0;
 		}
 
+		/**
+		 * @brief move assign operator
+		 * @param other another dynamic_bitset for move
+		 * @return self
+		 */
 		basic_dynamic_bitset& operator=(basic_dynamic_bitset&& other) noexcept(std::is_nothrow_move_assignable_v<container_type>) {
 			if (std::addressof(other) == this) {
 				return *this;
@@ -266,29 +402,52 @@ namespace gal::toolbox::dynamic_bitset {
 			container = std::move(other.container);
 			total_size = std::move(other.total_size);
 			// Required so that check_invariants() works.
-			GAL_ASSERT((other.container = container_type{}).empty());
+			GAL_ASSERT((other.container = container_type{}).empty());// NOLINT
 			other.total_size = 0;
 			return *this;
 		}
 
+		/**
+		 * @brief swap --> swap container and size
+		 * @param other another dynamic_bitset
+		 */
 		void swap(basic_dynamic_bitset& other) noexcept(noexcept(std::swap(container, other.container))) {
 			std::swap(container, other.container);
 			std::swap(total_size, other.total_size);
 		}
 
-		allocator_type get_allocator() const noexcept(noexcept(container.get_allocator())) {
+		/**
+		 * @brief Get allocator --> get container's allocator
+		 * @return container's allocator
+		 */
+		allocator_type get_allocator() const
+				noexcept(noexcept(container.get_allocator())) {
 			return container.get_allocator();
 		}
 
+		/**
+		 * @brief Get size (bits we hold, not container size)
+		 * @return bits we hold
+		 */
 		size_type size() const noexcept {
 			return total_size;
 		}
 
-		size_type container_size() const noexcept(noexcept(container.size())) {
+		/**
+		 * @brief Get container's real size we used
+		 * @return container's size
+		 */
+		size_type container_size() const
+				noexcept(noexcept(container.size())) {
 			return container.size();
 		}
 
-		auto max_size() const noexcept(noexcept(container.max_size()) && noexcept(get_allocator()) && noexcept(get_allocator().max_size())) {
+		/**
+		 * @brief Get the max bits we can hold (normally, bits_of_type * max_size_of_container)
+		 * @return max bits size
+		 */
+		auto max_size() const
+				noexcept(noexcept(container.max_size()) && noexcept(get_allocator()) && noexcept(get_allocator().max_size())) {
 			auto container_max = container.max_size();
 			auto alloc_max = get_allocator().max_size();
 
@@ -296,18 +455,35 @@ namespace gal::toolbox::dynamic_bitset {
 			return max <= static_cast<size_type>(-1) / bits_of_type ? max * bits_of_type : static_cast<size_type>(-1);
 		}
 
-		bool empty() const noexcept(noexcept(size())) {
+		/**
+		 * @brief Are we hold zero bits?
+		 * @return empty
+		 */
+		bool empty() const
+				noexcept(noexcept(size())) {
 			return size() == 0;
 		}
 
-		size_type capacity() const noexcept(noexcept(container.capacity())) {
+		/**
+		 * @brief Get the capacity of bits we hold (normally, bits_of_type * capacity_of_container)
+		 * @return what capacity is now
+		 */
+		size_type capacity() const
+				noexcept(noexcept(container.capacity())) {
 			return container.capacity() * bits_of_type;
 		}
 
+		/**
+		 * @brief Reserve enough memory for use (normally, size / bits_of_type, or container_real_size)
+		 * @param size how many size we need reserve
+		 */
 		void reserve(size_type size) noexcept(noexcept(container.reserve(size))) {
-			container.reserve(calc_num_blocks(size));
+			container.reserve(calc_blocks_needed(size));
 		}
 
+		/**
+		 * @brief Shrink to fit (normally, make container shrink to fit)
+		 */
 		void shrink_to_fit() noexcept(noexcept(container.size()) && noexcept(container.capacity()) && std::is_nothrow_swappable_v<container_type>) {
 			if (container.size() < container.capacity()) {
 				container_type{container}.swap(container);
@@ -315,28 +491,52 @@ namespace gal::toolbox::dynamic_bitset {
 		}
 
 	private:
-		bool unchecked_test(size_type pos) const noexcept(noexcept(bit_mask(pos)) && noexcept(block_index(pos)) && noexcept(container[0])) {
+		/**
+		 * @brief Just check a bit
+		 * @param pos bit's pos
+		 * @return it this bit set
+		 */
+		bool unchecked_test(size_type pos) const
+				noexcept(noexcept(bit_mask(pos)) && noexcept(block_index(pos)) && noexcept(container[0])) {
 			return (container[block_index(pos)] & bit_mask(pos)) != 0;
 		}
 
-		size_type calc_num_blocks(size_type num_bits) const noexcept {
+		/**
+		 * @brief Calc how many blocks we need to store num_bits bits
+		 * @param num_bits how many bits we want to hold
+		 * @return blocks we need
+		 */
+		size_type calc_blocks_needed(size_type num_bits) const noexcept {
 			return num_bits / bits_of_type + static_cast<size_type>(num_bits % bits_of_type != 0);
 		}
 
+		/**
+		 * @brief Get the highest block in container (normally, the container.back() element)
+		 * @return highest block
+		 */
 		value_type& highest_block() noexcept(noexcept(container.back())) {
 			GAL_ASSERT(size() > 0 && container_size() > 0);
 			return container.back();
 		}
 
+		/**
+		 * @brief Get the highest block in container (normally, the container.back() element)
+		 * @return highest block
+		 */
 		const value_type& highest_block() const noexcept(noexcept(container.back())) {
 			GAL_ASSERT(size() > 0 && container_size() > 0);
 			return container.back();
 		}
 
-		void init_from_value_type(size_type size, value_type value) noexcept(noexcept(calc_num_blocks(size)) && noexcept(container.resize(calc_num_blocks(size)))) {
+		/**
+		 * @brief Init a dynamic_bitset from value_type
+		 * @param size how many bits we want to hold
+		 * @param value the value for init
+		 */
+		void init_from_value_type(size_type size, value_type value) noexcept(noexcept(calc_blocks_needed(size)) && noexcept(container.resize(calc_blocks_needed(size)))) {
 			GAL_ASSERT(container_size() == 0);
 
-			container.resize(calc_num_blocks(size));
+			container.resize(calc_blocks_needed(size));
 			total_size = size;
 
 			// zero out all bits at pos >= num_bits, if any;
@@ -345,8 +545,12 @@ namespace gal::toolbox::dynamic_bitset {
 				value &= ((value_type{1} << size) - 1);
 			}
 
-			constexpr auto left_shifter = [](size_type & value) constexpr->void {
-				bits_of_type >= bits_of_unsigned_long ? (value = 0) : (value >>= bits_of_type);
+			constexpr auto left_shifter = [](value_type & value) constexpr->void {
+				if (bits_of_type >= bits_of_unsigned_long) {
+					value = 0;
+				} else {
+					value = static_cast<value_type>(static_cast<decltype(bits_of_unsigned_long)>(value) >> bits_of_type);
+				}
 			};
 
 			for (auto it = container.begin();; ++it) {
@@ -357,16 +561,28 @@ namespace gal::toolbox::dynamic_bitset {
 			}
 		}
 
+		/**
+		 * @brief Init a dynamic_bitset from str[pos~pos+n]
+		 * @tparam Char char_type of str
+		 * @tparam Traits trait_type of str
+		 * @tparam Alloc alloc_type of str
+		 * @param str the str we used
+		 * @param pos begin pos
+		 * @param n how many char we used
+		 * @param size how many bits we want(will) to hold, better make sure it greater than n
+		 */
 		template<typename Char, typename Traits, typename Alloc>
 		void init_from_basic_string(const std::basic_string<Char, Traits, Alloc>& str,
 									typename std::basic_string<Char, Traits, Alloc>::size_type pos,
 									typename std::basic_string<Char, Traits, Alloc>::size_type n,
-									size_type size) noexcept(noexcept(calc_num_blocks(size)) && noexcept(container.resize(size))) {
+									size_type size) noexcept(noexcept(calc_blocks_needed(size)) && noexcept(container.resize(size))) {
 			GAL_ASSERT(pos <= str.size());
+			GAL_ASSERT(n <= size);
 
+			// make sure the end pos is valid
 			auto len = std::min(n, str.size() - pos);
 			auto num_bits = size != npos ? size : len;
-			container.resize(calc_num_blocks(num_bits));
+			container.resize(calc_blocks_needed(num_bits));
 			total_size = num_bits;
 
 			auto& fac = std::use_facet<std::ctype<Char>>(std::locale());
@@ -382,17 +598,6 @@ namespace gal::toolbox::dynamic_bitset {
 					set(i);
 				}
 			}
-		}
-
-		template<typename ContainerInputIterator>
-		requires std::input_iterator<ContainerInputIterator> && requires(container_type c) {
-			c.insert(c.end(), ContainerInputIterator{}, ContainerInputIterator{});
-		}
-		void init_from_range(ContainerInputIterator first, ContainerInputIterator end) noexcept(noexcept(container.end()) && noexcept(container.insert(container.end(), first, end)) && noexcept(container.size())) {
-			GAL_ASSERT(container.size() == 0);
-
-			container.insert(container.end(), first, end);
-			total_size = container.size() * bits_of_type;
 		}
 
 		basic_dynamic_bitset& range_operation(size_type pos, size_type len,
@@ -454,8 +659,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * This function resets the unused bits (convenient
 		 * for the implementation of many member functions)
 		 */
-		void zero_unused_bits() noexcept(noexcept(container_size()) && noexcept(calc_num_blocks(total_size)) && noexcept(count_extra_bits()) && noexcept(highest_block())) {
-			GAL_ASSERT(container_size() == calc_num_blocks(total_size));
+		void zero_unused_bits() noexcept(noexcept(container_size()) && noexcept(calc_blocks_needed(total_size)) && noexcept(count_extra_bits()) && noexcept(highest_block())) {
+			GAL_ASSERT(container_size() == calc_blocks_needed(total_size));
 
 			// if != 0 this is the number of bits used in the last block
 			auto extra_bits = count_extra_bits();
@@ -468,7 +673,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * check class invariants
 		 */
 		[[nodiscard]] bool check_invariants() const
-				noexcept(noexcept(count_extra_bits()) && noexcept(highest_block()) && noexcept(container.size()) && noexcept(container.capacity()) && noexcept(container_size()) && noexcept(size()) && noexcept(calc_num_blocks(size()))) {
+				noexcept(noexcept(count_extra_bits()) && noexcept(highest_block()) && noexcept(container.size()) && noexcept(container.capacity()) && noexcept(container_size()) && noexcept(size()) && noexcept(calc_blocks_needed(size()))) {
 			auto extra_bits = count_extra_bits();
 			if (extra_bits > 0) {
 				auto mask = static_cast<value_type>(~0) << extra_bits;
@@ -476,7 +681,7 @@ namespace gal::toolbox::dynamic_bitset {
 					return false;
 				}
 			}
-			if (container.size() > container.capacity() || container_size() != calc_num_blocks(size())) {
+			if (container.size() > container.capacity() || container_size() != calc_blocks_needed(size())) {
 				return false;
 			}
 			return true;
@@ -634,13 +839,14 @@ namespace gal::toolbox::dynamic_bitset {
 			return {container[block_index(index)], bit_index(index)};
 		}
 
-		[[nodiscard]] bool operator[](size_type index) const noexcept(noexcept(test(index))) {
-			return test(index);
-		}
+		// please use test(index), unless you cannot get code-auto-complete because IDE dont know what is returned when you use dynamic_bitset[i]
+		//		[[nodiscard]] bool operator[](size_type index) const noexcept(noexcept(test(index))) {
+		//			return test(index);
+		//		}
 
-		void resize(size_type size, bool value = false) noexcept(noexcept(container_size()) && noexcept(calc_num_blocks(size)) && noexcept(container.resize(size_type{}, value_type{})) && noexcept(count_extra_bits()) && noexcept(container.size()) && noexcept(container[0]) && noexcept(zero_unused_bits())) {
+		void resize(size_type size, bool value = false) noexcept(noexcept(container_size()) && noexcept(calc_blocks_needed(size)) && noexcept(container.resize(size_type{}, value_type{})) && noexcept(count_extra_bits()) && noexcept(container.size()) && noexcept(container[0]) && noexcept(zero_unused_bits())) {
 			auto old_size = container_size();
-			auto required_size = calc_num_blocks(size);
+			auto required_size = calc_blocks_needed(size);
 
 			auto v = value ? ~value_type{0} : value_type{0};
 
@@ -679,9 +885,9 @@ namespace gal::toolbox::dynamic_bitset {
 			resize(sz + 1);
 			set(sz, value);
 		}
-		void pop_back() noexcept(noexcept(container_size()) && noexcept(calc_num_blocks(total_size - 1)) && noexcept(container.pop_back()) && noexcept(zero_unused_bits())) {
+		void pop_back() noexcept(noexcept(container_size()) && noexcept(calc_blocks_needed(total_size - 1)) && noexcept(container.pop_back()) && noexcept(zero_unused_bits())) {
 			auto old_size = container_size();
-			auto required_size = calc_num_blocks(total_size - 1);
+			auto required_size = calc_blocks_needed(total_size - 1);
 
 			if (required_size != old_size) {
 				container.pop_back();
@@ -930,6 +1136,55 @@ namespace gal::toolbox::dynamic_bitset {
 			return false;
 		}
 	};
+
+	template<typename T, typename Allocator, template<typename, typename> typename Container>
+	std::ostream& operator<<(std::ostream& os, const basic_dynamic_bitset<T, Allocator, Container>& bs) {
+		auto err = std::ios::goodbit;
+
+		auto sz = bs.size();
+		auto buf = os.rdbuf();
+		auto pad = os.width() <= 0 || static_cast<typename basic_dynamic_bitset<T, Allocator, Container>::size_type>(os.width()) <= sz ? 0 : os.width() - sz;
+
+		auto fill = os.fill();
+
+		// if needed fill at left; pad is decreased along the way
+		if ((os.flags() & std::ios::adjustfield) != std::ios::left) {
+			for (; 0 < pad; --pad) {
+				if (fill != buf->sputc(fill)) {
+					err |= std::ios::failbit;
+					break;
+				}
+			}
+		}
+
+		if (err == std::ios::goodbit) {
+			// output the bitset
+			for (auto i = sz; i > 0; --i) {
+				auto dig = bs.test(i - 1) ? '1' : '0';
+				if (buf->sputc(dig) == EOF) {
+					err |= std::ios::failbit;
+					break;
+				}
+			}
+		}
+
+		if (err == std::ios::goodbit) {
+			// if needed fill at right
+			for (; pad > 0; --pad) {
+				if (buf->sputc(fill) != fill) {
+					err |= std::ios::failbit;
+					break;
+				}
+			}
+		}
+
+		os.width(0);
+
+		if (err != std::ios::goodbit) {
+			os.setstate(err);
+		}
+		return os;
+	}
 
 }// namespace gal::toolbox::dynamic_bitset
 
