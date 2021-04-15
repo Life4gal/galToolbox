@@ -18,13 +18,14 @@ namespace gal::toolbox::dynamic_bitset {
 			requires(Container<T, Allocator> c) {
 		c.begin();
 		c.end();
-		c[0];
+		c[0] = {};
 		c.get_allocator();
 		c.size();
 		c.resize(typename Container<T, Allocator>::size_type{}, typename Container<T, Allocator>::value_type{});
 		c.clear();
 		c.push_back({});
 		c.pop_back();
+		c.insert(c.begin(), std::initializer_list<T>{}.begin(), std::initializer_list<T>{}.end());
 	}
 	class basic_dynamic_bitset;
 
