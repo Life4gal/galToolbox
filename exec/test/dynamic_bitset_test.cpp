@@ -3,30 +3,46 @@
 #include <vector>
 #define GAL_DYNAMIC_BITSET_USING_STD
 #include <dynamic_bitset/dynamic_bitset.hpp>
-#include <iterator>
+
 namespace {
 	TEST(TEST_DYNAMIC_BITSET, WE_NEED_CONSTEXPR_VECTOR) {
 		using namespace gal::toolbox::dynamic_bitset;
+
 		basic_dynamic_bitset foo1{};
+		std::cout << "foo1: " << foo1 << std::endl;
+
 		// auto deduce to unsigned int
-		basic_dynamic_bitset<unsigned int, std::allocator, std::vector> foo2{std::allocator<int>{}};
+		// todo: IDE say --> while substituting deduced template arguments into function template '<deduction guide for basic_dynamic_bitset>' [with T = std::allocator<int>]
+		// but it work
+		basic_dynamic_bitset foo2{std::allocator<int>{}};
+		std::cout << "foo2: " << foo2 << std::endl;
+
 		// auto deduce to unsigned int
 		basic_dynamic_bitset foo3{10, 1023};
+		std::cout << "foo3: " << foo3 << std::endl;
 
-		basic_dynamic_bitset foo41{std::string{"101"}, 0, 2};
-		basic_dynamic_bitset foo42{std::string{"101"}, 1};
+		basic_dynamic_bitset foo41{std::string{"110"}, 0, 2};
+		basic_dynamic_bitset foo42{std::string{"110"}, 1};
+		std::cout << "foo4: " << foo41 << ' ' << foo42 << std::endl;
 
-		basic_dynamic_bitset foo51{std::string_view{"101"}, 0, 2};
-		basic_dynamic_bitset foo52{std::string_view{"101"}, 1};
+		basic_dynamic_bitset foo51{std::string_view{"110"}, 0, 2};
+		basic_dynamic_bitset foo52{std::string_view{"110"}, 1};
+		std::cout << "foo5: " << foo51 << ' ' << foo52 << std::endl;
 
-		basic_dynamic_bitset foo61{"101", 0, 2};
-		basic_dynamic_bitset foo62{"101", 1};
+		basic_dynamic_bitset foo61{"110", 0, 2};
+		basic_dynamic_bitset foo62{"110", 1};
+		std::cout << "foo6: " << foo61 << ' ' << foo62 << std::endl;
 
-		std::vector<unsigned int> vec{1, 2, 3};
-		basic_dynamic_bitset<unsigned int, std::allocator, std::vector> foo7{vec.cbegin(), vec.cend()};
+		std::vector<int> vec{1, 2, 3};
+		// todo: IDE say --> while substituting deduced template arguments into function template '<deduction guide for basic_dynamic_bitset>' [with T = __gnu_cxx::__normal_iterator<const unsigned int *, std::vector<unsigned int>>]
+		// but it work
+		basic_dynamic_bitset foo7{vec.cbegin(), vec.cend()};
+		std::cout << "foo7: " << foo7 << std::endl;
 
-		basic_dynamic_bitset<unsigned int, std::allocator, std::vector> foo8{std::cin};
-
+		// todo: IDE say --> while substituting deduced template arguments into function template '<deduction guide for basic_dynamic_bitset>' [with T = std::basic_istream<char>]
+		// if not add {} as alloc, it will not work
+		basic_dynamic_bitset foo8{std::cin, {}};
+		std::cout << "foo8: " << foo8 << std::endl;
 
 		// first we get a bitset which length is 50 and init by 9999
 		// we got 10011100001111 (bin of 9999) and zero-fill --> 00000000000000000000000000000000000010011100001111

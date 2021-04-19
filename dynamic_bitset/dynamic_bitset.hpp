@@ -489,7 +489,7 @@ namespace gal::toolbox::dynamic_bitset {
 				auto c = str[begin - i];
 
 				auto is_one = str_trait_type::eq(c, one);
-				if(!is_one && str_trait_type::eq(c, zero)){
+				if(!is_one && !str_trait_type::eq(c, zero)){
 					break;
 				}
 
@@ -1862,7 +1862,7 @@ namespace gal::toolbox::dynamic_bitset {
 				auto c = str[begin - i];
 
 				auto is_one = str_trait_type::eq(c, one);
-				if(!is_one && str_trait_type::eq(c, zero)){
+				if(!is_one && !str_trait_type::eq(c, zero)){
 					break;
 				}
 
@@ -1912,7 +1912,7 @@ namespace gal::toolbox::dynamic_bitset {
 				auto c = str[begin - i];
 
 				auto is_one = str_trait_type::eq(c, one);
-				if(!is_one && str_trait_type::eq(c, zero)){
+				if(!is_one && !str_trait_type::eq(c, zero)){
 					break;
 				}
 
@@ -2060,7 +2060,7 @@ namespace gal::toolbox::dynamic_bitset {
 
 	  todo:
 	    `2`, `3` make `10` not work
-	    `11` not work at all
+	    `2` make `11` not work
 	    `12` make `2` not work
 
 	 */
