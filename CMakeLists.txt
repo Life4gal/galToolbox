@@ -1,29 +1,37 @@
 cmake_minimum_required(VERSION 3.12...3.17)
 
 project(
-		galToolBox
+		galToolbox
 		VERSION 0.0.1
 		LANGUAGES CXX
 )
 
 file(
 		GLOB_RECURSE
-		galToolBoxConcept
+		galToolboxConcept
 		CONFIGURE_DEPENDS
 		"${CMAKE_CURRENT_SOURCE_DIR}/concepts/*.hpp"
 )
 
 file(
 		GLOB_RECURSE
-		galToolBoxDynamicBitset
+		galToolboxDynamicBitset
 		CONFIGURE_DEPENDS
 		"${CMAKE_CURRENT_SOURCE_DIR}/dynamic_bitset/*.hpp"
 )
 
+file(
+		GLOB_RECURSE
+		galToolboxRandom
+		CONFIGURE_DEPENDS
+		"${CMAKE_CURRENT_SOURCE_DIR}/random/*.hpp"
+)
+
 add_library(
 		${PROJECT_NAME}
-		${galToolBoxConcept}
-		${galToolBoxDynamicBitset}
+		${galToolboxConcept}
+		${galToolboxDynamicBitset}
+		${galToolboxRandom}
 )
 
 set_target_properties(

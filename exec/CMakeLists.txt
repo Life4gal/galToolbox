@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12...3.17)
 
 project(
-		galToolBoxExec
+		galToolboxExec
 		LANGUAGES CXX
 )
 
@@ -18,7 +18,7 @@ add_executable(
 set_target_properties(
 		${PROJECT_NAME}
 		PROPERTIES CXX_STANDARD 20
-		OUTPUT_NAME "galToolBoxExec"
+		OUTPUT_NAME "galToolboxExec"
 )
 
 include(cmake/google-test.cmake)
@@ -30,11 +30,11 @@ target_link_libraries(
 
 include(../cmake/CPM.cmake)
 CPMAddPackage(
-		NAME galToolBox
+		NAME galToolbox
 		SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/..
 )
 target_link_libraries(
 		${PROJECT_NAME}
 		PRIVATE
-		galToolBox::galToolBox
+		galToolbox::galToolbox
 )
