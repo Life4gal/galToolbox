@@ -1,3 +1,9 @@
+/**
+ * Inspire from boost/dynamic_bitset (Distributed under the Boost Software License, Version 1.0.)(http://www.boost.org/LICENSE_1_0.txt)
+ *
+ * If there is no legal license conflict, the file will be distributed under the [see root project license] license.
+ */
+
 #ifndef GAL_TOOLBOX_DYNAMIC_BITSET_HPP
 #define GAL_TOOLBOX_DYNAMIC_BITSET_HPP
 
