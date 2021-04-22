@@ -47,25 +47,25 @@ namespace {
 			}
 		}
 
-		std::cout << "\n# Test overlap1 (100000 times) \n";
+		std::cout << "\n# Test overlap1 (1000000 times) \n";
 		{
 			for (auto i = 0; i < 10; ++i) {
 				random256PlusPlus		engine{};
 				std::set<std::uint64_t> set;
-				for (auto j = 0; j < 100000; ++j) {
+				for (auto j = 0; j < 1000000; ++j) {
 					set.insert(engine());
 				}
 				std::cout << set.size() << '\n';
 			}
 		}
 
-		std::cout << "\n# Test overlap2 (100000 times) \n";
+		std::cout << "\n# Test overlap2 (1000000 times) \n";
 		{
 			for (auto i = 0; i < 10; ++i) {
 				random256PlusPlus				   engine{};
-				std::uniform_int_distribution<int> dist;
+				std::uniform_int_distribution<std::uint64_t> dist;
 				std::set<std::uint64_t>			   set;
-				for (auto j = 0; j < 100000; ++j) {
+				for (auto j = 0; j < 1000000; ++j) {
 					set.insert(dist(engine));
 				}
 				std::cout << set.size() << '\n';

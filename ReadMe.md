@@ -2,7 +2,7 @@
 
 ## license
 > If there is no legal license conflict, all files in this repository will be distributed under [see root project license] license.
-> If not, corresponding file(source code) (maybe)will waive all rights(But I will try my best to keep the rights of [see root project license]).
+> If not, corresponding file(source code) (maybe)will waive all rights(keep the rights of [see root project license] as possible as we can).
 
 ### requirement:
 > gcc version: gcc version 11.0.1 (experimental) (GCC) 
