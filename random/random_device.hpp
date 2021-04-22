@@ -8,14 +8,36 @@
 #define GAL_TOOLBOX_RANDOM_HPP
 
 #include <array>
+#include <concepts>
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 
 namespace gal::toolbox::random {
 	namespace detail {
-		constexpr std::uint64_t default_seed = 1234567890ULL;
+		using bits_64_type					= std::uint64_t;
+		using bits_32_type					= std::uint32_t;
 
-		template<size_t N, size_t Total, typename T>
+		constexpr bits_64_type default_seed = 1234567890ULL;
+
+		template<std::unsigned_integral T, size_t N>
+		struct type_generator {
+			using result_type = std::conditional_t<
+					std::is_same_v<T, bits_64_type> || std::numeric_limits<T>::digits == std::numeric_limits<bits_64_type>::digits,
+					bits_64_type,
+					std::conditional_t<std::is_same_v<T, bits_32_type> || std::numeric_limits<T>::digits == std::numeric_limits<bits_32_type>::digits, bits_32_type, nullptr_t>>;
+			using state_type = std::array<result_type, N>;
+
+			static_assert(!std::is_same_v<result_type, nullptr_t>, "Not supported type");
+		};
+
+		template<typename T>
+		concept is_type_generator = requires {
+			typename T::result_type;
+			typename T::state_type;
+		};
+
+		template<size_t N, size_t Total, std::unsigned_integral T>
 		constexpr T rotate_left(T value) noexcept {
 			return (value << N) | (value >> (Total - N));
 		}
@@ -26,8 +48,10 @@ namespace gal::toolbox::random {
 		 * Footprint: 8 bytes
 		 * Original implementation: http://prng.di.unimi.it/splitmix64.c
 		 */
-		struct generator64 {
-			using result_type = std::uint64_t;
+		template<is_type_generator T>
+		struct seed_generator64 {
+			using result_type = typename T::result_type;
+			using state_type  = typename T::state_type;
 
 			result_type			  seed;
 
@@ -40,9 +64,8 @@ namespace gal::toolbox::random {
 				return z ^ (z >> 31);
 			}
 
-			template<size_t Size>
-			constexpr std::array<result_type, Size> generatorSeeds() noexcept {
-				std::array<result_type, Size> seeds{};
+			constexpr state_type generator_seeds() noexcept {
+				state_type seeds{};
 
 				for (auto& s: seeds) {
 					s = operator()();
@@ -52,17 +75,17 @@ namespace gal::toolbox::random {
 			}
 		};
 
-		template<typename T, size_t N>
-		class randomBase {
+		template<is_type_generator T>
+		class engineBase {
 		public:
-			using result_type				   = T;
-			constexpr static auto result_size  = N;
-			using state_type				   = std::array<result_type, result_size>;
-			constexpr static auto bits_of_this = std::numeric_limits<T>::digits;
+			using result_type				   = typename T::result_type;
+			using state_type				   = typename T::state_type;
 
-			constexpr explicit randomBase(state_type state) noexcept : state(std::move(state)) {}
+			constexpr static auto bits_of_this = std::numeric_limits<result_type>::digits;
 
-			constexpr explicit randomBase(result_type seed = default_seed) noexcept : state(generator64{seed}.template generatorSeeds<result_size>()) {}
+			constexpr explicit engineBase(state_type state) noexcept : state(std::move(state)) {}
+
+			constexpr explicit engineBase(result_type seed = default_seed) noexcept : state(seed_generator64<T>{seed}.template generator_seeds()) {}
 
 			constexpr virtual result_type operator()() noexcept = 0;
 
@@ -74,15 +97,15 @@ namespace gal::toolbox::random {
 				jump_support(long_jump_steps_generator());
 			}
 
-			[[nodiscard("If you do not receive the return value of randomBase::min, this call is meaningless overhead")]] constexpr static result_type min() noexcept {
+			[[nodiscard("If you do not receive the return value of engineBase::min, this call is meaningless overhead")]] constexpr static result_type min() noexcept {
 				return std::numeric_limits<result_type>::lowest();
 			}
 
-			[[nodiscard("If you do not receive the return value of randomBase::max, this call is meaningless overhead")]] constexpr static result_type max() noexcept {
+			[[nodiscard("If you do not receive the return value of engineBase::max, this call is meaningless overhead")]] constexpr static result_type max() noexcept {
 				return std::numeric_limits<result_type>::max();
 			}
 
-			[[nodiscard("If you do not receive the return value of randomBase::serialize, this call is meaningless overhead")]] constexpr state_type serialize() const noexcept {
+			[[nodiscard("If you do not receive the return value of engineBase::serialize, this call is meaningless overhead")]] constexpr state_type serialize() const noexcept {
 				return state;
 			}
 
@@ -115,9 +138,9 @@ namespace gal::toolbox::random {
 			}
 		};
 
-		class random256Base : public randomBase<std::uint64_t, 4> {
+		class engine64Plus4Base : public engineBase<type_generator<bits_64_type, 4>> {
 		public:
-			using randomBase::randomBase;
+			using engineBase::engineBase;
 
 			constexpr result_type operator()() noexcept override {
 				auto result = operator_call_result();
@@ -136,7 +159,7 @@ namespace gal::toolbox::random {
 			}
 
 		protected:
-			using randomBase::state;
+			using engineBase::state;
 
 		private:
 			constexpr virtual result_type operator_call_result() noexcept = 0;
@@ -147,13 +170,13 @@ namespace gal::toolbox::random {
 			 * non-overlapping subsequences for parallel computations.
 			 * @return generated jump steps
 			 */
-			constexpr state_type					  jump_steps_generator() noexcept override {
-				   return {
-						   0x180ec6d33cfd0aba,// 1100000001110110001101101001100111100111111010000101100000000
-						   0xd5a61266f0c9392c,// 1101010110100110000100100110011011110000110010010011100000000000
-						   0xa9582618e03fc9aa,// 1010100101011000001001100001100011100000001111111100100000000000
-						   0x39abdc4529b1661c // 11100110101011110111000100010100101001101100010110011000000000
-				   };
+			constexpr state_type		  jump_steps_generator() noexcept override {
+				 return {
+						 0x180ec6d33cfd0aba,// 1100000001110110001101101001100111100111111010000101100000000
+						 0xd5a61266f0c9392c,// 1101010110100110000100100110011011110000110010010011100000000000
+						 0xa9582618e03fc9aa,// 1010100101011000001001100001100011100000001111111100100000000000
+						 0x39abdc4529b1661c // 11100110101011110111000100010100101001101100010110011000000000
+				 };
 			}
 
 			/**
@@ -172,6 +195,22 @@ namespace gal::toolbox::random {
 				};
 			}
 		};
+
+		class engine64Plus2Base : public engineBase<type_generator<bits_64_type, 2>> {
+		public:
+			using engineBase::engineBase;
+
+		protected:
+			using engineBase::state;
+		};
+
+		class engine32Plus4Base : public engineBase<type_generator<bits_32_type, 4>> {
+		public:
+			using engineBase::engineBase;
+
+		protected:
+			using engineBase::state;
+		};
 	}// namespace detail
 
 	/**
@@ -180,9 +219,9 @@ namespace gal::toolbox::random {
 	 * Footprint: 32 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoshiro256plus.c
 	 */
-	class random256Plus : public detail::random256Base {
+	class xorShiftRotate256PlusEngine : public detail::engine64Plus4Base {
 	public:
-		using random256Base::random256Base;
+		using engine64Plus4Base::engine64Plus4Base;
 
 	private:
 		constexpr result_type operator_call_result() noexcept override {
@@ -196,9 +235,9 @@ namespace gal::toolbox::random {
 	 * Footprint: 32 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoshiro256plusplus.c
 	 */
-	class random256PlusPlus : public detail::random256Base {
+	class xorShiftRotate256PlusPlusEngine : public detail::engine64Plus4Base {
 	public:
-		using random256Base::random256Base;
+		using engine64Plus4Base::engine64Plus4Base;
 
 	private:
 		constexpr result_type operator_call_result() noexcept override {
@@ -212,9 +251,9 @@ namespace gal::toolbox::random {
 	 * Footprint: 32 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoshiro256starstar.c
 	 */
-	class random256StartStar : public detail::random256Base {
+	class xorShiftRotate256StarStarEngine : public detail::engine64Plus4Base {
 	public:
-		using random256Base::random256Base;
+		using engine64Plus4Base::engine64Plus4Base;
 
 	private:
 		constexpr result_type operator_call_result() noexcept override {
@@ -228,7 +267,7 @@ namespace gal::toolbox::random {
 	 * Footprint: 16 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoroshiro128plus.c
 	 */
-	class random128Plus : public detail::randomBase<std::uint64_t, 2> {
+	class xorRotateShiftRotate128PlusEngine : public detail::engine64Plus2Base {
 	public:
 		constexpr result_type operator()() noexcept override {
 			state_type to{state};
@@ -279,7 +318,7 @@ namespace gal::toolbox::random {
 	 * Footprint: 16 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoroshiro128plusplus.c
 	 */
-	class random128PlusPlus : public detail::randomBase<std::uint64_t, 2> {
+	class xorRotateShiftRotatePlusPlusEngine : public detail::engine64Plus2Base {
 	public:
 		constexpr result_type operator()() noexcept override {
 			state_type to{state};
@@ -330,7 +369,7 @@ namespace gal::toolbox::random {
 	 * Footprint: 16 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoroshiro128starstar.c
 	 */
-	class random128StarStar : public detail::randomBase<std::uint64_t, 2> {
+	class xorRotateShiftRotateStarStarEngine : public detail::engine64Plus2Base {
 	public:
 		constexpr result_type operator()() noexcept override {
 			state_type to{state};
@@ -373,6 +412,11 @@ namespace gal::toolbox::random {
 					0xdddf9b1090aa7ac1 // 1101110111011111100110110001000010010000101010100111100000000000
 			};
 		}
+	};
+
+	class xorShiftRotate128PlusEngine : public detail::engine32Plus4Base {
+	public:
+
 	};
 }// namespace gal::toolbox::random
 
