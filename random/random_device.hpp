@@ -38,8 +38,13 @@ namespace gal::toolbox::random {
 		};
 
 		template<size_t N, size_t Total, std::unsigned_integral T>
-		constexpr T rotate_left(T value) noexcept {
+		constexpr T get_rotate_left(T value) noexcept {
 			return (value << N) | (value >> (Total - N));
+		}
+
+		template<size_t N, size_t Total, std::unsigned_integral T>
+		constexpr void rotate_left_to(T& value) noexcept {
+			value = (value << N) | (value >> (Total - N));
 		}
 
 		/**
@@ -138,31 +143,47 @@ namespace gal::toolbox::random {
 			}
 		};
 
-		class engine64Plus4Base : public engineBase<type_generator<bits_64_type, 4>> {
+		template<std::unsigned_integral T>
+		class engine4Base : public engineBase<type_generator<T, 4>> {
 		public:
-			using engineBase::engineBase;
+			using base_type	  = engineBase<type_generator<T, 4>>;
+			using result_type = typename base_type::result_type;
+			using state_type  = typename base_type::state_type;
 
-			constexpr result_type operator()() noexcept override {
+			using engineBase<type_generator<T, 4>>::engineBase;
+
+			constexpr result_type operator()() noexcept final {
 				auto result = operator_call_result();
-				auto t		= state[1] << 17;
-
-				state[2] ^= state[0];
-				state[3] ^= state[1];
-
-				state[1] ^= state[2];
-				state[0] ^= state[3];
-
-				state[2] ^= t;
-				state[3] = detail::rotate_left<45, bits_of_this>(state[3]);
-
+				operator_call_end();
 				return result;
 			}
 
+		private:
+			constexpr virtual result_type operator_call_result() noexcept = 0;
+			constexpr virtual void		  operator_call_end() noexcept	  = 0;
+		};
+
+		class engine64x4Base : public engine4Base<bits_64_type> {
+		public:
+			using engine4Base::engine4Base;
+
 		protected:
-			using engineBase::state;
+			using engine4Base::state;
 
 		private:
 			constexpr virtual result_type operator_call_result() noexcept = 0;
+			constexpr virtual void		  operator_call_end() noexcept override {
+				   auto t = state[1] << 17;
+
+				   state[2] ^= state[0];
+				   state[3] ^= state[1];
+
+				   state[1] ^= state[2];
+				   state[0] ^= state[3];
+
+				   state[2] ^= t;
+				   detail::rotate_left_to<45, bits_of_this>(state[3]);
+			}
 
 			/**
 			 * @brief This is the jump function for the generator. It is equivalent
@@ -170,13 +191,13 @@ namespace gal::toolbox::random {
 			 * non-overlapping subsequences for parallel computations.
 			 * @return generated jump steps
 			 */
-			constexpr state_type		  jump_steps_generator() noexcept override {
-				 return {
-						 0x180ec6d33cfd0aba,// 1100000001110110001101101001100111100111111010000101100000000
-						 0xd5a61266f0c9392c,// 1101010110100110000100100110011011110000110010010011100000000000
-						 0xa9582618e03fc9aa,// 1010100101011000001001100001100011100000001111111100100000000000
-						 0x39abdc4529b1661c // 11100110101011110111000100010100101001101100010110011000000000
-				 };
+			constexpr state_type jump_steps_generator() noexcept override {
+				return {
+						0x180ec6d33cfd0aba,// 1100000001110110001101101001100111100111111010000101100000000
+						0xd5a61266f0c9392c,// 1101010110100110000100100110011011110000110010010011100000000000
+						0xa9582618e03fc9aa,// 1010100101011000001001100001100011100000001111111100100000000000
+						0x39abdc4529b1661c // 11100110101011110111000100010100101001101100010110011000000000
+				};
 			}
 
 			/**
@@ -196,7 +217,29 @@ namespace gal::toolbox::random {
 			}
 		};
 
-		class engine64Plus2Base : public engineBase<type_generator<bits_64_type, 2>> {
+		class engine32x4Base : public engine4Base<bits_32_type> {
+		public:
+			using engine4Base::engine4Base;
+
+		protected:
+			using engine4Base::state;
+
+		private:
+			constexpr virtual result_type operator_call_result() noexcept = 0;
+			constexpr virtual void		  operator_call_end() noexcept override {
+				   auto t = state[1] << 9;
+				   state[2] ^= state[0];
+				   state[3] ^= state[1];
+
+				   state[1] ^= state[2];
+				   state[0] ^= state[3];
+
+				   state[2] ^= t;
+				   detail::rotate_left_to<11, bits_of_this>(state[3]);
+			}
+		};
+
+		class engine64x2Base : public engineBase<type_generator<bits_64_type, 2>> {
 		public:
 			using engineBase::engineBase;
 
@@ -204,12 +247,62 @@ namespace gal::toolbox::random {
 			using engineBase::state;
 		};
 
-		class engine32Plus4Base : public engineBase<type_generator<bits_32_type, 4>> {
+		class engine32x4Base : public engineBase<type_generator<bits_32_type, 4>> {
 		public:
 			using engineBase::engineBase;
 
+			constexpr result_type operator()() noexcept override {
+				auto result = operator_call_result();
+				auto t		= state[1] << 9;
+
+				state[2] ^= state[0];
+				state[3] ^= state[1];
+
+				state[1] ^= state[2];
+				state[0] ^= state[3];
+
+				state[2] ^= t;
+				detail::rotate_left_to<11, bits_of_this>(state[3]);
+
+				return result;
+			}
+
 		protected:
 			using engineBase::state;
+
+		private:
+			constexpr virtual result_type operator_call_result() noexcept = 0;
+
+			/**
+			 * @brief This is the jump function for the generator. It is equivalent
+			 * to 2^64 calls to operator(); it can be used to generate 2^64
+			 * non-overlapping subsequences for parallel computations.
+			 * @return generated jump steps
+			 */
+			constexpr state_type		  jump_steps_generator() noexcept override {
+				 return {
+						 0x8764000b,// 10000111011001000000000000001011
+						 0xf542d2d3,// 11110101010000101101001011010011
+						 0x6fa035c3,// 1101111101000000011010111000011
+						 0x77f2db5b // 1110111111100101101101101011011
+				 };
+			}
+
+			/**
+			 * @brief This is the long-jump function for the generator. It is equivalent to
+			 * 2^96 calls to operator(); it can be used to generate 2^32 starting points,
+			 * from each of which jump() will generate 2^32 non-overlapping
+			 * subsequences for parallel distributed computations.
+			 * @return generated long jump steps
+			 */
+			constexpr state_type long_jump_steps_generator() noexcept override {
+				return {
+						0xb523952e,// 10110101001000111001010100101110
+						0x0b6f099f,// 1011011011110000100110011111
+						0xccf5a0ef,// 11001100111101011010000011101111
+						0x1c580662 // 11100010110000000011001100010
+				};
+			}
 		};
 	}// namespace detail
 
@@ -219,9 +312,9 @@ namespace gal::toolbox::random {
 	 * Footprint: 32 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoshiro256plus.c
 	 */
-	class xorShiftRotate256PlusEngine : public detail::engine64Plus4Base {
+	class xorShiftRotate256PlusEngine : public detail::engine64x4Base {
 	public:
-		using engine64Plus4Base::engine64Plus4Base;
+		using engine64x4Base::engine64x4Base;
 
 	private:
 		constexpr result_type operator_call_result() noexcept override {
@@ -235,13 +328,13 @@ namespace gal::toolbox::random {
 	 * Footprint: 32 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoshiro256plusplus.c
 	 */
-	class xorShiftRotate256PlusPlusEngine : public detail::engine64Plus4Base {
+	class xorShiftRotate256PlusPlusEngine : public detail::engine64x4Base {
 	public:
-		using engine64Plus4Base::engine64Plus4Base;
+		using engine64x4Base::engine64x4Base;
 
 	private:
 		constexpr result_type operator_call_result() noexcept override {
-			return detail::rotate_left<23, bits_of_this>(state[0] + state[3]) + state[0];
+			return detail::get_rotate_left<23, bits_of_this>(state[0] + state[3]) + state[0];
 		}
 	};
 
@@ -251,13 +344,39 @@ namespace gal::toolbox::random {
 	 * Footprint: 32 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoshiro256starstar.c
 	 */
-	class xorShiftRotate256StarStarEngine : public detail::engine64Plus4Base {
+	class xorShiftRotate256StarStarEngine : public detail::engine64x4Base {
 	public:
-		using engine64Plus4Base::engine64Plus4Base;
+		using engine64x4Base::engine64x4Base;
 
 	private:
 		constexpr result_type operator_call_result() noexcept override {
-			return detail::rotate_left<7, bits_of_this>(state[1] * 5) * 9;
+			return detail::get_rotate_left<7, bits_of_this>(state[1] * 5) * 9;
+		}
+	};
+
+	/**
+	 * Output: 32 bits
+	 * Period: 2^128 - 1
+	 * Footprint: 16 bytes
+	 * Original implementation: http://prng.di.unimi.it/xoshiro128plus.c
+	 */
+	class xorShiftRotate128PlusEngine : public detail::engine32x4Base {
+	public:
+		using engine32x4Base::engine32x4Base;
+
+	private:
+		constexpr result_type operator_call_result() noexcept override {
+			return state[0] + state[3];
+		}
+	};
+
+	class xorShiftRotate128PlusPLusEngine : public detail::engine32x4Base {
+	public:
+		using engine32x4Base::engine32x4Base;
+
+	private:
+		constexpr result_type operator_call_result() noexcept override {
+			return detail::get_rotate_left<7, bits_of_this>(state[0] + state[3]) + state[0];
 		}
 	};
 
@@ -267,7 +386,7 @@ namespace gal::toolbox::random {
 	 * Footprint: 16 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoroshiro128plus.c
 	 */
-	class xorRotateShiftRotate128PlusEngine : public detail::engine64Plus2Base {
+	class xorRotateShiftRotate128PlusEngine : public detail::engine64x2Base {
 	public:
 		constexpr result_type operator()() noexcept override {
 			state_type to{state};
@@ -277,8 +396,8 @@ namespace gal::toolbox::random {
 			to[1] ^= to[0];
 
 			state = {
-					detail::rotate_left<24, bits_of_this>(to[0]) ^ to[1] ^ (to[1] << 16),
-					detail::rotate_left<37, bits_of_this>(to[1])};
+					detail::get_rotate_left<24, bits_of_this>(to[0]) ^ to[1] ^ (to[1] << 16),
+					detail::get_rotate_left<37, bits_of_this>(to[1])};
 
 			return result;
 		}
@@ -318,18 +437,18 @@ namespace gal::toolbox::random {
 	 * Footprint: 16 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoroshiro128plusplus.c
 	 */
-	class xorRotateShiftRotatePlusPlusEngine : public detail::engine64Plus2Base {
+	class xorRotateShiftRotate128PlusPlusEngine : public detail::engine64x2Base {
 	public:
 		constexpr result_type operator()() noexcept override {
 			state_type to{state};
 
-			auto	   result = detail::rotate_left<17, bits_of_this>(to[0] + to[1]) + to[0];
+			auto	   result = detail::get_rotate_left<17, bits_of_this>(to[0] + to[1]) + to[0];
 
 			to[1] ^= to[0];
 
 			state = {
-					detail::rotate_left<49, bits_of_this>(to[0]) ^ to[1] ^ (to[1] << 21),
-					detail::rotate_left<28, bits_of_this>(to[1])};
+					detail::get_rotate_left<49, bits_of_this>(to[0]) ^ to[1] ^ (to[1] << 21),
+					detail::get_rotate_left<28, bits_of_this>(to[1])};
 
 			return result;
 		}
@@ -369,18 +488,18 @@ namespace gal::toolbox::random {
 	 * Footprint: 16 bytes
 	 * Original implementation: http://prng.di.unimi.it/xoroshiro128starstar.c
 	 */
-	class xorRotateShiftRotateStarStarEngine : public detail::engine64Plus2Base {
+	class xorRotateShiftRotate128StarStarEngine : public detail::engine64x2Base {
 	public:
 		constexpr result_type operator()() noexcept override {
 			state_type to{state};
 
-			auto	   result = detail::rotate_left<7, bits_of_this>(to[0] * 5) * 9;
+			auto	   result = detail::get_rotate_left<7, bits_of_this>(to[0] * 5) * 9;
 
 			to[1] ^= to[0];
 
 			state = {
-					detail::rotate_left<24, bits_of_this>(to[0]) ^ to[1] ^ (to[1] << 16),
-					detail::rotate_left<37, bits_of_this>(to[1])};
+					detail::get_rotate_left<24, bits_of_this>(to[0]) ^ to[1] ^ (to[1] << 16),
+					detail::get_rotate_left<37, bits_of_this>(to[1])};
 
 			return result;
 		}
@@ -412,11 +531,6 @@ namespace gal::toolbox::random {
 					0xdddf9b1090aa7ac1 // 1101110111011111100110110001000010010000101010100111100000000000
 			};
 		}
-	};
-
-	class xorShiftRotate128PlusEngine : public detail::engine32Plus4Base {
-	public:
-
 	};
 }// namespace gal::toolbox::random
 

@@ -51,7 +51,7 @@ namespace {
 		{
 			for (auto i = 0; i < 10; ++i) {
 				xorShiftRotate256PlusPlusEngine engine{};
-				std::set<std::uint64_t> set;
+				std::set<std::uint64_t>			set;
 				for (auto j = 0; j < 100000; ++j) {
 					set.insert(engine());
 				}
@@ -62,9 +62,9 @@ namespace {
 		std::cout << "\n# Test overlap2 (100000 times) \n";
 		{
 			for (auto i = 0; i < 10; ++i) {
-				xorShiftRotate256PlusPlusEngine	   engine{};
-				std::uniform_int_distribution<int> dist;
-				std::set<std::uint64_t>			   set;
+				xorShiftRotate256PlusPlusEngine												engine{};
+				std::uniform_int_distribution<xorShiftRotate256PlusPlusEngine::result_type> dist;
+				std::set<xorShiftRotate256PlusPlusEngine::result_type>						set;
 				for (auto j = 0; j < 100000; ++j) {
 					set.insert(dist(engine));
 				}
