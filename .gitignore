@@ -35,3 +35,5 @@ xcuserdata/
 
 /exec/cmake-build-debug/
 /exec/cmake-build-release/
+/exec/cmake-build-debug/googletest-src/
+/exec/cmake-build-release/googletest-src/
