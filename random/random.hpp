@@ -94,13 +94,16 @@ namespace gal::toolbox::random {
 			constexpr explicit engineBase(result_type seed = default_seed) noexcept : state(seed_generator<T>{seed}.template generator_seeds()) {}
 
 			constexpr result_type operator()() noexcept {
-				auto result = operator_call_result();
-				operator_call_end();
+				auto result = result_peek();
+				result_next();
 				return result;
 			}
 
-			constexpr void jump() noexcept {
-				jump_support(jump_steps_generator());
+			[[nodiscard("If you do not receive the return value of engineBase::result_peek, this call is meaningless overhead")]] constexpr virtual result_type result_peek() const noexcept = 0;
+			constexpr virtual void																																result_next() noexcept		 = 0;
+
+			constexpr void																																		jump() noexcept {
+				 jump_support(jump_steps_generator());
 			}
 
 			constexpr void long_jump() noexcept {
@@ -119,27 +122,24 @@ namespace gal::toolbox::random {
 			state_type state;
 
 		private:
-			[[nodiscard]] constexpr virtual result_type operator_call_result() const noexcept	   = 0;
-			constexpr virtual void						operator_call_end() noexcept			   = 0;
+			[[nodiscard]] constexpr virtual state_type jump_steps_generator() const noexcept	  = 0;
+			[[nodiscard]] constexpr virtual state_type long_jump_steps_generator() const noexcept = 0;
 
-			[[nodiscard]] constexpr virtual state_type	jump_steps_generator() const noexcept	   = 0;
-			[[nodiscard]] constexpr virtual state_type	long_jump_steps_generator() const noexcept = 0;
+			constexpr virtual void					   jump_support(const state_type& steps) noexcept {
+				state_type to{};
 
-			constexpr virtual void						jump_support(const state_type& steps) noexcept {
-				 state_type to{};
+				for (const auto& step: steps) {
+					for (auto bit = 0; bit < bits_of_this; ++bit) {
+						if (step & result_type{1} << bit) {
+							for (auto i = 0; i < to.size(); ++i) {
+								to[i] ^= state[i];
+							}
+						}
+						operator()();
+					}
+				}
 
-				 for (const auto& step: steps) {
-					 for (auto bit = 0; bit < bits_of_this; ++bit) {
-						 if (step & result_type{1} << bit) {
-							 for (auto i = 0; i < to.size(); ++i) {
-								 to[i] ^= state[i];
-							 }
-						 }
-						 operator()();
-					 }
-				 }
-
-				 state.swap(to);
+				state.swap(to);
 			}
 		};
 
@@ -147,11 +147,7 @@ namespace gal::toolbox::random {
 		public:
 			using engineBase::engineBase;
 
-		protected:
-			using engineBase::state;
-
-		private:
-			constexpr void operator_call_end() noexcept override {
+			constexpr void result_next() noexcept override {
 				result_type t = state[1] << 17;
 
 				state[2] ^= state[0];
@@ -164,6 +160,10 @@ namespace gal::toolbox::random {
 				detail::rotate_left_to<45, bits_of_this>(state[3]);
 			}
 
+		protected:
+			using engineBase::state;
+
+		private:
 			/**
 			 * @brief This is the jump function for the generator. It is equivalent
 			 * to 2^128 calls to operator(); it can be used to generate 2^128
@@ -200,11 +200,7 @@ namespace gal::toolbox::random {
 		public:
 			using engineBase::engineBase;
 
-		protected:
-			using engineBase::state;
-
-		private:
-			constexpr void operator_call_end() noexcept override {
+			constexpr void result_next() noexcept override {
 				result_type t = state[1] << 9;
 				state[2] ^= state[0];
 				state[3] ^= state[1];
@@ -216,6 +212,10 @@ namespace gal::toolbox::random {
 				detail::rotate_left_to<11, bits_of_this>(state[3]);
 			}
 
+		protected:
+			using engineBase::state;
+
+		private:
 			/**
 			 * @brief This is the jump function for the generator. It is equivalent
 			 * to 2^64 calls to operator(); it can be used to generate 2^64
@@ -295,8 +295,7 @@ namespace gal::toolbox::random {
 	public:
 		using engine64x4Base::engine64x4Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorShiftRotate256PlusEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return state[0] + state[3];
 		}
 	};
@@ -311,8 +310,7 @@ namespace gal::toolbox::random {
 	public:
 		using engine64x4Base::engine64x4Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorShiftRotate256PlusPlusEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return detail::get_rotate_left<23, bits_of_this>(state[0] + state[3]) + state[0];
 		}
 	};
@@ -327,8 +325,7 @@ namespace gal::toolbox::random {
 	public:
 		using engine64x4Base::engine64x4Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorShiftRotate256StarEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return detail::get_rotate_left<7, bits_of_this>(state[1] * 5) * 9;
 		}
 	};
@@ -343,8 +340,7 @@ namespace gal::toolbox::random {
 	public:
 		using engine32x4Base::engine32x4Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorShiftRotate128PlusEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return state[0] + state[3];
 		}
 	};
@@ -359,8 +355,7 @@ namespace gal::toolbox::random {
 	public:
 		using engine32x4Base::engine32x4Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorShiftRotate128PlusPlusEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return detail::get_rotate_left<7, bits_of_this>(state[0] + state[3]) + state[0];
 		}
 	};
@@ -375,8 +370,7 @@ namespace gal::toolbox::random {
 	public:
 		using engine32x4Base::engine32x4Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorShiftRotate128StarStarEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return detail::get_rotate_left<7, bits_of_this>(state[1] * 5) * 9;
 		}
 	};
@@ -391,12 +385,11 @@ namespace gal::toolbox::random {
 	public:
 		using engine64x2Base::engine64x2Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorRotateShiftRotate128PlusEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return state[0] + state[1];
 		}
 
-		constexpr void operator_call_end() noexcept override {
+		constexpr void result_next() noexcept override {
 			auto s1 = state[1] ^ state[0];
 
 			detail::rotate_left_to<24, bits_of_this>(state[0]);
@@ -417,12 +410,11 @@ namespace gal::toolbox::random {
 	public:
 		using engine64x2Base::engine64x2Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorRotateShiftRotate128PlusPlusEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return detail::get_rotate_left<17, bits_of_this>(state[0] + state[1]) + state[0];
 		}
 
-		constexpr void operator_call_end() noexcept override {
+		constexpr void result_next() noexcept override {
 			auto s1 = state[1] ^ state[0];
 
 			detail::rotate_left_to<49, bits_of_this>(state[0]);
@@ -470,12 +462,11 @@ namespace gal::toolbox::random {
 	public:
 		using engine64x2Base::engine64x2Base;
 
-	private:
-		[[nodiscard]] constexpr result_type operator_call_result() const noexcept override {
+		[[nodiscard("If you do not receive the return value of xorRotateShiftRotate128StarStarEngine::result_peek, this call is meaningless overhead")]] constexpr result_type result_peek() const noexcept override {
 			return detail::get_rotate_left<7, bits_of_this>(state[0] * 5) * 9;
 		}
 
-		constexpr void operator_call_end() noexcept override {
+		constexpr void result_next() noexcept override {
 			auto s1 = state[1] ^ state[0];
 
 			detail::rotate_left_to<24, bits_of_this>(state[0]);
