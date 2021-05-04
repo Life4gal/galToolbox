@@ -53,13 +53,11 @@ namespace gal::toolbox::concepts {
 		namespace iterator {
 			template<typename ContainerIterator>
 			concept is_standard_iterator = requires {
-				typename ContainerIterator::iterator_type;
 				typename ContainerIterator::iterator_category;
 				typename ContainerIterator::value_type;
 				typename ContainerIterator::difference_type;
 				typename ContainerIterator::reference;
 				typename ContainerIterator::pointer;
-				typename ContainerIterator::iterator_concept;
 			};
 
 			template<typename ContainerIterator>

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <random/random_device.hpp>
+#include <random/random.hpp>
 #include <set>
 
 namespace {
@@ -17,7 +17,7 @@ namespace {
 	TEST(TEST_RANDOM_DEVICE, WHY_I_CANNOT_USE_FORMAT) {
 		using namespace gal::toolbox::random;
 
-		constexpr auto test_times = 1000000;
+		constexpr auto test_times = 10000;
 
 		std::cout << std::fixed << std::setprecision(3);
 
