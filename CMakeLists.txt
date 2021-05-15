@@ -27,11 +27,19 @@ file(
 		"${CMAKE_CURRENT_SOURCE_DIR}/random/*.hpp"
 )
 
+file(
+		GLOB_RECURSE
+		galToolboxParser
+		CONFIGURE_DEPENDS
+		"${CMAKE_CURRENT_SOURCE_DIR}/parser/*.hpp"
+)
+
 add_library(
 		${PROJECT_NAME}
 		${galToolboxConcept}
 		${galToolboxDynamicBitset}
 		${galToolboxRandom}
+		${galToolboxParser}
 )
 
 set_target_properties(
