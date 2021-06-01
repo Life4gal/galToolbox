@@ -1,6 +1,7 @@
 #ifndef GAL_TOOLBOX_CMD_LINE_PARSER_HPP
 #define GAL_TOOLBOX_CMD_LINE_PARSER_HPP
 
+#include <exception>
 #include <memory>
 #include <regex>
 #include <string>
@@ -8,7 +9,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <exception>
 
 #if !defined(GAL_ASSERT)
 #if __has_include(<cassert>)
@@ -17,8 +17,6 @@
 #define GAL_ASSERT
 #endif
 #endif
-
-#define GAL_TOOLBOX_CSTRING_WIDE_WRAPPER(str) str
 
 namespace gal::toolbox::parser {
 	namespace detail {
@@ -40,18 +38,8 @@ namespace gal::toolbox::parser {
 		template<typename T>
 		constexpr static bool	   is_container_v = is_container<T>::value;
 
-		constexpr static char_type delimiter	  = GAL_TOOLBOX_CSTRING_WIDE_WRAPPER(',');
-		constexpr static char_type begin		  = GAL_TOOLBOX_CSTRING_WIDE_WRAPPER('-');
-
-		template<std::integral T>
-		string to_string(T value) {
-			if constexpr (std::is_same_v<string::value_type, char>)// NOLINT
-			{
-				return std::to_string(value);
-			} else {
-				return std::to_wstring(value);
-			}
-		}
+		constexpr static char_type delimiter	  = ',';
+		constexpr static char_type begin		  = '-';
 
 		template<typename T>
 		void do_parse(const string& text, T& out);
@@ -192,11 +180,9 @@ namespace gal::toolbox::parser {
 	};
 	*/
 
-	class parser_exception : std::exception
-	{
+	class parser_exception : std::exception {
 	public:
-		const char * what() const noexcept override
-		{
+		[[nodiscard]] const char* what() const noexcept override {
 			return "parser exception";
 		}
 	};
@@ -350,9 +336,9 @@ namespace gal::toolbox::parser {
 
 
 	namespace detail {
-		constexpr const char_type* integer_pattern = GAL_TOOLBOX_CSTRING_WIDE_WRAPPER("(-)?(0x|0X)?([0-9a-zA-Z]+)|((0x|0X)?0)");
-		constexpr const char_type* truthy_pattern  = GAL_TOOLBOX_CSTRING_WIDE_WRAPPER("(t|T)(rue)?|1");
-		constexpr const char_type* falsy_pattern   = GAL_TOOLBOX_CSTRING_WIDE_WRAPPER("(f|F)(alse)?|0");
+		constexpr const char_type* integer_pattern = "(-)?(0x|0X)?([0-9a-zA-Z]+)|((0x|0X)?0)";
+		constexpr const char_type* truthy_pattern  = "(t|T)(rue)?|1";
+		constexpr const char_type* falsy_pattern   = "(f|F)(alse)?|0";
 
 		bool					   get_text_boolean_result(const string& text) {
 			  static std::basic_regex<char_type>		 true_regex{truthy_pattern};
@@ -406,7 +392,7 @@ namespace gal::toolbox::parser {
 
 			if (match.length(4) > 0) {
 				ret.hex	  = match[5].matched;
-				ret.value = to_string(0);
+				ret.value = std::to_string(0);
 			}
 
 			return ret;
@@ -439,7 +425,7 @@ namespace gal::toolbox::parser {
 			}
 
 			if constexpr (std::is_signed_v<real_from>) {
-				if(negative) {
+				if (negative) {
 					if (total > static_cast<real_to>(std::numeric_limits<real_from>::min())) {
 						// todo: throw a certain exception
 						throw parser_exception{};
@@ -454,9 +440,7 @@ namespace gal::toolbox::parser {
 
 			if (negative) {
 				return static_cast<real_from>(-static_cast<real_from>(total - 1) - 1);
-			}
-			else
-			{
+			} else {
 				return static_cast<real_from>(total);
 			}
 		}
