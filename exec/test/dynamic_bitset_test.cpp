@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <vector>
-#define GAL_DYNAMIC_BITSET_USING_STD
 #include <dynamic_bitset/dynamic_bitset.hpp>
 
 namespace {

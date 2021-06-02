@@ -2,6 +2,7 @@
 #define GAL_TOOLBOX_DYNAMIC_BITSET_FWD_HPP
 
 #include <concepts>
+#include <vector>
 
 namespace gal::toolbox::dynamic_bitset {
 	template<std::integral T, template<typename> typename Allocator, template<typename, typename> typename Container>
@@ -25,18 +26,8 @@ namespace gal::toolbox::dynamic_bitset {
 	}
 	class basic_dynamic_bitset;
 
-#if defined(GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER)
-	#if defined(GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR)
-		template<typename T = GAL_DYNAMIC_BITSET_DEFAULT_TYPE>
-		using dynamic_bitset = basic_dynamic_bitset<T, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
-	#else
-		template<typename T, template<typename> typename Allocator>
-		using dynamic_bitset = basic_dynamic_bitset<T, Allocator, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
-	#endif
-#else
-	template<typename T, template<typename> typename Allocator, template<typename, typename> typename Container>
-	using dynamic_bitset = basic_dynamic_bitset<T, Allocator, Container>;
-#endif
+	template<typename T = std::size_t>
+	using dynamic_bitset = basic_dynamic_bitset<T, std::allocator, std::vector>;
 }// namespace gal::toolbox::dynamic_bitset
 
 #endif//GAL_TOOLBOX_DYNAMIC_BITSET_FWD_HPP

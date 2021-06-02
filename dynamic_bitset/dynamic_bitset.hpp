@@ -7,86 +7,28 @@
 #ifndef GAL_TOOLBOX_DYNAMIC_BITSET_HPP
 #define GAL_TOOLBOX_DYNAMIC_BITSET_HPP
 
-/**
- * Necessary dependency:
- *      <concepts>
- *      <memory>
- *
- * Available macros:
- *      GAL_DYNAMIC_BITSET_DEFAULT_TYPE: define dynamic_bitset default type, if not defined
- *
- *      GAL_ASSERT: just assert
- *      GAL_BITS_OF_TYPE: get bits of type
- *
- *      GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING: make dynamic_bitset(std::basic_string) available
- *      GAL_DYNAMIC_BITSET_USING_OSTREAM: make std::basic_ostream << dynamic_bitset available
- *      GAL_DYNAMIC_BITSET_USING_ISTREAM: make std::basic_istream >> dynamic_bitset available
- *          GAL_DYNAMIC_BITSET_CLEAR_BEFORE_READ_FROM_ISTREAM: let dynamic_bitset clear before read from std::basic_istream
- */
-
-#if !defined(GAL_DYNAMIC_BITSET_DEFAULT_TYPE)
-#define GAL_DYNAMIC_BITSET_DEFAULT_TYPE unsigned int
-#endif
-
-#if defined(GAL_DYNAMIC_BITSET_USING_STD)
-#include <vector>
-#include <memory>
-#define GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER std::vector
-#define GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR std::allocator
-#else
-#if __has_include(<vector>)
-#define GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER std::vector
-#endif
-#if __has_include(<memory>)
-#define GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR std::allocator
-#endif
-#endif
-
-#if !defined(GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING) && __has_include(<string>)
-#define GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING true
-#endif
-
-#if !defined(GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW) && __has_include(<string_view>)
-#define GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW true
-#endif
-
-#if !defined(GAL_DYNAMIC_BITSET_USING_OSTREAM)
-#define GAL_DYNAMIC_BITSET_USING_OSTREAM true
-#endif
-
-#if !defined(GAL_DYNAMIC_BITSET_USING_ISTREAM)
-#define GAL_DYNAMIC_BITSET_USING_ISTREAM true
-#endif
-
 #include <dynamic_bitset/dynamic_bitset_fwd.hpp>
-
-#if !defined(GAL_ASSERT)
-	#if __has_include(<cassert>)
-		#define GAL_ASSERT assert
-	#else
-		#define GAL_ASSERT
-	#endif
-#endif
-
-#if !defined(GAL_BITS_OF_TYPE)
-	#if __has_include(<limits>)
-		#define GAL_BITS_OF_TYPE(T) std::numeric_limits<T>::digits
-	#else
-		#define GAL_BITS_OF_TYPE(T) sizeof(T) * CHAR_BIT
-	#endif
-#endif
-
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING || GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW || GAL_DYNAMIC_BITSET_USING_OSTREAM || GAL_DYNAMIC_BITSET_USING_ISTREAM
 #include <iosfwd>
 #include <locale>
+#include <memory>
+#include <numbers>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#if !defined(GAL_ASSERT)
+#if __has_include(<cassert>)
+#define GAL_ASSERT assert
+#else
+#define GAL_ASSERT
+#endif
 #endif
 
 namespace gal::toolbox::dynamic_bitset {
 	namespace detail {
 		template<std::unsigned_integral T>
-		[[nodiscard("If you do not receive the return value of bits_of_type, this call is meaningless overhead")]]
-		constexpr size_t bits_of_type() {
-			return GAL_BITS_OF_TYPE(T);
+		[[nodiscard("If you do not receive the return value of bits_of_type, this call is meaningless overhead")]] constexpr size_t bits_of_type() {
+			return std::numeric_limits<T>::digits;
 		}
 
 		template<typename T, template<typename> typename Allocator, template<typename, typename> typename Container>
@@ -117,15 +59,13 @@ namespace gal::toolbox::dynamic_bitset {
 			}
 
 		public:
-			auto operator&() = delete; /* NOLINT, let IDE stop prompting us that 'Do not overload unary operator&, it is dangerous' */
+			auto																														   operator&() = delete; /* NOLINT, let IDE stop prompting us that 'Do not overload unary operator&, it is dangerous' */
 
-			[[nodiscard("If you do not receive the return value of bit_ref::operator bool, this call is meaningless overhead")]]
-			constexpr operator bool() const noexcept /* NOLINT, let IDE stop prompting us to add explicit for implicit conversion */ {
+			[[nodiscard("If you do not receive the return value of bit_ref::operator bool, this call is meaningless overhead")]] constexpr operator bool() const noexcept /* NOLINT, let IDE stop prompting us to add explicit for implicit conversion */ {
 				return (value & mask) != 0;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_ref::operator~, this call is meaningless overhead")]]
-			constexpr bool operator~() const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_ref::operator~, this call is meaningless overhead")]] constexpr bool operator~() const noexcept {
 				return !this->operator bool();
 			}
 
@@ -208,8 +148,7 @@ namespace gal::toolbox::dynamic_bitset {
 				  index(offset) {}
 
 		public:
-			[[nodiscard("If you do not receive the return value of bit_it::operator++(int), this call is meaningless overhead (use operator++() instead)")]]
-			constexpr bit_it operator++(int) const noexcept /* NOLINT */ {
+			[[nodiscard("If you do not receive the return value of bit_it::operator++(int), this call is meaningless overhead (use operator++() instead)")]] constexpr bit_it operator++(int) const noexcept /* NOLINT */ {
 				GAL_ASSERT(index + 1 > index);
 				auto copy{*this};
 				++index;
@@ -222,8 +161,7 @@ namespace gal::toolbox::dynamic_bitset {
 				return *this;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::operator--(int), this call is meaningless overhead (use operator--() instead)")]]
-			constexpr bit_it operator--(int) const noexcept /* NOLINT */ {
+			[[nodiscard("If you do not receive the return value of bit_it::operator--(int), this call is meaningless overhead (use operator--() instead)")]] constexpr bit_it operator--(int) const noexcept /* NOLINT */ {
 				GAL_ASSERT(index > 0);
 				auto copy{*this};
 				--index;
@@ -236,8 +174,7 @@ namespace gal::toolbox::dynamic_bitset {
 				return *this;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::operator+, this call is meaningless overhead")]]
-			constexpr bit_it operator+(size_type n) const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_it::operator+, this call is meaningless overhead")]] constexpr bit_it operator+(size_type n) const noexcept {
 				GAL_ASSERT(index + n > index);
 				return {iterator, index + n};
 			}
@@ -248,8 +185,7 @@ namespace gal::toolbox::dynamic_bitset {
 				return *this;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::operator-, this call is meaningless overhead")]]
-			constexpr bit_it operator-(size_type n) const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_it::operator-, this call is meaningless overhead")]] constexpr bit_it operator-(size_type n) const noexcept {
 				GAL_ASSERT(index >= n);
 				return {iterator, index - n};
 			}
@@ -260,24 +196,20 @@ namespace gal::toolbox::dynamic_bitset {
 				return *this;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::distance, this call is meaningless overhead")]]
-			constexpr size_type distance(const bit_it& other) const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_it::distance, this call is meaningless overhead")]] constexpr size_type distance(const bit_it& other) const noexcept {
 				GAL_ASSERT(other.index <= index);
 				return index - other.index;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::operator==, this call is meaningless overhead")]]
-			constexpr bool operator==(const bit_it& other) const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_it::operator==, this call is meaningless overhead")]] constexpr bool operator==(const bit_it& other) const noexcept {
 				return index == other.index && iterator == other.iterator;
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::operator!=, this call is meaningless overhead")]]
-			constexpr bool operator!=(const bit_it& other) const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_it::operator!=, this call is meaningless overhead")]] constexpr bool operator!=(const bit_it& other) const noexcept {
 				return !operator==(other);
 			}
 
-			[[nodiscard("If you do not receive the return value of bit_it::operator*, this call is meaningless overhead")]]
-			constexpr value_type operator*() const noexcept {
+			[[nodiscard("If you do not receive the return value of bit_it::operator*, this call is meaningless overhead")]] constexpr value_type operator*() const noexcept {
 				return {(iterator + ref_container::block_index(index)).operator*(), ref_container::bit_index(index)};
 			}
 
@@ -288,8 +220,7 @@ namespace gal::toolbox::dynamic_bitset {
 	}// namespace detail
 
 	template<std::integral T, template<typename> typename Allocator, template<typename, typename> typename Container>
-	requires
-	requires {
+	requires requires {
 		typename Container<T, Allocator<T>>::value_type;
 		typename Container<T, Allocator<T>>::size_type;
 		typename Container<T, Allocator<T>>::allocator_type;
@@ -331,8 +262,7 @@ namespace gal::toolbox::dynamic_bitset {
 		/**
 		 * @brief Default ctor
 		 */
-		constexpr basic_dynamic_bitset()
-				noexcept(std::is_nothrow_default_constructible_v<container_type>)
+		constexpr basic_dynamic_bitset() noexcept(std::is_nothrow_default_constructible_v<container_type>)
 			: container(),
 			  total_size() {}
 
@@ -340,8 +270,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Ctor from alloc
 		 * @param alloc the allocator of container
 		 */
-		constexpr explicit basic_dynamic_bitset(const allocator_type& alloc)
-				noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>)
+		constexpr explicit basic_dynamic_bitset(const allocator_type& alloc) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>)
 			: container(alloc),
 			  total_size() {}
 
@@ -351,17 +280,13 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param value the value to init
 		 * @param alloc the allocator of container
 		 */
-		constexpr explicit basic_dynamic_bitset(size_type size, value_type_ref_if_cheaper value = {}, const allocator_type& alloc = {})
-				noexcept(
-						std::is_nothrow_constructible_v<container_type, allocator_type> &&
-						noexcept(std::declval<basic_dynamic_bitset>().init_from_value_type(size, value))
-						)
+		constexpr explicit basic_dynamic_bitset(size_type size, value_type_ref_if_cheaper value = {}, const allocator_type& alloc = {}) noexcept(
+				std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(std::declval<basic_dynamic_bitset>().init_from_value_type(size, value)))
 			: container(alloc),
 			  total_size() {
 			init_from_value_type(size, value);
 		}
 
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING
 		/**
 		 * @brief Ctor from str[pos~pos+n]
 		 * @tparam Char char_type of str
@@ -378,11 +303,7 @@ namespace gal::toolbox::dynamic_bitset {
 									   typename std::basic_string<Char, Traits, Alloc>::size_type pos,
 									   typename std::basic_string<Char, Traits, Alloc>::size_type n,
 									   size_type												  size	= npos,
-									   const allocator_type&									  alloc = {})
-				noexcept(
-						std::is_nothrow_constructible_v<container_type, allocator_type> &&
-				        noexcept(std::declval<basic_dynamic_bitset>().init_from_basic_string(str, pos, n, size))
-						)
+									   const allocator_type&									  alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(std::declval<basic_dynamic_bitset>().init_from_basic_string(str, pos, n, size)))
 			: container(alloc),
 			  total_size() {
 			init_from_basic_string(
@@ -404,12 +325,9 @@ namespace gal::toolbox::dynamic_bitset {
 		template<typename Char, typename Traits = std::char_traits<Char>, typename Alloc = std::allocator<Char>>
 		constexpr explicit basic_dynamic_bitset(const std::basic_string<Char, Traits, Alloc>&			   str,
 												typename std::basic_string<Char, Traits, Alloc>::size_type pos	 = {},
-												const allocator_type&									   alloc = {})
-				noexcept(noexcept(basic_dynamic_bitset(str, pos, std::basic_string<Char, Traits, Alloc>::npos, npos, alloc)))
+												const allocator_type&									   alloc = {}) noexcept(noexcept(basic_dynamic_bitset(str, pos, std::basic_string<Char, Traits, Alloc>::npos, npos, alloc)))
 			: basic_dynamic_bitset(str, pos, std::basic_string<Char, Traits, Alloc>::npos, npos, alloc) {}
-#endif
 
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW
 		/**
 		 * @brief Ctor from str_view[pos~pos+n]
 		 * @tparam Char char_type of str_view
@@ -421,15 +339,11 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param alloc the allocator of container
 		 */
 		template<typename Char, typename Traits = std::char_traits<Char>>
-		constexpr basic_dynamic_bitset(std::basic_string_view<Char, Traits>                     str,
-		                               typename std::basic_string_view<Char, Traits>::size_type pos,
-		                               typename std::basic_string_view<Char, Traits>::size_type n,
-		                               size_type                                                size	= npos,
-		                               const allocator_type&                                    alloc = {})
-		noexcept(
-				std::is_nothrow_constructible_v<container_type, allocator_type> &&
-				noexcept(std::declval<basic_dynamic_bitset>().init_from_basic_string_view(str, pos, n, size))
-				)
+		constexpr basic_dynamic_bitset(std::basic_string_view<Char, Traits>						str,
+									   typename std::basic_string_view<Char, Traits>::size_type pos,
+									   typename std::basic_string_view<Char, Traits>::size_type n,
+									   size_type												size  = npos,
+									   const allocator_type&									alloc = {}) noexcept(std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(std::declval<basic_dynamic_bitset>().init_from_basic_string_view(str, pos, n, size)))
 			: container(alloc),
 			  total_size() {
 			init_from_basic_string_view(
@@ -448,70 +362,25 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param alloc the allocator of container
 		 */
 		template<typename Char, typename Traits = std::char_traits<Char>>
-		constexpr explicit basic_dynamic_bitset(std::basic_string_view<Char, Traits>                        str,
-		                                        typename std::basic_string_view<Char, Traits>::size_type    pos	 = {},
-		                                        const allocator_type&                                       alloc = {})
-				noexcept(noexcept(basic_dynamic_bitset(str, pos, std::basic_string_view<Char, Traits>::npos, npos, alloc)))
-				: basic_dynamic_bitset(str, pos, std::basic_string_view<Char, Traits>::npos, npos, alloc) {}
-#endif
+		constexpr explicit basic_dynamic_bitset(std::basic_string_view<Char, Traits>					 str,
+												typename std::basic_string_view<Char, Traits>::size_type pos   = {},
+												const allocator_type&									 alloc = {}) noexcept(noexcept(basic_dynamic_bitset(str, pos, std::basic_string_view<Char, Traits>::npos, npos, alloc)))
+			: basic_dynamic_bitset(str, pos, std::basic_string_view<Char, Traits>::npos, npos, alloc) {}
 
 		template<typename Char>
 		constexpr explicit basic_dynamic_bitset(
-				const Char* str,
-				size_type pos,
-				size_type n,
-				size_type size = npos,
-				const allocator_type& alloc = {})
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW
-				noexcept(noexcept(basic_dynamic_bitset(std::basic_string_view<Char>{str}, pos, n, size, alloc))) : basic_dynamic_bitset(std::basic_string_view<Char>{str}, pos, n, size, alloc) {}
-#elif GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING
-				noexcept(noexcept(basic_dynamic_bitset(std::basic_string<Char>{str}, pos, n, size, alloc))) : basic_dynamic_bitset(std::basic_string<Char>{str}, pos, n, size, alloc) {}
-#else
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.resize(size))
-						){
-			GAL_ASSERT(n <= size);
-
-			size_type str_len = 0;
-			for(auto p = str; p; ++p){
-				++str_len;
-			}
-
-			// make sure the end pos is valid
-			auto len	  = std::min(n, str_len - pos);
-			auto num_bits = size != npos ? size : len;
-			container.resize(calc_blocks_needed(num_bits));
-			total_size			 = num_bits;
-
-			auto& fac			 = std::use_facet<std::ctype<Char>>(std::locale());
-			auto  one			 = fac.widen('1');
-			auto zero = fac.widen('0');
-
-			auto  shorter		 = std::min(num_bits, len);
-			using str_size_type = size_type;
-			using str_trait_type = typename std::char_traits<Char>::char_type;
-			for (str_size_type i = 0, begin = pos + shorter - 1; i < shorter; ++i) {
-				auto c = str[begin - i];
-
-				auto is_one = str_trait_type::eq(c, one);
-				if(!is_one && !str_trait_type::eq(c, zero)){
-					break;
-				}
-
-				if (is_one) {
-					set(i);
-				}
-			}
-		}
-#endif
+				const Char*			  str,
+				size_type			  pos,
+				size_type			  n,
+				size_type			  size	= npos,
+				const allocator_type& alloc = {}) noexcept(noexcept(basic_dynamic_bitset(std::basic_string_view<Char>{str}, pos, n, size, alloc)))
+			: basic_dynamic_bitset(std::basic_string_view<Char>{str}, pos, n, size, alloc) {}
 
 		template<typename Char>
 		constexpr explicit basic_dynamic_bitset(
-				const Char* str,
-				size_type pos,
-				const allocator_type& alloc = {})
-				noexcept(noexcept(basic_dynamic_bitset(str, pos, npos, npos, alloc)))
+				const Char*			  str,
+				size_type			  pos,
+				const allocator_type& alloc = {}) noexcept(noexcept(basic_dynamic_bitset(str, pos, npos, npos, alloc)))
 			: basic_dynamic_bitset(str, pos, npos, npos, alloc) {}
 
 		/**
@@ -522,25 +391,20 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param alloc the allocator of container
 		 */
 		template<std::input_iterator ContainerInputIterator>
-		requires
-		requires(ContainerInputIterator it){
+		requires requires(ContainerInputIterator it) {
 			std::is_convertible_v<decltype(*it), value_type>;
 		} &&
 				requires(container_type c) {
 			c.insert(c.end(), ContainerInputIterator{}, ContainerInputIterator{});
 		}
-		constexpr basic_dynamic_bitset(ContainerInputIterator first, ContainerInputIterator last, const allocator_type& alloc = {})
-				noexcept(
-						std::is_nothrow_constructible_v<container_type, allocator_type> &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.insert(std::declval<basic_dynamic_bitset>().container.begin(), first, last))
-						)
+		constexpr basic_dynamic_bitset(ContainerInputIterator first, ContainerInputIterator last, const allocator_type& alloc = {}) noexcept(
+				std::is_nothrow_constructible_v<container_type, allocator_type>&& noexcept(std::declval<basic_dynamic_bitset>().container.insert(std::declval<basic_dynamic_bitset>().container.begin(), first, last)))
 			: container(alloc),
 			  total_size() {
 			container.insert(container.begin(), first, last);
 			total_size += container.size() * bits_of_type;
 		}
 
-#if GAL_DYNAMIC_BITSET_USING_ISTREAM
 		/**
 		 * @brief Ctor from std::basic_istream
 		 * @tparam Char type of input char
@@ -550,22 +414,17 @@ namespace gal::toolbox::dynamic_bitset {
 		template<typename Char, typename Trait = std::char_traits<Char>>
 		explicit basic_dynamic_bitset(std::basic_istream<Char, Trait>& is, const allocator_type& alloc = {})
 			: container(alloc),
-			  total_size()
-		{
+			  total_size() {
 			is >> *this;
 		}
-#endif
 
 		/**
 		 * @brief Ctor from initializer_list
 		 * @param args args for init
 		 * @param alloc the allocator of container
 		 */
-		constexpr basic_dynamic_bitset(std::initializer_list<value_type>&& args, const allocator_type& alloc = {})
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container.insert(container.begin(), args.begin(), args.end())) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.size())
-						)
+		constexpr basic_dynamic_bitset(std::initializer_list<value_type>&& args, const allocator_type& alloc = {}) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container.insert(container.begin(), args.begin(), args.end())) && noexcept(std::declval<basic_dynamic_bitset>().container.size()))
 			: container(alloc),
 			  total_size() {
 			container.insert(container.begin(), std::forward<std::initializer_list<value_type>>(args));
@@ -583,8 +442,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief copy ctor
 		 * @param other
 		 */
-		constexpr basic_dynamic_bitset(const basic_dynamic_bitset& other)
-				noexcept(std::is_nothrow_copy_constructible_v<container_type>)
+		constexpr basic_dynamic_bitset(const basic_dynamic_bitset& other) noexcept(std::is_nothrow_copy_constructible_v<container_type>)
 			: container(other.container),
 			  total_size(other.total_size) {}
 
@@ -593,8 +451,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset for copy
 		 * @return self
 		 */
-		basic_dynamic_bitset& operator=(const basic_dynamic_bitset& other)
-				noexcept(std::is_nothrow_copy_assignable_v<container_type>) {
+		basic_dynamic_bitset& operator=(const basic_dynamic_bitset& other) noexcept(std::is_nothrow_copy_assignable_v<container_type>) {
 			container  = other.container;
 			total_size = other.total_size;
 			return *this;
@@ -604,8 +461,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Move ctor
 		 * @param other another dynamic_bitset for move
 		 */
-		basic_dynamic_bitset(basic_dynamic_bitset&& other)
-				noexcept(std::is_nothrow_move_constructible_v<container_type>)
+		basic_dynamic_bitset(basic_dynamic_bitset&& other) noexcept(std::is_nothrow_move_constructible_v<container_type>)
 			: container(std::move(other.container)),
 			  total_size(std::move(other.total_size)) {
 			// Required so that check_invariants() works.
@@ -618,8 +474,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset for move
 		 * @return self
 		 */
-		basic_dynamic_bitset& operator=(basic_dynamic_bitset&& other)
-				noexcept(std::is_nothrow_move_assignable_v<container_type>) {
+		basic_dynamic_bitset& operator=(basic_dynamic_bitset&& other) noexcept(std::is_nothrow_move_assignable_v<container_type>) {
 			if (std::addressof(other) == this) {
 				return *this;
 			}
@@ -635,8 +490,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Swap --> swap container and size
 		 * @param other another dynamic_bitset
 		 */
-		constexpr void swap(basic_dynamic_bitset& other)
-				noexcept(noexcept(std::swap(container, other.container))) {
+		constexpr void swap(basic_dynamic_bitset& other) noexcept(noexcept(std::swap(container, other.container))) {
 			std::swap(container, other.container);
 			std::swap(total_size, other.total_size);
 		}
@@ -645,8 +499,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get allocator --> get container's allocator
 		 * @return container's allocator
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::get_allocator, this call is meaningless overhead")]]
-		constexpr allocator_type get_allocator() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::get_allocator, this call is meaningless overhead")]] constexpr allocator_type get_allocator() const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.get_allocator())) {
 			return container.get_allocator();
 		}
@@ -655,8 +508,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get size (bits we hold, not container size)
 		 * @return bits we hold
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::size, this call is meaningless overhead")]]
-		constexpr size_type size() const noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::size, this call is meaningless overhead")]] constexpr size_type size() const noexcept {
 			return total_size;
 		}
 
@@ -664,8 +516,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get container's real size we used
 		 * @return container's size
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::container_size, this call is meaningless overhead")]]
-		constexpr size_type container_size() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::container_size, this call is meaningless overhead")]] constexpr size_type container_size() const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.size())) {
 			return container.size();
 		}
@@ -674,13 +525,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get the max bits we can hold (normally, bits_of_type * max_size_of_container)
 		 * @return max bits size
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::max_size, this call is meaningless overhead")]]
-		constexpr auto max_size() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::max_size, this call is meaningless overhead")]] constexpr auto max_size() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container.max_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().get_allocator()) &&
-						noexcept(std::allocator_traits<allocator_type>::max_size(std::declval<basic_dynamic_bitset>().get_allocator()))
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().container.max_size()) && noexcept(std::declval<basic_dynamic_bitset>().get_allocator()) && noexcept(std::allocator_traits<allocator_type>::max_size(std::declval<basic_dynamic_bitset>().get_allocator()))) {
 			auto container_max = container.max_size();
 			auto alloc_max	   = std::allocator_traits<allocator_type>::max_size(get_allocator());
 
@@ -692,8 +539,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Are we hold zero bits?
 		 * @return empty
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::empty, this call is meaningless overhead")]]
-		constexpr bool empty() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::empty, this call is meaningless overhead")]] constexpr bool empty() const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().size())) {
 			return size() == 0;
 		}
@@ -702,8 +548,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get the capacity of bits we hold (normally, bits_of_type * capacity_of_container)
 		 * @return what capacity is now
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::capacity, this call is meaningless overhead")]]
-		constexpr size_type capacity() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::capacity, this call is meaningless overhead")]] constexpr size_type capacity() const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.capacity())) {
 			return container.capacity() * bits_of_type;
 		}
@@ -712,20 +557,16 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Reserve enough memory for use (normally, size / bits_of_type, or container_real_size)
 		 * @param size how many size we need reserve
 		 */
-		constexpr void reserve(size_type size)
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.reserve(size))) {
+		constexpr void reserve(size_type size) noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.reserve(size))) {
 			container.reserve(calc_blocks_needed(size));
 		}
 
 		/**
 		 * @brief Shrink to fit (normally, make container shrink to fit)
 		 */
-		constexpr void shrink_to_fit()
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container.size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.capacity()) &&
-						std::is_nothrow_swappable_v<container_type>
-						) {
+		constexpr void shrink_to_fit() noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container.size()) && noexcept(std::declval<basic_dynamic_bitset>().container.capacity()) &&
+				std::is_nothrow_swappable_v<container_type>) {
 			if (container.size() < container.capacity()) {
 				container_type{container}.swap(container);
 			}
@@ -739,11 +580,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param set set or reset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& set(size_type pos, size_type len, bool set)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, &std::declval<basic_dynamic_bitset>().set_block_partial, &std::declval<basic_dynamic_bitset>().set_block_full)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, &std::declval<basic_dynamic_bitset>().reset_block_partial, &std::declval<basic_dynamic_bitset>().reset_block_full))
-						) {
+		constexpr basic_dynamic_bitset& set(size_type pos, size_type len, bool set) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, &std::declval<basic_dynamic_bitset>().set_block_partial, &std::declval<basic_dynamic_bitset>().set_block_full)) && noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, &std::declval<basic_dynamic_bitset>().reset_block_partial, &std::declval<basic_dynamic_bitset>().reset_block_full))) {
 			if (set) {
 				return range_operation(pos, len, set_block_partial, set_block_full);
 			} else {
@@ -757,13 +595,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param set set or reset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& set(size_type pos, bool set = true)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {}) &&
-						noexcept(std::declval<basic_dynamic_bitset>().reset(pos))
-						) {
+		constexpr basic_dynamic_bitset& set(size_type pos, bool set = true) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) && noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {}) && noexcept(std::declval<basic_dynamic_bitset>().reset(pos))) {
 			GAL_ASSERT(pos < total_size);
 
 			if (set) {
@@ -778,13 +611,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Set all block's value
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& set()
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container.begin()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.end()) &&
-						noexcept(*std::declval<basic_dynamic_bitset>().container.begin() = {}) &&
-						noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-						) {
+		constexpr basic_dynamic_bitset& set() noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container.begin()) && noexcept(std::declval<basic_dynamic_bitset>().container.end()) && noexcept(*std::declval<basic_dynamic_bitset>().container.begin() = {}) && noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())) {
 			for (auto it = container.begin(); it != container.end(); ++it) {
 				*it = static_cast<value_type>(~0);
 			}
@@ -798,10 +626,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param len length
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& reset(size_type pos, size_type len)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, std::declval<basic_dynamic_bitset>().reset_block_partial, std::declval<basic_dynamic_bitset>().reset_block_full))
-						 ) {
+		constexpr basic_dynamic_bitset& reset(size_type pos, size_type len) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, std::declval<basic_dynamic_bitset>().reset_block_partial, std::declval<basic_dynamic_bitset>().reset_block_full))) {
 			return range_operation(pos, len, reset_block_partial, reset_block_full);
 		}
 
@@ -810,12 +636,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos pos of bit
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& reset(size_type pos)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr basic_dynamic_bitset& reset(size_type pos) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) && noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			GAL_ASSERT(pos < total_size);
 
 			container[block_index(pos)] &= ~bit_mask(pos);
@@ -826,10 +648,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Reset all block's value
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& reset()
-				noexcept(
-						noexcept(*std::declval<basic_dynamic_bitset>().container.begin() = {})
-						) {
+		constexpr basic_dynamic_bitset& reset() noexcept(
+				noexcept(*std::declval<basic_dynamic_bitset>().container.begin() = {})) {
 			for (auto it = container.begin(); it != container.end(); ++it) {
 				*it = static_cast<value_type>(0);
 			}
@@ -842,10 +662,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param len length
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& flip(size_type pos, size_type len)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, std::declval<basic_dynamic_bitset>().flip_block_partial, std::declval<basic_dynamic_bitset>().flip_block_full))
-						) {
+		constexpr basic_dynamic_bitset& flip(size_type pos, size_type len) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().range_operation(pos, len, std::declval<basic_dynamic_bitset>().flip_block_partial, std::declval<basic_dynamic_bitset>().flip_block_full))) {
 			return range_operation(pos, len, flip_block_partial, flip_block_full);
 		}
 
@@ -854,12 +672,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos pos of bit
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& flip(size_type pos)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr basic_dynamic_bitset& flip(size_type pos) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) && noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			GAL_ASSERT(pos < total_size);
 
 			container[block_index(pos)] ^= bit_mask(pos);
@@ -870,11 +684,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Flip all block's value
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& flip()
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-						) {
+		constexpr basic_dynamic_bitset& flip() noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())) {
 			for (size_type i = 0; i < container_size(); ++i) {
 				container[i] = ~container[i];
 			}
@@ -887,8 +698,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos pos of bit
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::test, this call is meaningless overhead")]]
-		constexpr bool test(size_type pos) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::test, this call is meaningless overhead")]] constexpr bool test(size_type pos) const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().unchecked_test(pos))) {
 			GAL_ASSERT(pos < total_size);
 			return unchecked_test(pos);
@@ -900,12 +710,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param value expect value
 		 * @return tested value
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::test_and_set, this call is meaningless overhead (use dynamic_bitset::set instead)")]]
-		constexpr bool test_and_set(size_type pos, bool value)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().test(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().set(pos, value))
-						) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::test_and_set, this call is meaningless overhead (use dynamic_bitset::set instead)")]] constexpr bool test_and_set(size_type pos, bool value) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().test(pos)) && noexcept(std::declval<basic_dynamic_bitset>().set(pos, value))) {
 			auto b = test(pos);
 			if (b != value) {
 				set(pos, value);
@@ -917,14 +723,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Is all bit been set ?
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::all, this call is meaningless overhead")]]
-		constexpr bool all() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::all, this call is meaningless overhead")]] constexpr bool all() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().empty()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().empty()) && noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) && noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			if (empty()) {
 				return true;
 			}
@@ -955,12 +756,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Is any bit been set ?
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::any, this call is meaningless overhead")]]
-		constexpr bool any() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::any, this call is meaningless overhead")]] constexpr bool any() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0])
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0])) {
 			if (empty()) {
 				return false;
 			}
@@ -976,11 +774,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Is none bit been set ?
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::none, this call is meaningless overhead")]]
-		constexpr bool none() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::none, this call is meaningless overhead")]] constexpr bool none() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().any())
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().any())) {
 			return !any();
 		}
 
@@ -988,26 +784,271 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Count how many bit been set
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::count, this call is meaningless overhead")]]
-		constexpr size_type count() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::count, this call is meaningless overhead")]] constexpr size_type count() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size())
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().container_size())) {
 			constexpr auto pop_count = [](value_type_ref_if_cheaper value) constexpr noexcept {
 				static_assert(sizeof(std::byte) == sizeof(unsigned char));
 				static_assert(sizeof(unsigned char) == 1);
 				constexpr auto			table_width = 8;
 				constexpr unsigned char count_table[] =
 						{
-								0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-								1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-								1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-								2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-								1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-								2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-								2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-								3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-						};
+								0,
+								1,
+								1,
+								2,
+								1,
+								2,
+								2,
+								3,
+								1,
+								2,
+								2,
+								3,
+								2,
+								3,
+								3,
+								4,
+								1,
+								2,
+								2,
+								3,
+								2,
+								3,
+								3,
+								4,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								1,
+								2,
+								2,
+								3,
+								2,
+								3,
+								3,
+								4,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								1,
+								2,
+								2,
+								3,
+								2,
+								3,
+								3,
+								4,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								4,
+								5,
+								5,
+								6,
+								5,
+								6,
+								6,
+								7,
+								1,
+								2,
+								2,
+								3,
+								2,
+								3,
+								3,
+								4,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								4,
+								5,
+								5,
+								6,
+								5,
+								6,
+								6,
+								7,
+								2,
+								3,
+								3,
+								4,
+								3,
+								4,
+								4,
+								5,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								4,
+								5,
+								5,
+								6,
+								5,
+								6,
+								6,
+								7,
+								3,
+								4,
+								4,
+								5,
+								4,
+								5,
+								5,
+								6,
+								4,
+								5,
+								5,
+								6,
+								5,
+								6,
+								6,
+								7,
+								4,
+								5,
+								5,
+								6,
+								5,
+								6,
+								6,
+								7,
+								5,
+								6,
+								6,
+								7,
+								6,
+								7,
+								7,
+								8};
 				size_type num{};
 				while (value) {
 					num += count_table[value & ((value_type{1} << table_width) - 1)];
@@ -1028,9 +1069,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param index index of bit
 		 * @return ref
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator[], this call is meaningless overhead")]]
-		constexpr reference_type operator[](size_type index)
-				noexcept(std::is_nothrow_constructible_v<reference_type, value_type&, size_type>) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator[], this call is meaningless overhead")]] constexpr reference_type operator[](size_type index) noexcept(std::is_nothrow_constructible_v<reference_type, value_type&, size_type>) {
 			return {container[block_index(index)], bit_index(index)};
 		}
 
@@ -1039,8 +1078,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param index index of bit
 		 * @return ref
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator[], this call is meaningless overhead")]]
-		constexpr reference_type operator[](size_type index) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator[], this call is meaningless overhead")]] constexpr reference_type operator[](size_type index) const
 				noexcept(std::is_nothrow_constructible_v<reference_type, value_type&, size_type>) {
 			return {container[block_index(index)], bit_index(index)};
 		}
@@ -1049,9 +1087,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get a iterator in container.begin()
 		 * @return iterator
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]]
-		constexpr iterator_type begin()
-				noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.begin()), size_type>) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]] constexpr iterator_type begin() noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.begin()), size_type>) {
 			return {container.begin(), 0};
 		}
 
@@ -1059,8 +1095,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get a iterator in container.begin()
 		 * @return iterator
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]]
-		constexpr iterator_type begin() const noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.begin()), size_type>) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]] constexpr iterator_type begin() const noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.begin()), size_type>) {
 			return {container.begin(), 0};
 		}
 
@@ -1068,8 +1103,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get a iterator in container.end()
 		 * @return iterator
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]]
-		constexpr iterator_type end() noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.end()), size_type>) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]] constexpr iterator_type end() noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.end()), size_type>) {
 			return {container.begin(), total_size};
 		}
 
@@ -1077,8 +1111,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get a iterator in container.end()
 		 * @return iterator
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]]
-		constexpr iterator_type end() const noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.end()), size_type>) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::begin, this call is meaningless overhead")]] constexpr iterator_type end() const noexcept(std::is_nothrow_constructible_v<iterator_type, decltype(std::declval<basic_dynamic_bitset>().container.end()), size_type>) {
 			return {container.begin(), total_size};
 		}
 
@@ -1087,16 +1120,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param size required size
 		 * @param value value to set
 		 */
-		constexpr void resize(size_type size, bool value = false)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.resize(size_type{}, value_type{})) &&
-						noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0]) &&
-						noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-						) {
+		constexpr void resize(size_type size, bool value = false) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) && noexcept(std::declval<basic_dynamic_bitset>().container.resize(size_type{}, value_type{})) && noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) && noexcept(std::declval<basic_dynamic_bitset>().container.size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0]) && noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())) {
 			auto old_size	   = container_size();
 			auto required_size = calc_blocks_needed(size);
 
@@ -1132,8 +1157,7 @@ namespace gal::toolbox::dynamic_bitset {
 		/**
 		 * @brief Clear container
 		 */
-		constexpr void clear()
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.clear())) {
+		constexpr void clear() noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.clear())) {
 			container.clear();
 			total_size = 0;
 		}
@@ -1142,12 +1166,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Push a bit from back
 		 * @param value bit's value
 		 */
-		constexpr void push_back(bool value)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().resize(0)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().size(), value)
-						) {
+		constexpr void push_back(bool value) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().size()) && noexcept(std::declval<basic_dynamic_bitset>().resize(0)) && noexcept(std::declval<basic_dynamic_bitset>().size(), value)) {
 			auto sz = size();
 			resize(sz + 1, value);
 		}
@@ -1155,13 +1175,8 @@ namespace gal::toolbox::dynamic_bitset {
 		/**
 		 * @brief Pop a bit from back
 		 */
-		constexpr void pop_back()
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(total_size - 1)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.pop_back()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-						) {
+		constexpr void pop_back() noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(total_size - 1)) && noexcept(std::declval<basic_dynamic_bitset>().container.pop_back()) && noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())) {
 			auto old_size	   = container_size();
 			auto required_size = calc_blocks_needed(total_size - 1);
 
@@ -1176,12 +1191,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Append a value (not a bit) from back (it means you will append bits_of_type bits from back)
 		 * @param value value for append
 		 */
-		constexpr void append(value_type_ref_if_cheaper value)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.push_back(value)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr void append(value_type_ref_if_cheaper value) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) && noexcept(std::declval<basic_dynamic_bitset>().container.push_back(value)) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			auto extra = count_extra_bits();
 			if (extra == 0) {
 				// the buffer is empty, or all blocks are filled
@@ -1200,11 +1211,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& operator&=(const basic_dynamic_bitset& other)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr basic_dynamic_bitset& operator&=(const basic_dynamic_bitset& other) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			GAL_ASSERT(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i) {
 				container[i] &= other.container[i];
@@ -1217,11 +1225,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& operator|=(const basic_dynamic_bitset& other)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr basic_dynamic_bitset& operator|=(const basic_dynamic_bitset& other) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			GAL_ASSERT(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i) {
 				container[i] |= other.container[i];
@@ -1234,11 +1239,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& operator^=(const basic_dynamic_bitset& other)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr basic_dynamic_bitset& operator^=(const basic_dynamic_bitset& other) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			GAL_ASSERT(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i) {
 				container[i] ^= other.container[i];
@@ -1251,11 +1253,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& operator-=(const basic_dynamic_bitset& other)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})
-						) {
+		constexpr basic_dynamic_bitset& operator-=(const basic_dynamic_bitset& other) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {})) {
 			GAL_ASSERT(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i) {
 				container[i] &= ~other.container[i];
@@ -1268,15 +1267,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param n offset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& operator<<=(size_type n)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().reset()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(n)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().bit_index(n)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {}) &&
-						noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-						) {
+		constexpr basic_dynamic_bitset& operator<<=(size_type n) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().reset()) && noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().block_index(n)) && noexcept(std::declval<basic_dynamic_bitset>().bit_index(n)) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {}) && noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())) {
 			if (n >= total_size) {
 				return reset();
 			}
@@ -1332,8 +1324,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param n offset
 		 * @return self
 		 */
-		constexpr basic_dynamic_bitset& operator>>=(size_type n)
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<<=(n))) {
+		constexpr basic_dynamic_bitset& operator>>=(size_type n) noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<<=(n))) {
 			if (n >= total_size) {
 				return reset();
 			}
@@ -1385,8 +1376,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param n offset
 		 * @return copy
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator<<, this call is meaningless overhead")]]
-		constexpr basic_dynamic_bitset operator<<(size_type n) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator<<, this call is meaningless overhead")]] constexpr basic_dynamic_bitset operator<<(size_type n) const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<<=(n))) {
 			auto copy{*this};
 			copy <<= n;
@@ -1398,8 +1388,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param n offset
 		 * @return copy
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator>>, this call is meaningless overhead")]]
-		constexpr basic_dynamic_bitset operator>>(size_type n) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator>>, this call is meaningless overhead")]] constexpr basic_dynamic_bitset operator>>(size_type n) const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator>>=(n))) {
 			auto copy{*this};
 			copy >>= n;
@@ -1410,8 +1399,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Flip a copy all bit
 		 * @return copy
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator~, this call is meaningless overhead")]]
-		constexpr basic_dynamic_bitset operator~() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator~, this call is meaningless overhead")]] constexpr basic_dynamic_bitset operator~() const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().flip())) {
 			auto copy{*this};
 			copy.flip();
@@ -1423,8 +1411,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator==, this call is meaningless overhead")]]
-		constexpr bool operator==(const basic_dynamic_bitset& other) const noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator==, this call is meaningless overhead")]] constexpr bool operator==(const basic_dynamic_bitset& other) const noexcept {
 			return total_size == other.total_size && container == other.container;
 		}
 
@@ -1433,8 +1420,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator!=, this call is meaningless overhead")]]
-		constexpr bool operator!=(const basic_dynamic_bitset& other) const noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator!=, this call is meaningless overhead")]] constexpr bool operator!=(const basic_dynamic_bitset& other) const noexcept {
 			return !operator==(other);
 		}
 
@@ -1443,14 +1429,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator<, this call is meaningless overhead")]]
-		constexpr bool operator<(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator<, this call is meaningless overhead")]] constexpr bool operator<(const basic_dynamic_bitset& other) const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().empty()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0])
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().empty()) && noexcept(std::declval<basic_dynamic_bitset>().size()) && noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0])) {
 			if (other.empty()) {
 				return false;
 			} else if (empty()) {
@@ -1485,12 +1466,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator<=, this call is meaningless overhead")]]
-		constexpr bool operator<=(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator<=, this call is meaningless overhead")]] constexpr bool operator<=(const basic_dynamic_bitset& other) const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().operator==(other)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().operator<(other))
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().operator==(other)) && noexcept(std::declval<basic_dynamic_bitset>().operator<(other))) {
 			return operator==(other) || operator<(other);
 		}
 
@@ -1499,8 +1477,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator>, this call is meaningless overhead")]]
-		constexpr bool operator>(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator>, this call is meaningless overhead")]] constexpr bool operator>(const basic_dynamic_bitset& other) const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<=(other))) {
 			return !operator<=(other);
 		}
@@ -1510,8 +1487,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator>=, this call is meaningless overhead")]]
-		constexpr bool operator>=(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::operator>=, this call is meaningless overhead")]] constexpr bool operator>=(const basic_dynamic_bitset& other) const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<(other))) {
 			return !operator<(other);
 		}
@@ -1523,13 +1499,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 */
 		template<typename To = unsigned long>
 		requires(sizeof(To) >= sizeof(T))
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::cast_to, this call is meaningless overhead")]]
-		constexpr To cast_to() const
+				[[nodiscard("If you do not receive the return value of dynamic_bitset::cast_to, this call is meaningless overhead")]] constexpr To cast_to() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().empty()) &&
-						noexcept(detail::bits_of_type<To>()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(0))
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().empty()) && noexcept(detail::bits_of_type<To>()) && noexcept(std::declval<basic_dynamic_bitset>().block_index(0))) {
 			if (empty()) {
 				return {};
 			}
@@ -1552,12 +1524,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::is_subset_of, this call is meaningless overhead")]]
-		constexpr bool is_subset_of(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::is_subset_of, this call is meaningless overhead")]] constexpr bool is_subset_of(const basic_dynamic_bitset& other) const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0])
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0])) {
 			GAL_ASSERT(size() == other.size());
 
 			for (decltype(container_size()) i = 0; i < container_size(); ++i) {
@@ -1573,12 +1542,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::is_proper_subset_of, this call is meaningless overhead")]]
-		constexpr bool is_proper_subset_of(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::is_proper_subset_of, this call is meaningless overhead")]] constexpr bool is_proper_subset_of(const basic_dynamic_bitset& other) const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0])
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0])) {
 			GAL_ASSERT(size() == other.size());
 			GAL_ASSERT(container_size() == other.container_size());
 
@@ -1603,12 +1569,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param other another dynamic_bitset
 		 * @return result
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::is_intersects, this call is meaningless overhead")]]
-		constexpr bool is_intersects(const basic_dynamic_bitset& other) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::is_intersects, this call is meaningless overhead")]] constexpr bool is_intersects(const basic_dynamic_bitset& other) const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0])
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().container[0])) {
 			auto intersect_size = std::min(container_size(), other.container_size());
 
 			for (size_type i = 0; i < intersect_size; ++i) {
@@ -1625,8 +1588,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos the pos of bit is
 		 * @return index
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::block_index, this call is meaningless overhead")]]
-		constexpr static size_type block_index(size_type pos) noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::block_index, this call is meaningless overhead")]] constexpr static size_type block_index(size_type pos) noexcept {
 			return pos / bits_of_type;
 		}
 		/**
@@ -1634,8 +1596,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos the pos of the bit is
 		 * @return index
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::bit_index, this call is meaningless overhead")]]
-		constexpr static size_type bit_index(size_type pos) noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::bit_index, this call is meaningless overhead")]] constexpr static size_type bit_index(size_type pos) noexcept {
 			return pos % bits_of_type;
 		}
 		/**
@@ -1643,8 +1604,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos the pos of bit is
 		 * @return mask
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::bit_mask, this call is meaningless overhead")]]
-		constexpr static value_type bit_mask(size_type pos) noexcept(noexcept(std::declval<basic_dynamic_bitset>().bit_index(pos))) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::bit_mask, this call is meaningless overhead")]] constexpr static value_type bit_mask(size_type pos) noexcept(noexcept(std::declval<basic_dynamic_bitset>().bit_index(pos))) {
 			return value_type{1} << bit_index(pos);
 		}
 		/**
@@ -1653,8 +1613,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param last end for get mask
 		 * @return mask
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::bit_mask, this call is meaningless overhead")]]
-		constexpr static value_type bit_mask(size_type first, size_type last) noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::bit_mask, this call is meaningless overhead")]] constexpr static value_type bit_mask(size_type first, size_type last) noexcept {
 			GAL_ASSERT(first <= last);
 			GAL_ASSERT(last < bits_of_type);
 			auto res = (last == bits_of_type - 1) ? static_cast<value_type>(~0) : ((value_type{1} << (last + 1)) - 1);
@@ -1668,9 +1627,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param set set or reset
 		 * @return block after set
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::set_block_bits, this call is meaningless overhead")]]
-		constexpr static value_type set_block_bits(value_type_ref_if_cheaper block, size_type first, size_type last, bool set)
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().bit_mask(first, last))) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::set_block_bits, this call is meaningless overhead")]] constexpr static value_type set_block_bits(value_type_ref_if_cheaper block, size_type first, size_type last, bool set) noexcept(noexcept(std::declval<basic_dynamic_bitset>().bit_mask(first, last))) {
 			if (set) {
 				return block | bit_mask(first, last);
 			} else {
@@ -1685,9 +1642,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param last end for get mask
 		 * @return block after set
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::set_block_partial, this call is meaningless overhead")]]
-		constexpr static value_type set_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last)
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().set_block_bits(block, first, last, true))) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::set_block_partial, this call is meaningless overhead")]] constexpr static value_type set_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last) noexcept(noexcept(std::declval<basic_dynamic_bitset>().set_block_bits(block, first, last, true))) {
 			return set_block_bits(block, first, last, true);
 		}
 
@@ -1695,8 +1650,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Set the block's value to full (wont change itself)
 		 * @return ~0
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::set_block_full, this call is meaningless overhead")]]
-		constexpr static value_type set_block_full(value_type_ref_if_cheaper) noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::set_block_full, this call is meaningless overhead")]] constexpr static value_type set_block_full(value_type_ref_if_cheaper) noexcept {
 			return static_cast<value_type>(~0);
 		}
 
@@ -1707,9 +1661,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param last ebd for get mask
 		 * @return block after reset
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::reset_block_partial, this call is meaningless overhead")]]
-		constexpr static value_type reset_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last)
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().set_block_bits(block, first, last, false))) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::reset_block_partial, this call is meaningless overhead")]] constexpr static value_type reset_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last) noexcept(noexcept(std::declval<basic_dynamic_bitset>().set_block_bits(block, first, last, false))) {
 			return set_block_bits(block, first, last, false);
 		}
 
@@ -1717,8 +1669,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Reset the block's value to full (wont change itself)
 		 * @return 0
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::reset_block_full, this call is meaningless overhead")]]
-		constexpr static value_type reset_block_full(value_type_ref_if_cheaper) noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::reset_block_full, this call is meaningless overhead")]] constexpr static value_type reset_block_full(value_type_ref_if_cheaper) noexcept {
 			return 0;
 		}
 
@@ -1729,9 +1680,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param last end for get mask
 		 * @return block after flip
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::flip_block_partial, this call is meaningless overhead")]]
-		constexpr static value_type flip_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last)
-				noexcept(noexcept(std::declval<basic_dynamic_bitset>().bit_mask(first, last))) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::flip_block_partial, this call is meaningless overhead")]] constexpr static value_type flip_block_partial(value_type_ref_if_cheaper block, size_type first, size_type last) noexcept(noexcept(std::declval<basic_dynamic_bitset>().bit_mask(first, last))) {
 			return block ^ bit_mask(first, last);
 		}
 
@@ -1740,8 +1689,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param block current block
 		 * @return block after flip
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::flip_block_full, this call is meaningless overhead")]]
-		constexpr static value_type flip_block_full(value_type_ref_if_cheaper block) noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::flip_block_full, this call is meaningless overhead")]] constexpr static value_type flip_block_full(value_type_ref_if_cheaper block) noexcept {
 			return ~block;
 		}
 
@@ -1750,13 +1698,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param pos bit's pos
 		 * @return it this bit set
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::unchecked_test, this call is meaningless overhead")]]
-		constexpr bool unchecked_test(size_type pos) const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::unchecked_test, this call is meaningless overhead")]] constexpr bool unchecked_test(size_type pos) const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0])
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().bit_mask(pos)) && noexcept(std::declval<basic_dynamic_bitset>().block_index(pos)) && noexcept(std::declval<basic_dynamic_bitset>().container[0])) {
 			return (container[block_index(pos)] & bit_mask(pos)) != 0;
 		}
 
@@ -1765,8 +1709,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param num_bits how many bits we want to hold
 		 * @return blocks we need
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::calc_blocks_needed, this call is meaningless overhead")]]
-		constexpr size_type calc_blocks_needed(size_type num_bits) const noexcept {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::calc_blocks_needed, this call is meaningless overhead")]] constexpr size_type calc_blocks_needed(size_type num_bits) const noexcept {
 			return num_bits / bits_of_type + static_cast<size_type>(num_bits % bits_of_type != 0);
 		}
 
@@ -1774,8 +1717,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get the highest block in container (normally, the container.back() element)
 		 * @return highest block
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::highest_block, this call is meaningless overhead")]]
-		constexpr value_type& highest_block() noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.back())) {
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::highest_block, this call is meaningless overhead")]] constexpr value_type& highest_block() noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.back())) {
 			GAL_ASSERT(size() > 0 && container_size() > 0);
 			return container.back();
 		}
@@ -1784,8 +1726,7 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Get the highest block in container (normally, the container.back() element)
 		 * @return highest block
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::highest_block, this call is meaningless overhead")]]
-		constexpr const value_type& highest_block() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::highest_block, this call is meaningless overhead")]] constexpr const value_type& highest_block() const
 				noexcept(noexcept(std::declval<basic_dynamic_bitset>().container.back())) {
 			GAL_ASSERT(size() > 0 && container_size() > 0);
 			return container.back();
@@ -1796,11 +1737,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param size how many bits we want to hold
 		 * @param value the value for init
 		 */
-		constexpr void init_from_value_type(size_type size, value_type value)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.resize(calc_blocks_needed(size)))
-						) {
+		constexpr void init_from_value_type(size_type size, value_type value) noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) && noexcept(std::declval<basic_dynamic_bitset>().container.resize(calc_blocks_needed(size)))) {
 			GAL_ASSERT(container_size() == 0);
 
 			container.resize(calc_blocks_needed(size));
@@ -1828,7 +1766,6 @@ namespace gal::toolbox::dynamic_bitset {
 			}
 		}
 
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING
 		/**
 		 * @brief Init a dynamic_bitset from str[pos~pos+n]
 		 * @tparam Char char_type of str
@@ -1843,11 +1780,7 @@ namespace gal::toolbox::dynamic_bitset {
 		constexpr void init_from_basic_string(const std::basic_string<Char, Traits, Alloc>&				 str,
 											  typename std::basic_string<Char, Traits, Alloc>::size_type pos,
 											  typename std::basic_string<Char, Traits, Alloc>::size_type n,
-											  size_type													 size)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.resize(size))
-						) {
+											  size_type													 size) noexcept(noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) && noexcept(std::declval<basic_dynamic_bitset>().container.resize(size))) {
 			GAL_ASSERT(pos <= str.size());
 			GAL_ASSERT(n <= size);
 
@@ -1859,16 +1792,16 @@ namespace gal::toolbox::dynamic_bitset {
 
 			auto& fac			 = std::use_facet<std::ctype<Char>>(std::locale());
 			auto  one			 = fac.widen('1');
-			auto zero = fac.widen('0');
+			auto  zero			 = fac.widen('0');
 
 			auto  shorter		 = std::min(num_bits, len);
 			using str_size_type	 = typename std::basic_string<Char, Traits, Alloc>::size_type;
 			using str_trait_type = typename std::basic_string<Char, Traits, Alloc>::traits_type;
 			for (str_size_type i = 0, begin = pos + shorter - 1; i < shorter; ++i) {
-				auto c = str[begin - i];
+				auto c		= str[begin - i];
 
 				auto is_one = str_trait_type::eq(c, one);
-				if(!is_one && !str_trait_type::eq(c, zero)){
+				if (!is_one && !str_trait_type::eq(c, zero)) {
 					break;
 				}
 
@@ -1877,9 +1810,7 @@ namespace gal::toolbox::dynamic_bitset {
 				}
 			}
 		}
-#endif
 
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW
 		/**
 		 * @brief Init a dynamic_bitset from str_view[pos~pos+n]
 		 * @tparam Char char_type of str_view
@@ -1890,14 +1821,10 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @param size how many bits we want(will) to hold, better make sure it greater than n
 		 */
 		template<typename Char, typename Traits>
-		constexpr void init_from_basic_string_view(const std::basic_string_view<Char, Traits>               str,
+		constexpr void init_from_basic_string_view(const std::basic_string_view<Char, Traits>				str,
 												   typename std::basic_string_view<Char, Traits>::size_type pos,
 												   typename std::basic_string_view<Char, Traits>::size_type n,
-												   size_type                                                size)
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.resize(size))
-						) {
+												   size_type												size) noexcept(noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(size)) && noexcept(std::declval<basic_dynamic_bitset>().container.resize(size))) {
 			GAL_ASSERT(pos <= str.size());
 			GAL_ASSERT(n <= size);
 
@@ -1909,16 +1836,16 @@ namespace gal::toolbox::dynamic_bitset {
 
 			auto& fac			 = std::use_facet<std::ctype<Char>>(std::locale());
 			auto  one			 = fac.widen('1');
-			auto zero = fac.widen('0');
+			auto  zero			 = fac.widen('0');
 
 			auto  shorter		 = std::min(num_bits, len);
 			using str_size_type	 = typename std::basic_string_view<Char, Traits>::size_type;
 			using str_trait_type = typename std::basic_string_view<Char, Traits>::traits_type;
 			for (str_size_type i = 0, begin = pos + shorter - 1; i < shorter; ++i) {
-				auto c = str[begin - i];
+				auto c		= str[begin - i];
 
 				auto is_one = str_trait_type::eq(c, one);
-				if(!is_one && !str_trait_type::eq(c, zero)){
+				if (!is_one && !str_trait_type::eq(c, zero)) {
 					break;
 				}
 
@@ -1927,7 +1854,6 @@ namespace gal::toolbox::dynamic_bitset {
 				}
 			}
 		}
-#endif
 
 		/**
 		 * @briefl Process the block between pos and pos+len
@@ -1939,15 +1865,8 @@ namespace gal::toolbox::dynamic_bitset {
 		 */
 		constexpr basic_dynamic_bitset& range_operation(size_type pos,
 														size_type len,
-														value_type (*partial_block_operation)(value_type_ref_if_cheaper , size_type, size_type),
-														value_type (*full_block_operation)(value_type_ref_if_cheaper))
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().block_index(0)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().bit_index(0)) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container[0] = {}) &&
-						noexcept(partial_block_operation(std::declval<basic_dynamic_bitset>().container[0], 0, 0)) &&
-						noexcept(full_block_operation(std::declval<basic_dynamic_bitset>().container[0]))
-						) {
+														value_type (*partial_block_operation)(value_type_ref_if_cheaper, size_type, size_type),
+														value_type (*full_block_operation)(value_type_ref_if_cheaper)) noexcept(noexcept(std::declval<basic_dynamic_bitset>().block_index(0)) && noexcept(std::declval<basic_dynamic_bitset>().bit_index(0)) && noexcept(std::declval<basic_dynamic_bitset>().container[0] = {}) && noexcept(partial_block_operation(std::declval<basic_dynamic_bitset>().container[0], 0, 0)) && noexcept(full_block_operation(std::declval<basic_dynamic_bitset>().container[0]))) {
 			GAL_ASSERT(pos + len <= total_size);
 
 			// Do nothing in case of zero length
@@ -2002,11 +1921,8 @@ namespace gal::toolbox::dynamic_bitset {
 		/**
 		 * @brief If size() is not a multiple of bits_per_block then not all the bits in the last block are used. This function resets the unused bits (convenient for the implementation of many member functions)
 		 */
-		constexpr void zero_unused_bits()
-				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().highest_block())
-						) {
+		constexpr void zero_unused_bits() noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) && noexcept(std::declval<basic_dynamic_bitset>().highest_block())) {
 			GAL_ASSERT(container_size() == calc_blocks_needed(total_size));
 
 			// if != 0 this is the number of bits used in the last block
@@ -2020,17 +1936,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Check class invariants
 		 * @return is invariant
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::check_invariants, this call is meaningless overhead")]]
-		constexpr bool check_invariants() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::check_invariants, this call is meaningless overhead")]] constexpr bool check_invariants() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().highest_block()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container.capacity()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().container_size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(std::declval<basic_dynamic_bitset>().size()))
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().count_extra_bits()) && noexcept(std::declval<basic_dynamic_bitset>().highest_block()) && noexcept(std::declval<basic_dynamic_bitset>().container.size()) && noexcept(std::declval<basic_dynamic_bitset>().container.capacity()) && noexcept(std::declval<basic_dynamic_bitset>().container_size()) && noexcept(std::declval<basic_dynamic_bitset>().size()) && noexcept(std::declval<basic_dynamic_bitset>().calc_blocks_needed(std::declval<basic_dynamic_bitset>().size()))) {
 			auto extra_bits = count_extra_bits();
 			if (extra_bits > 0) {
 				auto mask = static_cast<value_type>(~0) << extra_bits;
@@ -2048,12 +1956,9 @@ namespace gal::toolbox::dynamic_bitset {
 		 * @brief Count extra bits (in last block)
 		 * @return extra bits
 		 */
-		[[nodiscard("If you do not receive the return value of dynamic_bitset::count_extra_bits, this call is meaningless overhead")]]
-		constexpr size_type count_extra_bits() const
+		[[nodiscard("If you do not receive the return value of dynamic_bitset::count_extra_bits, this call is meaningless overhead")]] constexpr size_type count_extra_bits() const
 				noexcept(
-						noexcept(std::declval<basic_dynamic_bitset>().size()) &&
-						noexcept(std::declval<basic_dynamic_bitset>().bit_index(std::declval<basic_dynamic_bitset>().size()))
-						) {
+						noexcept(std::declval<basic_dynamic_bitset>().size()) && noexcept(std::declval<basic_dynamic_bitset>().bit_index(std::declval<basic_dynamic_bitset>().size()))) {
 			return bit_index(size());
 		}
 
@@ -2072,101 +1977,86 @@ namespace gal::toolbox::dynamic_bitset {
 	 */
 
 	// 1
-	basic_dynamic_bitset() -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+	basic_dynamic_bitset() -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 2
 	template<std::integral T, template<typename> typename Allocator>
-	basic_dynamic_bitset(const Allocator<T>&) -> basic_dynamic_bitset<std::make_unsigned_t<T>, Allocator, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+	basic_dynamic_bitset(const Allocator<T>&) -> basic_dynamic_bitset<std::make_unsigned_t<T>, Allocator, std::vector>;
 
 	// 3
 	template<std::integral T>
 	basic_dynamic_bitset(
-			typename GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER<std::make_unsigned_t<T>, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<std::make_unsigned_t<T>>>::size_type,
+			typename std::vector<std::make_unsigned_t<T>, std::allocator<std::make_unsigned_t<T>>>::size_type,
 			T,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<std::make_unsigned_t<T>, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			const std::allocator<std::size_t>& = {}) -> basic_dynamic_bitset<std::make_unsigned_t<T>, std::allocator, std::vector>;
 
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING
 	// 4
 	template<typename Char, typename Traits = std::char_traits<Char>, typename Alloc = std::allocator<Char>>
 	basic_dynamic_bitset(
 			const std::basic_string<Char, Traits, Alloc>&,
 			typename std::basic_string<Char, Traits, Alloc>::size_type,
 			typename std::basic_string<Char, Traits, Alloc>::size_type,
-			typename basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::size_type = basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::npos,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-			) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			typename basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::size_type = basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::npos,
+			const std::allocator<std::size_t>&												   = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 5
 	template<typename Char, typename Traits = std::char_traits<Char>, typename Alloc = std::allocator<Char>>
 	basic_dynamic_bitset(
 			const std::basic_string<Char, Traits, Alloc>&,
 			typename std::basic_string<Char, Traits, Alloc>::size_type = {},
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
-#endif
+			const std::allocator<std::size_t>&						   = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
-#if GAL_DYNAMIC_BITSET_ENABLE_INIT_FROM_STRING_VIEW
 	// 6
 	template<typename Char, typename Traits = std::char_traits<Char>>
 	basic_dynamic_bitset(
 			std::basic_string_view<Char, Traits>,
 			typename std::basic_string_view<Char, Traits>::size_type,
 			typename std::basic_string_view<Char, Traits>::size_type,
-			typename basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::size_type = basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::npos,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			typename basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::size_type = basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::npos,
+			const std::allocator<std::size_t>&												   = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 7
 	template<typename Char, typename Trait = std::char_traits<Char>>
 	basic_dynamic_bitset(
 			std::basic_string_view<Char, Trait>,
 			typename std::basic_string_view<Char, Trait>::size_type = {},
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
-#endif
+			const std::allocator<std::size_t>&						= {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 8
 	template<typename Char>
 	basic_dynamic_bitset(
 			const Char*,
-			typename basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::size_type,
-			typename basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::size_type,
-			typename basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::size_type = basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::npos,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			typename basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::size_type,
+			typename basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::size_type,
+			typename basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::size_type = basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::npos,
+			const std::allocator<std::size_t>&												   = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 9
 	template<typename Char>
 	basic_dynamic_bitset(
 			const Char* str,
-			typename basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>::size_type,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			typename basic_dynamic_bitset<std::size_t, std::allocator, std::vector>::size_type,
+			const std::allocator<std::size_t>& = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 10
 	template<std::input_iterator ContainerInputIterator>
 	basic_dynamic_bitset(
 			ContainerInputIterator first,
 			ContainerInputIterator last,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-	) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			const std::allocator<std::size_t>& = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 11
 	template<typename Char, typename Trait = std::char_traits<Char>>
 	basic_dynamic_bitset(
 			std::basic_istream<Char, Trait>& is,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-    ) -> basic_dynamic_bitset<GAL_DYNAMIC_BITSET_DEFAULT_TYPE, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			const std::allocator<std::size_t>& = {}) -> basic_dynamic_bitset<std::size_t, std::allocator, std::vector>;
 
 	// 12
 	template<std::integral T>
 	basic_dynamic_bitset(
 			std::initializer_list<T>&& arg,
-			const GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR<GAL_DYNAMIC_BITSET_DEFAULT_TYPE>& = {}
-    ) -> basic_dynamic_bitset<std::make_unsigned_t<T>, GAL_DYNAMIC_BITSET_DEFAULT_ALLOCATOR, GAL_DYNAMIC_BITSET_DEFAULT_CONTAINER>;
+			const std::allocator<std::size_t>& = {}) -> basic_dynamic_bitset<std::make_unsigned_t<T>, std::allocator, std::vector>;
 
-#if GAL_DYNAMIC_BITSET_USING_OSTREAM
 	template<typename Char, typename Trait, typename T, template<typename> typename Allocator, template<typename, typename> typename Container>
 	std::basic_ostream<Char, Trait>&
 	operator<<(std::basic_ostream<Char, Trait>& os, const basic_dynamic_bitset<T, Allocator, Container>& bitset) {
@@ -2226,26 +2116,24 @@ namespace gal::toolbox::dynamic_bitset {
 		}
 		return os;
 	}
-#endif
 
-#if GAL_DYNAMIC_BITSET_USING_ISTREAM
 	template<typename Char, typename Trait, typename T, template<typename> typename Allocator, template<typename, typename> typename Container>
 	std::basic_istream<Char, Trait>&
 	operator>>(std::basic_istream<Char, Trait>& is, basic_dynamic_bitset<T, Allocator, Container>& bitset) {
 		using size_type = typename basic_dynamic_bitset<T, Allocator, Container>::size_type;
 
-		auto  width = is.width();
-		auto  limit = (width > 0 && static_cast<size_type>(width) < bitset.max_size()) ? static_cast<size_type>(width) : bitset.max_size();
+		auto width		= is.width();
+		auto limit		= (width > 0 && static_cast<size_type>(width) < bitset.max_size()) ? static_cast<size_type>(width) : bitset.max_size();
 
-		auto err    = std::ios_base::goodbit;
+		auto err		= std::ios_base::goodbit;
 
 		if (typename std::basic_istream<Char, Trait>::sentry{is}) {
-			auto& fac	= std::use_facet<std::ctype<Char>>(is.getloc());
-			auto  zero	= fac.widen('0');
-			auto  one	= fac.widen('1');
+			auto& fac  = std::use_facet<std::ctype<Char>>(is.getloc());
+			auto  zero = fac.widen('0');
+			auto  one  = fac.widen('1');
 
-			auto buf = is.rdbuf();
-			auto i	 = buf->sgetc();
+			auto  buf  = is.rdbuf();
+			auto  i	   = buf->sgetc();
 			while (bitset.size() < limit) {
 				if (Trait::eq_int_type(Trait::eof(), i)) {
 					err |= std::ios_base::eofbit;
@@ -2276,7 +2164,6 @@ namespace gal::toolbox::dynamic_bitset {
 		}
 		return is;
 	}
-#endif
 
 }// namespace gal::toolbox::dynamic_bitset
 
