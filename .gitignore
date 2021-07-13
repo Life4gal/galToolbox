@@ -2,8 +2,6 @@
 .vs/
 .idea/
 
-build/
-cmake-build-debug/
-cmake-build-release/
+Debug/
+X64/
 
-CMakeSettings.json
