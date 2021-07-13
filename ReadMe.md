@@ -1,14 +1,8 @@
 # A toolbox base on cxx20
 
-## license
-> If there is no legal license conflict, all files in this repository will be distributed under [see root project license] license.
-> If not, corresponding file(source code) (maybe)will waive all rights(keep the rights of [see root project license] as possible as we can).
-
 ### requirement:
-> gcc version: gcc version 11.0.1 (experimental) (GCC) 
-
-### environment
-![CLion](asset/clion.png)
+> linux: gcc version: gcc version 11.0.1 (experimental) (GCC) 
+> windows: MSVC 19
 
 ### install/update gcc11
 
@@ -19,7 +13,7 @@ cd gcc
 ./contrib/download_prerequisites
 mkdir build && cd build
 ../configure --disable-multilib
-make -j8	# cat /proc/cpuinfo | grep "processor" | wc -l --> if got 8 then set -j8, if got 4 then set -j4
+make -j${cat /proc/cpuinfo | grep "processor" | wc -l}
 sudo make install
 
 # optional

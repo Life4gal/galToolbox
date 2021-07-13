@@ -1,39 +1,9 @@
-.DS_Store
+.vscode/
+.vs/
+.idea/
 
-# Xcode
-#
-# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
+build/
+cmake-build-debug/
+cmake-build-release/
 
-## Build generated
-_build/
-DerivedData/
-
-## Various settings
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-xcuserdata/
-
-## Other
-*.moved-aside
-*.xccheckout
-*.xcscmblueprint
-*.user
-/.vscode/
-/.idea/
-/build/
-/cmake-build-debug/
-/cmake-build-release/
-/.vs/
-/CMakeSettings.json
-/cpm_modules
-
-/exec/cmake-build-debug/
-/exec/cmake-build-release/
-/exec/cmake-build-debug/googletest-src/
-/exec/cmake-build-release/googletest-src/
+CMakeSettings.json
