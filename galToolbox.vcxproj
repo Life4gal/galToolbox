@@ -19,7 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\queue\fifo.ixx" />
+    <ClCompile Include="src\queue\message_queue.ixx" />
+    <ClCompile Include="src\queue\ring_buffer.ixx" />
+    <ClCompile Include="src\queue\double_linked_list.ixx" />
+    <ClCompile Include="src\queue\linked_list.ixx" />
+    <ClCompile Include="src\queue\sequence.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="ReadMe.md" />
+    <None Include="UNLICENSE" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -1,16 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="lockfree">
-      <UniqueIdentifier>{f5fa9e71-d26f-4b83-972b-19a5b76f8560}</UniqueIdentifier>
-    </Filter>
     <Filter Include="test">
       <UniqueIdentifier>{7ced16c3-6f7c-4053-b33f-4e1c2c09a0ad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="queue">
+      <UniqueIdentifier>{b6923346-9f8e-43a7-8a68-edc66f4b6765}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>test</Filter>
+    <ClCompile Include="src\queue\ring_buffer.ixx">
+      <Filter>queue</Filter>
     </ClCompile>
+    <ClCompile Include="src\queue\fifo.ixx">
+      <Filter>queue</Filter>
+    </ClCompile>
+    <ClCompile Include="src\queue\double_linked_list.ixx">
+      <Filter>queue</Filter>
+    </ClCompile>
+    <ClCompile Include="src\queue\linked_list.ixx">
+      <Filter>queue</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\queue\message_queue.ixx" />
+    <ClCompile Include="src\queue\sequence.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="ReadMe.md" />
+    <None Include="UNLICENSE" />
   </ItemGroup>
 </Project>
