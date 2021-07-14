@@ -37,11 +37,14 @@ namespace gal::toolbox {
 		 * @param capacity 
 		*/
 		constexpr explicit MessageQueue(size_type capacity)
+			noexcept(
+				noexcept(std::is_nothrow_constructible_v<pointer, decltype(new value_type[])>)
+			)
 			: queue_(new value_type[capacity]), capacity_(capacity), producer_(), consumer_() {
 			gal::toolbox::assert(queue_ not_eq nullptr);
 		}
 
-		constexpr compl MessageQueue() {
+		constexpr compl MessageQueue() noexcept {
 			delete[] queue_;
 			queue_ = nullptr;
 		}
@@ -55,7 +58,14 @@ namespace gal::toolbox {
 		 * @return 
 		*/
 		constexpr bool push(const_reference data)
-		{
+			noexcept(
+				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
+				noexcept(std::declval<MessageQueue<T>>().get_next(std::declval<iterator>())) and
+				noexcept(std::declval<std::atomic<iterator>>().load(std::memory_order_acquire)) and
+				noexcept(std::declval<std::atomic<iterator>>().store(std::memory_order_release)) and
+				noexcept(std::declval<pointer>().operator[](std::declval<iterator>())) and
+				noexcept(std::declval<std::condition_variable>.notify_all())
+			) {
 			{
 				std::scoped_lock lock(producer_lock_);
 				auto next = get_next(producer_);
@@ -78,7 +88,15 @@ namespace gal::toolbox {
 		 * @return pop success or not
 		*/
 		constexpr bool pop(reference data, time_type wait_milliseconds_time)
-		{
+			noexcept(
+				noexcept(std::is_nothrow_constructible_v<std::unique_lock, std::mutex>) and
+				noexcept(std::declval<MessageQueue<T>>().get_next(std::declval<iterator>())) and
+				noexcept(std::declval<std::atomic<iterator>>().load()) and
+				noexcept(std::declval<std::atomic<iterator>>().store(std::memory_order_release)) and
+				noexcept(std::is_nothrow_constructible_v<std::chrono::milliseconds, time_type>) and
+				noexcept(std::declval<std::condition_variable>.wait_for(std::declval<std::mutex>(), std::declval<std::chrono::milliseconds>())) and
+				noexcept(std::declval<pointer>().operator[](std::declval<iterator>()))
+			) {
 			std::unique_lock lock(consumer_lock_);
 			auto next = get_next(consumer_);
 			if (consumer_ == producer_.load()) {
@@ -101,13 +119,16 @@ namespace gal::toolbox {
 		 * @param wait_milliseconds_time maximum time willing to wait (milliseconds)
 		 * @return pop success or not
 		*/
-		constexpr bool pop(time_type wait_milliseconds_time) {
+		constexpr bool pop(time_type wait_milliseconds_time) 
+			noexcept(
+				noexcept(std::declval<MessageQueue<T>>().pop(std::declval<reference>(), std::declval<time_type>()))
+			) {
 			value_type dummy;
 			return pop(dummy, wait_milliseconds_time);
 		}
 
 	private:
-		constexpr iterator get_next(iterator curr) {
+		constexpr iterator get_next(iterator curr) noexcept {
 			auto next = curr + 1;
 			return static_cast<size_type>(next) == capacity_ ? 0 : next;
 		}

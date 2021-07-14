@@ -33,7 +33,7 @@ namespace gal::toolbox {
 		 * @brief use `size` to initialize `ringbuffer` and specify its `size`
 		 * @param size 
 		*/
-		constexpr explicit Fifo(size_type size)
+		constexpr explicit Fifo(size_type size) noexcept(noexcept(std::is_nothrow_constructible_v<internal_type, size_type>))
 			: ring_(size), producer_(), consumer_(), count_(0) {}
 
 		/**
@@ -42,7 +42,13 @@ namespace gal::toolbox {
 		 * @param data 
 		 * @return 
 		*/
-		constexpr bool push(const_reference data) {
+		constexpr bool push(const_reference data) 
+			noexcept(
+				noexcept(std::declval<Fifo<T>>().full()) and
+				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
+				noexcept(std::declval<internal_type>().operator[](std::declval<iterator>())) and
+				noexcept(std::declval<std::condition_variable>.notify_one())
+			) {
 			if (full()) {
 				return false;
 			}
@@ -65,9 +71,14 @@ namespace gal::toolbox {
 		 * it will overwrite exist data
 		 * @param data 
 		*/
-		constexpr void push_force(const_reference data) {
+		constexpr void push_force(const_reference data) 
+			noexcept(
+				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
+				noexcept(std::declval<internal_type>().operator[](std::declval<iterator>())) and
+				noexcept(std::declval<std::condition_variable>.notify_one())
+			){
 			{
-				std::lock_guard lock(write_lock_);
+				std::scoped_lock lock(write_lock_);
 				ring_[producer_] = data;
 				++producer_;
 				++count_;
@@ -84,7 +95,15 @@ namespace gal::toolbox {
 		 * otherwise, wait for the given time, if there is still no data, return false
 		 * @return pop success or not
 		*/
-		constexpr bool pop(reference data, time_type wait_milliseconds_time = 0) {
+		constexpr bool pop(reference data, time_type wait_milliseconds_time = 0) 
+			noexcept(
+				noexcept(std::declval<Fifo<T>>().empty()) and
+				noexcept(std::is_nothrow_constructible_v<std::unique_lock, std::mutex>) and
+				noexcept(std::declval<internal_type>().operator[](std::declval<iterator>())) and
+				noexcept(std::declval<std::condition_variable>.wait(std::declval<std::mutex>())) and
+				noexcept(std::is_nothrow_constructible_v<std::chrono::milliseconds, time_type>) and
+				noexcept(std::declval<std::condition_variable>.wait_for(std::declval<std::mutex>(), std::declval<std::chrono::milliseconds>()))
+			) {
 			std::unique_lock lock(read_lock_);
 			if (empty()) {
 				if (wait_milliseconds_time == static_cast<time_type>(-1)) {
@@ -114,7 +133,10 @@ namespace gal::toolbox {
 		 * for more detail, see `pop` with two arguments
 		 * @return pop success or not
 		*/
-		constexpr bool pop(time_type wait_milliseconds_time = 0) {
+		constexpr bool pop(time_type wait_milliseconds_time = 0) 
+			noexcept(
+				noexcept(std::declval<Fifo<T>>().pop(std::declval<reference>(), std::declval<time_type>()))
+			) {
 			buffer_type dummy;
 			return pop(dummy, wait_milliseconds_time);
 		}
@@ -123,18 +145,27 @@ namespace gal::toolbox {
 		 * @brief get exist data size current
 		 * @return 
 		*/
-		constexpr size_type size() const {
+		constexpr size_type size() const 
+			noexcept(
+				noexcept(std::declval<internal_type>().distance(std::declval<iterator>(), std::declval<iterator>()))
+			) {
 			return ring_.distance(consumer_, producer_);
 		}
 
-		constexpr size_type capacity() const {
+		constexpr size_type capacity() const
+			noexcept(
+				noexcept(std::declval<internal_type>().size())
+			) {
 			return ring_.size();
 		}
 
-		constexpr bool full() {
+		constexpr bool full() const 
+			noexcept(
+				noexcept(std::declval<Fifo<T>>().capacity())
+			) {
 			return count_ == capacity();
 		}
-		constexpr bool empty() {
+		constexpr bool empty() const noexcept {
 			return count_ == 0;
 		}
 

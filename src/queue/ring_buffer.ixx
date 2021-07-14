@@ -22,6 +22,8 @@ namespace gal::toolbox {
 
 		using reference = buffer_type bitand;
 		using const_reference = const reference;
+		using pointer = buffer_type*;
+		using const_pointer = const pointer;
 		using iterator = size_type;
 
 		/**
@@ -29,20 +31,23 @@ namespace gal::toolbox {
 		 * @param size size must be 2 xor n
 		*/
 		constexpr explicit RingBuffer(size_type size)
+			noexcept(
+				noexcept(std::is_nothrow_constructible_v<pointer, decltype(new buffer_type[])>)
+			)
 			: size_(size), mask_(size - 1), buffer_(new buffer_type[size]) {
 			gal::toolbox::assert((size_ bitand mask_) == 0);
 			gal::toolbox::assert(buffer_ not_eq nullptr);
 		}
 
-		constexpr compl RingBuffer() {
+		constexpr compl RingBuffer() noexcept {
 			delete[] buffer_;
 			buffer_ = nullptr;
 		}
 
-		constexpr reference operator[](size_type index) {
+		constexpr reference operator[](size_type index) noexcept(noexcept(std::declval<pointer>().operator[](std::declval<size_type>()))) {
 			return buffer_[index bitand mask_];
 		}
-		constexpr const_reference operator[](size_type index) const {
+		constexpr const_reference operator[](size_type index) const noexcept(noexcept(std::declval<pointer>().operator[](std::declval<size_type>()))) {
 			return buffer_[index bitand mask_];
 		}
 
@@ -50,7 +55,7 @@ namespace gal::toolbox {
 		 * @brief get buffer's total size
 		 * @return 
 		*/
-		constexpr size_type size() const {
+		constexpr size_type size() const noexcept {
 			return size_;
 		}
 
@@ -59,7 +64,7 @@ namespace gal::toolbox {
 		 * @param pos 
 		 * @return 
 		*/
-		constexpr size_type index(size_type pos) const {
+		constexpr size_type index(size_type pos) const noexcept {
 			return pos bitand mask_;
 		}
 
@@ -70,7 +75,7 @@ namespace gal::toolbox {
 		 * @param end 
 		 * @return 
 		*/
-		constexpr size_type distance(iterator begin, iterator end) {
+		constexpr size_type distance(iterator begin, iterator end) noexcept {
 			begin and_eq mask_;
 			end and_eq mask_;
 
@@ -83,7 +88,7 @@ namespace gal::toolbox {
 		}
 
 	private:
-		buffer_type* const buffer_;
+		pointer const buffer_;
 		const size_type size_;
 		const mask_type mask_;
 	};

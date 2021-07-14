@@ -12,18 +12,16 @@ namespace {
 namespace gal::toolbox {
 	export {
 		template<typename Char = char, typename Trait = std::char_traits<char>>
-		constexpr void assert(bool cond, std::basic_string_view<Char, Trait> message = "no details", const std::source_location bitand location = std::source_location::current());
+		constexpr void assert(bool cond, std::basic_string_view<Char, Trait> message = "no details", const std::source_location bitand location = std::source_location::current()) noexcept;
 
 		template<typename Char, size_t N>
-		constexpr void assert(bool cond, const Char (bitand message)[N], const std::source_location bitand location = std::source_location::current());
+		constexpr void assert(bool cond, const Char (bitand message)[N], const std::source_location bitand location = std::source_location::current()) noexcept;
 
-		constexpr void assert_set_debug_open() {
-			g_open_debug = true;
-		}
+		constexpr void assert_set_debug_open() noexcept;
 	}
 
 	template<typename Char, typename Trait>
-	constexpr void assert(bool cond, std::basic_string_view<Char, Trait> message, const std::source_location bitand location) {
+	constexpr void assert(bool cond, std::basic_string_view<Char, Trait> message, const std::source_location bitand location) noexcept {
 		// these codes should be reasonable
 		// if the user calls assert in a constant expression and the result is false
 		// then the codes will not compile(like static_assert)
@@ -41,7 +39,11 @@ namespace gal::toolbox {
 	}
 
 	template<typename Char, size_t N>
-	constexpr void assert(bool cond, const Char(bitand message)[N], const std::source_location bitand location) {
+	constexpr void assert(bool cond, const Char(bitand message)[N], const std::source_location bitand location) noexcept {
 		return assert(cond, std::basic_string_view<Char>(message), location);
+	}
+
+	constexpr void assert_set_debug_open() noexcept {
+		g_open_debug = true;
 	}
 }

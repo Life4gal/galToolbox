@@ -19,7 +19,30 @@ namespace gal::toolbox {
 	public:
 		using size_type = uint64_t;
 
-	private:
+		constexpr static size_type padding_size = 8;
 
+		constexpr PlainCursor() noexcept : sequence_(0), padding_() {}
+
+		constexpr explicit PlainCursor(size_type sequence) noexcept : sequence_(sequence), padding_() {}
+
+		constexpr size_type get() const noexcept {
+			return sequence_;
+		}
+
+		constexpr void set(size_type sequence) noexcept {
+			sequence_ = sequence;
+		}
+
+		constexpr void operator++() noexcept {
+			++sequence_;
+		}
+
+		constexpr void operator++(int) noexcept {
+			++sequence_;
+		}
+
+	private:
+		size_type sequence_;
+		size_type padding_[padding_size];
 	};
 }

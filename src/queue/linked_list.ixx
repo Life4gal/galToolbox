@@ -34,13 +34,21 @@ namespace gal::toolbox {
 		/**
 		 * @brief build a empty list
 		*/
-		constexpr LinkedList() : front_(nullptr), tail_(nullptr), size_(0) {}
+		constexpr LinkedList() noexcept(noexcept(std::is_nothrow_constructible_v<node_type, nullptr_t>)) : front_(nullptr), tail_(nullptr), size_(0) {}
 
-		constexpr node_type front() {
+		constexpr node_type front() noexcept(noexcept(std::is_nothrow_copy_constructible_v<node_type>)) {
 			return front_;
 		}
 
-		constexpr node_type tail() {
+		constexpr node_type front() const noexcept(noexcept(std::is_nothrow_copy_constructible_v<node_type>)) {
+			return front_;
+		}
+
+		constexpr node_type tail() noexcept(noexcept(std::is_nothrow_copy_constructible_v<node_type>)) {
+			return tail_;
+		}
+
+		constexpr node_type tail() const noexcept(noexcept(std::is_nothrow_copy_constructible_v<node_type>)) {
 			return tail_;
 		}
 
@@ -49,7 +57,11 @@ namespace gal::toolbox {
 		 * @param p the added node, needs to ensure that the node is valid
 		 * @return list itself
 		*/
-		constexpr chain_type push_front(node_type p) {
+		constexpr chain_type push_front(node_type p) 
+			noexcept(
+				noexcept(std::declval<node_type>()->set_next(std::declval<node_type>())) and
+				noexcept(std::is_nothrow_copy_assignable_v<node_type>)
+			) {
 			gal::toolbox::assert(p not_eq nullptr);
 
 			p->set_next(front_);
@@ -69,7 +81,12 @@ namespace gal::toolbox {
 		 * @brief remove a node from the head
 		 * @return list itself
 		*/
-		constexpr chain_type pop_front() {
+		constexpr chain_type pop_front() 
+			noexcept(
+				noexcept(std::declval<node_type>()->set_next(std::declval<node_type>())) and
+				noexcept(std::is_nothrow_copy_assignable_v<node_type>) and
+				noexcept(std::declval<node_type>() = std::declval<node_type>()->get_next())
+			) {
 			gal::toolbox::assert(front_ not_eq nullptr);
 
 			auto old_front = front_;
@@ -92,7 +109,12 @@ namespace gal::toolbox {
 		 * @param p the added node, needs to ensure that the node is valid
 		 * @return list itself
 		*/
-		constexpr chain_type push_back(node_type p) {
+		constexpr chain_type push_back(node_type p) 
+			noexcept(
+				noexcept(std::declval<LinkedList<T>>().push_front(std::declval<node_type>())) and
+				noexcept(std::declval<node_type>()->set_next(std::declval<node_type>())) and
+				noexcept(std::is_nothrow_copy_assignable_v<node_type>)
+			) {
 			gal::toolbox::assert(p not_eq nullptr);
 
 			// no node exist
@@ -112,17 +134,17 @@ namespace gal::toolbox {
 		/**
 		 * @brief clear list
 		*/
-		constexpr void clear() {
+		constexpr void clear() noexcept {
 			front_ = nullptr;
 			tail_ = nullptr;
 			size_ = 0;
 		}
 
-		constexpr size_type size() const {
+		constexpr size_type size() const noexcept {
 			return size_;
 		}
 
-		constexpr bool empty() {
+		constexpr bool empty() const noexcept {
 			return size() == 0;
 		}
 
