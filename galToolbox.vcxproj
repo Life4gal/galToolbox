@@ -27,6 +27,7 @@
     <ClCompile Include="src\queue\linked_list.ixx" />
     <ClCompile Include="src\queue\sequence.ixx" />
     <ClCompile Include="src\utils\assert.ixx" />
+    <ClCompile Include="src\utils\crtp.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
