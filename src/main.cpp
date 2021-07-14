@@ -1,4 +1,5 @@
 import std.core;
+import gal.toolbox.assert;
 
 int main()
 {

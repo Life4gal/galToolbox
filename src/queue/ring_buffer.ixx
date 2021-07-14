@@ -1,7 +1,7 @@
 export module gal.toolbox.ring_buffer;
 
 import <cstdint>;
-import <cassert>;
+import gal.toolbox.assert;
 
 namespace gal::toolbox {
 	export {
@@ -30,8 +30,8 @@ namespace gal::toolbox {
 		*/
 		constexpr explicit RingBuffer(size_type size)
 			: size_(size), mask_(size - 1), buffer_(new buffer_type[size]) {
-			assert((size_ bitand mask_) == 0);
-			assert(buffer_ not_eq nullptr);
+			gal::toolbox::assert((size_ bitand mask_) == 0);
+			gal::toolbox::assert(buffer_ not_eq nullptr);
 		}
 
 		constexpr compl RingBuffer() {

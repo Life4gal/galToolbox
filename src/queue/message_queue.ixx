@@ -5,6 +5,7 @@ import <thread>;
 import <atomic>;
 import <mutex>;
 import <condition_variable>;
+import gal.toolbox.assert;
 
 namespace gal::toolbox {
 	export {
@@ -37,7 +38,7 @@ namespace gal::toolbox {
 		*/
 		constexpr explicit MessageQueue(size_type capacity)
 			: queue_(new value_type[capacity]), capacity_(capacity), producer_(), consumer_() {
-			assert(queue_ not_eq nullptr);
+			gal::toolbox::assert(queue_ not_eq nullptr);
 		}
 
 		constexpr compl MessageQueue() {

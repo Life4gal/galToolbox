@@ -26,6 +26,7 @@
     <ClCompile Include="src\queue\double_linked_list.ixx" />
     <ClCompile Include="src\queue\linked_list.ixx" />
     <ClCompile Include="src\queue\sequence.ixx" />
+    <ClCompile Include="src\utils\assert.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -110,6 +111,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -146,6 +148,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

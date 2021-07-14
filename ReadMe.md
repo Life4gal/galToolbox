@@ -1,5 +1,7 @@
 # A toolbox base on cxx20
 
+## Modern CPP first step: don't use macros
+
 ## CMAKE not supported module yet, so we have to use MSVC now
 
 ### requirement:

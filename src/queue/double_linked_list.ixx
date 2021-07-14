@@ -2,7 +2,7 @@ export module gal.toolbox.double_linked_list;
 
 import <type_traits>;
 import <cstdint>;
-import <cassert>;
+import gal.toolbox.assert;
 
 namespace gal::toolbox {
 	export {
@@ -54,7 +54,7 @@ namespace gal::toolbox {
 		 * @return list itself
 		*/
 		constexpr chain_type push_front(node_type p) {
-			assert(p not_eq nullptr);
+			gal::toolbox::assert(p not_eq nullptr);
 
 			p->set_prev(nullptr);
 			p->set_next(front_);
@@ -78,7 +78,7 @@ namespace gal::toolbox {
 		 * @return list itself
 		*/
 		constexpr chain_type pop_front() {
-			assert(front_ not_eq nullptr);
+			gal::toolbox::assert(front_ not_eq nullptr);
 
 			auto old_front = front_;
 			auto next = front_->get_next();
@@ -106,7 +106,7 @@ namespace gal::toolbox {
 		 * @return list itself
 		*/
 		constexpr chain_type push_back(node_type p) {
-			assert(p not_eq nullptr);
+			gal::toolbox::assert(p not_eq nullptr);
 
 			p->set_prev(tail_);
 			p->set_next(nullptr);
@@ -130,7 +130,7 @@ namespace gal::toolbox {
 		 * @return list itself
 		*/
 		constexpr chain_type pop_back() {
-			assert(tail_ not_eq nullptr);
+			gal::toolbox::assert(tail_ not_eq nullptr);
 
 			auto old_tail = tail_;
 			auto prev = tail_->get_prev();
@@ -157,7 +157,7 @@ namespace gal::toolbox {
 		 * @param p node to be removed
 		*/
 		constexpr void erase(node_type p) {
-			assert(p not_eq nullptr);
+			gal::toolbox::assert(p not_eq nullptr);
 
 			auto prev = p->get_prev();
 			auto next = p->get_next();

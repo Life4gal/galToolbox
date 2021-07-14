@@ -24,6 +24,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\queue\message_queue.ixx" />
     <ClCompile Include="src\queue\sequence.ixx" />
+    <ClCompile Include="src\utils\assert.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

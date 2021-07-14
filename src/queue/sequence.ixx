@@ -7,6 +7,7 @@ import <mutex>;
 import <condition_variable>;
 import <chrono>;
 import gal.toolbox.ring_buffer;
+import gal.toolbox.assert;
 
 namespace gal::toolbox {
 	export {
