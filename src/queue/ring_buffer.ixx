@@ -18,7 +18,6 @@ namespace gal::toolbox {
 	*/
 	template <typename T, typename Alloc>
 	class ring_buffer {
-	public:
 		using ring_buffer_reference = ring_buffer<T, Alloc>bitand;
 		using const_ring_buffer_reference = const ring_buffer<T, Alloc>bitand;
 		using ring_buffer_rreference = ring_buffer<T, Alloc>and;
