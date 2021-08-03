@@ -19,7 +19,7 @@ namespace gal::toolbox {
 	template<typename T>
 	class Fifo {
 	public:
-		using internal_type = RingBuffer<T>;
+		using internal_type = ring_buffer<T>;
 
 		using buffer_type = internal_type::buffer_type;
 		using size_type = internal_type::size_type;
