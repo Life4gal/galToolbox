@@ -173,10 +173,10 @@ namespace gal::toolbox {
 		}
 
 		/**
-	 * @brief get where the pos actually in
-	 * @param pos given pos
-	 * @return actually index
-	*/
+		 * @brief get where the pos actually in
+		 * @param pos given pos
+		 * @return actually index
+		*/
 		constexpr size_type index(size_type pos) const noexcept {
 			return pos bitand mask_;
 		}
