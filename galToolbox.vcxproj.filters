@@ -27,6 +27,7 @@
     <ClCompile Include="src\utils\crtp.ixx" />
     <ClCompile Include="test\test_ring_buffer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="test\test_fifo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

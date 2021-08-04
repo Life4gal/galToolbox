@@ -167,10 +167,8 @@ namespace gal::toolbox {
 		 * @return reference
 		*/
 		template <typename... Args>
-		constexpr reference get(size_type index, Args&&...args)
+		constexpr reference get(size_type index, Args and ...args)
 			noexcept(
-				// noexcept(std::is_nothrow_invocable_r_v<bool, decltype(bit_checker_type::operator[]), size_type>) and
-				// noexcept(std::is_nothrow_invocable_v<decltype(bit_checker_type::set), size_type>) and
 				noexcept(std::declval<bit_checker_type>().operator[](std::declval<size_type>())) and
 				noexcept(std::declval<bit_checker_type>().set(std::declval<size_type>(), std::declval<bool>())) and
 				noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
@@ -180,10 +178,10 @@ namespace gal::toolbox {
 			if (not bit_checker_[real_index])
 			{
 				// has not been constructed yet
-				bit_checker_.set(real_index);
 				allocator_trait_type::construct(allocator_,
 					std::next(buffer_, real_index),
 					std::forward<Args>(args)...);
+				bit_checker_.set(real_index);
 			}
 
 			return *std::next(buffer_, real_index);
@@ -197,10 +195,8 @@ namespace gal::toolbox {
 		 * @return nothing
 		*/
 		template <typename... Args>
-		constexpr void set_or_overwrite(size_type index, Args&&...args)
+		constexpr void set_or_overwrite(size_type index, Args and ...args)
 			noexcept(
-				//noexcept(std::is_nothrow_invocable_r_v<bool, decltype(bit_checker_type::operator[]), size_type>) and
-				//noexcept(std::is_nothrow_invocable_v<decltype(bit_checker_type::set), size_type, bool>) and
 				noexcept(std::declval<bit_checker_type>().operator[](std::declval<size_type>())) and
 				noexcept(std::declval<bit_checker_type>().set(std::declval<size_type>(), std::declval<bool>())) and
 				noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
@@ -264,16 +260,28 @@ namespace gal::toolbox {
 		 * @param end given end iterator
 		 * @return distance
 		*/
-		constexpr size_type distance(iterator begin, iterator end) noexcept
+		constexpr size_type distance(iterator begin, iterator end) const noexcept
 		{
-			begin and_eq mask;
-			end and_eq mask;
+			const auto real_begin = begin bitand mask;
+			const auto real_end = end bitand mask;
 
-			if (end >= begin)
+			if (real_end == real_begin)
 			{
-				return end - begin;
+				if (end not_eq begin)
+				{
+					// exactly one circle from begin to end
+					return max_size;
+				}
+				return 0;
 			}
-			return max_size - (begin - end);
+			else if (real_end > real_begin)
+			{
+				return real_end - real_begin;
+			}
+			else
+			{
+				return max_size - (real_begin - real_end);
+			}
 		}
 
 		const bit_checker_type bitand get_bit_checker() const noexcept

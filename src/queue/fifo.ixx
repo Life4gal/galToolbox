@@ -49,17 +49,17 @@ namespace gal::toolbox {
 
 		/**
 		 * @brief push a new data into ring buffer
-		 * it will not overwrite exist data, return false if push fail
-		 * @param data new data
+		 * @tparam Args args' type
+		 * @param args the parameters must be constructable into the value_type
 		 * @return push result
 		*/
-		constexpr bool push(const_reference data)
+		template <typename... Args>
+		constexpr bool push(Args and ...args)
 			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::full)>) and
-				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
-				and
-				noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::notify_one)>)
+				noexcept(std::declval<fifo<value_tye, max_size, allocator_type>>().full()) and
+				noexcept(std::is_nothrow_constructible_v<std::scoped_lock<std::mutex>, std::mutex>) and
+				noexcept(std::declval<internal_type>().set_or_overwrite(std::declval<size_type>(), std::declval<decltype(std::forward<Args>(args))>()...)) and
+				noexcept(std::declval<std::condition_variable>().notify_one())
 				)
 		{
 			if (full())
@@ -74,35 +74,13 @@ namespace gal::toolbox {
 					return false;
 				}
 
-				buffer_.set_or_overwrite(producer_, data);
+				// buffer_.set_or_overwrite(producer_, std::forward<Args>(args)...);
+				buffer_.get(producer_, std::forward<Args>(args)...);
 				++producer_;
 				++count_;
 			}
 			read_cond_.notify_one();
 			return true;
-		}
-
-		/**
-		 * @brief push a new data into ring buffer
-		 * it will overwrite exist data
-		 * @param data new data
-		*/
-		constexpr void push_force(const_reference data)
-			noexcept(
-				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
-				and
-				noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::notify_one)>)
-				)
-		{
-			{
-				std::scoped_lock lock(write_mutex_);
-
-				buffer_.set_or_overwrite(producer_, data);
-				++producer_;
-				++count_;
-			}
-			read_cond_.notify_one();
 		}
 
 		/**
@@ -116,15 +94,12 @@ namespace gal::toolbox {
 		*/
 		constexpr bool pop(reference data, time_type wait_milliseconds_time = 0)
 			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::empty)>)
-				and
-				noexcept(std::is_nothrow_constructible_v<std::unique_lock, std::mutex>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::wait), std::unique_lock<std::mutex>>)
-				and
+				noexcept(std::declval<fifo<value_tye, max_size, allocator_type>>().empty()) and
+				noexcept(std::is_nothrow_constructible_v<std::unique_lock<std::mutex>, std::mutex>) and
+				noexcept(std::declval<internal_type>().set_or_overwrite(std::declval<size_type>())) and
+				noexcept(std::declval<std::condition_variable>().wait(std::declval<std::unique_lock<std::mutex> bitand>())) and
 				noexcept(std::is_nothrow_constructible_v<std::chrono::milliseconds, time_type>) and
-				noexcept(std::is_nothrow_invocable_v<
-					decltype(std::condition_variable::wait_for), std::mutex, std::chrono::milliseconds>)
+				noexcept(std::declval<std::condition_variable>().wait_for(std::declval<std::unique_lock<std::mutex> bitand>(), std::declval<std::chrono::milliseconds>()))
 				)
 		{
 			std::unique_lock lock(read_mutex_);
@@ -163,8 +138,7 @@ namespace gal::toolbox {
 		*/
 		constexpr bool pop(time_type wait_milliseconds_time = 0)
 			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<
-					bool, decltype(fifo<value_tye, max_size, allocator_type>::pop), reference, time_type>)
+				noexcept(std::declval<fifo<value_tye, max_size, allocator_type>>().pop(std::declval<reference>(), std::declval<time_type>()))
 				)
 		{
 			value_tye dummy;
@@ -177,7 +151,8 @@ namespace gal::toolbox {
 		*/
 		constexpr size_type size() const
 			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<size_type, decltype(internal_type::distance), iterator, iterator>)
+				// noexcept(std::is_nothrow_invocable_r_v<size_type, decltype(internal_type::distance), iterator, iterator>)
+				noexcept(std::declval<internal_type>().distance(std::declval<iterator>(), std::declval<iterator>()))
 				)
 		{
 			return buffer_.distance(consumer_, producer_);

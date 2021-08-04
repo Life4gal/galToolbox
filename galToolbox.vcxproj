@@ -28,6 +28,7 @@
     <ClCompile Include="src\queue\sequence.ixx" />
     <ClCompile Include="src\utils\assert.ixx" />
     <ClCompile Include="src\utils\crtp.ixx" />
+    <ClCompile Include="test\test_fifo.cpp" />
     <ClCompile Include="test\test_ring_buffer.cpp" />
   </ItemGroup>
   <ItemGroup>

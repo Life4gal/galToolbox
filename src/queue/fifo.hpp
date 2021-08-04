@@ -40,11 +40,12 @@ namespace gal::test
 
 		/**
 		 * @brief push a new data into ring buffer
-		 * it will not overwrite exist data, return false if push fail
-		 * @param data new data
+		 * @tparam Args args' type
+		 * @param args the parameters must be constructable into the value_type
 		 * @return push result
 		*/
-		constexpr bool push(const_reference data)
+		template <typename... Args>
+		constexpr bool push(Argsand ...args)
 		noexcept(
 			noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::full)>) and
 			noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
@@ -65,7 +66,7 @@ namespace gal::test
 					return false;
 				}
 
-				buffer_.set_or_overwrite(producer_, data);
+				buffer_.set_or_overwrite(producer_, std::forward<Args>(args)...);
 				++producer_;
 				++count_;
 			}
@@ -74,11 +75,12 @@ namespace gal::test
 		}
 
 		/**
-		 * @brief push a new data into ring buffer
-		 * it will overwrite exist data
-		 * @param data new data
+		 * @brief push a new data into ring buffer, it will overwrite exist data
+		 * @tparam Args args' type
+		 * @param args the parameters must be constructable into the value_type
 		*/
-		constexpr void push_force(const_reference data)
+		template <typename... Args>
+		constexpr void push_force(Argsand ...args)
 		noexcept(
 			noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
 			noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
@@ -89,7 +91,7 @@ namespace gal::test
 			{
 				std::scoped_lock lock(write_mutex_);
 
-				buffer_.set_or_overwrite(producer_, data);
+				buffer_.set_or_overwrite(producer_, std::forward<Args>(args)...);
 				++producer_;
 				++count_;
 			}
