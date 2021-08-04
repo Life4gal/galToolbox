@@ -1,25 +1,16 @@
-export module gal.toolbox.fifo;
+#pragma once
 
-import <mutex>;
-import <atomic>;
-import <condition_variable>;
-import <chrono>;
-import gal.toolbox.ring_buffer;
+#include "rb.hpp"
+#include <mutex>
+#include <atomic>
+#include <condition_variable>
+#include <chrono>
 
-namespace gal::toolbox {
-	export {
-		template <typename T, std::size_t N, typename Alloc = std::allocator<T>>
-		class fifo;
-	}
-
-	/**
-	 * @brief a common fifo ringbuffer(fixed size) 
-	 * @tparam T value type
-	 * @param Size max size
-	 * @tparam Alloc allocator type
-	*/
-	template <typename T, std::size_t N, typename Alloc>
-	class fifo {
+namespace gal::test
+{
+	template <typename T, std::size_t N, typename Alloc = std::allocator<T>>
+	class fifo
+	{
 		template <typename A, std::size_t B, typename C>
 		using fifo_reference = fifo<A, B, C>bitand;
 		template <typename A, std::size_t B, typename C>
@@ -54,13 +45,13 @@ namespace gal::toolbox {
 		 * @return push result
 		*/
 		constexpr bool push(const_reference data)
-			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::full)>) and
-				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
-				and
-				noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::notify_one)>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::full)>) and
+			noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
+			noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
+			and
+			noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::notify_one)>)
+		)
 		{
 			if (full())
 			{
@@ -88,12 +79,12 @@ namespace gal::toolbox {
 		 * @param data new data
 		*/
 		constexpr void push_force(const_reference data)
-			noexcept(
-				noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
-				and
-				noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::notify_one)>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_constructible_v<std::scoped_lock, std::mutex>) and
+			noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator, const_reference>)
+			and
+			noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::notify_one)>)
+		)
 		{
 			{
 				std::scoped_lock lock(write_mutex_);
@@ -115,17 +106,17 @@ namespace gal::toolbox {
 		 * @return pop success or not
 		*/
 		constexpr bool pop(reference data, time_type wait_milliseconds_time = 0)
-			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::empty)>)
-				and
-				noexcept(std::is_nothrow_constructible_v<std::unique_lock, std::mutex>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator>) and
-				noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::wait), std::unique_lock<std::mutex>>)
-				and
-				noexcept(std::is_nothrow_constructible_v<std::chrono::milliseconds, time_type>) and
-				noexcept(std::is_nothrow_invocable_v<
-					decltype(std::condition_variable::wait_for), std::mutex, std::chrono::milliseconds>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_invocable_r_v<bool, decltype(fifo<value_tye, max_size, allocator_type>::empty)>)
+			and
+			noexcept(std::is_nothrow_constructible_v<std::unique_lock, std::mutex>) and
+			noexcept(std::is_nothrow_invocable_v<decltype(internal_type::set_or_overwrite), iterator>) and
+			noexcept(std::is_nothrow_invocable_v<decltype(std::condition_variable::wait), std::unique_lock<std::mutex>>)
+			and
+			noexcept(std::is_nothrow_constructible_v<std::chrono::milliseconds, time_type>) and
+			noexcept(std::is_nothrow_invocable_v<
+				decltype(std::condition_variable::wait_for), std::mutex, std::chrono::milliseconds>)
+		)
 		{
 			std::unique_lock lock(read_mutex_);
 			if (empty())
@@ -162,10 +153,10 @@ namespace gal::toolbox {
 		 * @return pop success or not
 		*/
 		constexpr bool pop(time_type wait_milliseconds_time = 0)
-			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<
-					bool, decltype(fifo<value_tye, max_size, allocator_type>::pop), reference, time_type>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_invocable_r_v<
+				bool, decltype(fifo<value_tye, max_size, allocator_type>::pop), reference, time_type>)
+		)
 		{
 			value_tye dummy;
 			return pop(dummy, wait_milliseconds_time);
@@ -176,9 +167,9 @@ namespace gal::toolbox {
 		 * @return size
 		*/
 		constexpr size_type size() const
-			noexcept(
-				noexcept(std::is_nothrow_invocable_r_v<size_type, decltype(internal_type::distance), iterator, iterator>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_invocable_r_v<size_type, decltype(internal_type::distance), iterator, iterator>)
+		)
 		{
 			return buffer_.distance(consumer_, producer_);
 		}

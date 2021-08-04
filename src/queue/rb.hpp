@@ -1,25 +1,20 @@
-export module gal.toolbox.ring_buffer;
+#pragma once
 
-import <type_traits>;
-import <iterator>;
-import <memory>;
-import <bitset>;
-import gal.toolbox.assert;
+#include <iterator>
+#include <type_traits>
+#include <memory>
+#include <bitset>
 
-namespace gal::toolbox {
-	export {
-		template <typename T, std::size_t Size, typename Alloc = std::allocator<T>>
-		class ring_buffer;
-	}
-
+namespace gal::test
+{
 	/**
 	 * @brief a common ring buffer with a fixed capacity
 	 * @tparam T value type
-	 * @param Size max size
 	 * @tparam Alloc allocator type
 	*/
 	template <typename T, std::size_t Size, typename Alloc>
-	class ring_buffer {
+	class ring_buffer
+	{
 		template <typename A, std::size_t B, typename C>
 		using ring_buffer_reference = ring_buffer<A, B, C>bitand;
 		template <typename A, std::size_t B, typename C>
@@ -36,24 +31,21 @@ namespace gal::toolbox {
 		using iterator = size_type;
 
 		constexpr static size_type max_size = Size;
-		constexpr static size_type mask = max_size - 1;
-		static_assert((max_size& mask) == 0, "capacity must be 2 xor n");
+		constexpr static size_type mask     = max_size - 1;
+		static_assert((max_size & mask) == 0, "capacity must be 2 xor n");
 
 		using bit_checker_type = std::bitset<max_size>;
 
-		using reference = value_type bitand;
-		using const_reference = const value_type bitand;
+		using reference = value_typebitand;
+		using const_reference = const value_typebitand;
 		using pointer = value_type*;
 		using const_pointer = const value_type*;
 
 		constexpr ring_buffer()
-			noexcept(
-				// noexcept(std::is_nothrow_invocable_v<decltype(allocator_trait_type::allocate), allocator_type, size_type>)
-				noexcept(std::declval<allocator_trait_type>().allocate(std::declval<allocator_type bitand>(), std::declval<size_type>()))
-				)
-			: buffer_(allocator_trait_type::allocate(allocator_, max_size)) {
-			gal::toolbox::assert(buffer_ not_eq nullptr);
-		}
+		noexcept(
+			noexcept(std::is_nothrow_invocable_v<decltype(allocator_trait_type::allocate), allocator_type, size_type>)
+		)
+			: buffer_(allocator_trait_type::allocate(allocator_, max_size)) { }
 
 		constexpr compl ring_buffer() noexcept
 		{
@@ -71,54 +63,45 @@ namespace gal::toolbox {
 		}
 
 		template <typename U, size_type N, typename Allocator>
-		requires std::is_convertible_v<U, value_type>
-			constexpr explicit ring_buffer(const_ring_buffer_reference<U, N, Allocator> other)
-			noexcept(
-				noexcept(std::is_nothrow_convertible_v<U, value_type>)
-				)
+			requires std::is_convertible_v<U, value_type>
+		constexpr explicit ring_buffer(const_ring_buffer_reference<U, N, Allocator> other)
+		noexcept(
+			noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		)
 			: buffer_(allocator_trait_type::allocate(allocator_, max_size))
 		{
-			const auto& checker = other.get_bit_checker();
 			for (size_type i = 0; i < std::min(max_size, ring_buffer<U, N, Allocator>::max_size); ++i)
 			{
-				if (checker[i])
+				if (other.bit_checker_[i])
 				{
 					// the elements of the current bit have been constructed
 					bit_checker_.set(i);
-					allocator_trait_type::construct(allocator_, std::next(buffer_, i), other[i]);
+					allocator_trait_type::construct(allocator_, std::next(buffer_, i), *std::next(other.buffer_, i));
 				}
 			}
 		}
 
 		template <typename U, size_type N, typename Allocator>
-		requires std::is_convertible_v<U, value_type>
-			constexpr ring_buffer_reference<value_type, max_size, allocator_type> operator=(
-				const_ring_buffer_reference<U, N, Allocator> other)
-			noexcept(
-				noexcept(std::is_nothrow_convertible_v<U, value_type>)
-				)
+			requires std::is_convertible_v<U, value_type>
+		constexpr ring_buffer_reference<value_type, max_size, allocator_type> operator=(
+			const_ring_buffer_reference<U, N, Allocator> other)
+		noexcept(
+			noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		)
 		{
-			if constexpr (std::is_same_v<U, value_type>)
+			if (std::addressof(other) not_eq this)
 			{
-				// is same value_type
-				if (std::addressof(other) == this)
+				// we only copy parts of the same length, other parts do not provide any guarantee
+				for (size_type i = 0; i < std::min(max_size, ring_buffer<U, N, Allocator>::max_size); ++i)
 				{
-					// is same address
-					return *this;
-				}
-			}
-
-			const auto& checker = other.get_bit_checker();
-			// we only copy parts of the same length, other parts do not provide any guarantee
-			for (size_type i = 0; i < std::min(max_size, ring_buffer<U, N, Allocator>::max_size); ++i)
-			{
-				if (checker[i])
-				{
-					// the elements of the current bit have been constructed
-					bit_checker_.set(i);
-					allocator_trait_type::construct(allocator_,
-						std::next(buffer_, i),
-						other[i]);
+					if (other.bit_checker_[i])
+					{
+						// the elements of the current bit have been constructed
+						bit_checker_.set(i);
+						allocator_trait_type::construct(allocator_,
+														std::next(buffer_, i),
+														*std::next(other.buffer_, i));
+					}
 				}
 			}
 
@@ -132,7 +115,7 @@ namespace gal::toolbox {
 		constexpr ring_buffer_reference<value_type, max_size, allocator_type> operator=(
 			ring_buffer_rreference<value_type, max_size, allocator_type> other) noexcept
 		{
-			buffer_ = std::exchange(other.buffer_, nullptr);
+			buffer_      = std::exchange(other.buffer_, nullptr);
 			bit_checker_ = std::exchange(other.bit_checker_, {});
 			return *this;
 		}
@@ -143,7 +126,8 @@ namespace gal::toolbox {
 		 * @return reference
 		 * @note if the element of the given index has not been constructed, the behavior is undefined
 		*/
-		constexpr reference operator[](size_type index) noexcept
+		constexpr reference operator[](size_type index)
+		noexcept(noexcept(std::declval<pointer>().operator[](std::declval<size_type>())))
 		{
 			return *std::next(buffer_, index bitand mask);
 		}
@@ -154,7 +138,8 @@ namespace gal::toolbox {
 		 * @return const_reference
 		 * @note if the element of the given index has not been constructed, the behavior is undefined
 		*/
-		constexpr const_reference operator[](size_type index) const noexcept
+		constexpr const_reference operator[](size_type index) const
+		noexcept(noexcept(std::declval<pointer>().operator[](std::declval<size_type>())))
 		{
 			return *std::next(buffer_, index bitand mask);
 		}
@@ -168,13 +153,11 @@ namespace gal::toolbox {
 		*/
 		template <typename... Args>
 		constexpr reference get(size_type index, Args&&...args)
-			noexcept(
-				// noexcept(std::is_nothrow_invocable_r_v<bool, decltype(bit_checker_type::operator[]), size_type>) and
-				// noexcept(std::is_nothrow_invocable_v<decltype(bit_checker_type::set), size_type>) and
-				noexcept(std::declval<bit_checker_type>().operator[](std::declval<size_type>())) and
-				noexcept(std::declval<bit_checker_type>().set(std::declval<size_type>(), std::declval<bool>())) and
-				noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_invocable_r_v<bool, decltype(bit_checker_type::operator[]), size_type>) and
+			noexcept(std::is_nothrow_invocable_v<decltype(bit_checker_type::set), size_type>) and
+			noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
+		)
 		{
 			const auto real_index = index bitand mask;
 			if (not bit_checker_[real_index])
@@ -182,8 +165,8 @@ namespace gal::toolbox {
 				// has not been constructed yet
 				bit_checker_.set(real_index);
 				allocator_trait_type::construct(allocator_,
-					std::next(buffer_, real_index),
-					std::forward<Args>(args)...);
+												std::next(buffer_, real_index),
+												std::forward<Args>(args)...);
 			}
 
 			return *std::next(buffer_, real_index);
@@ -198,13 +181,11 @@ namespace gal::toolbox {
 		*/
 		template <typename... Args>
 		constexpr void set_or_overwrite(size_type index, Args&&...args)
-			noexcept(
-				//noexcept(std::is_nothrow_invocable_r_v<bool, decltype(bit_checker_type::operator[]), size_type>) and
-				//noexcept(std::is_nothrow_invocable_v<decltype(bit_checker_type::set), size_type, bool>) and
-				noexcept(std::declval<bit_checker_type>().operator[](std::declval<size_type>())) and
-				noexcept(std::declval<bit_checker_type>().set(std::declval<size_type>(), std::declval<bool>())) and
-				noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
-				)
+		noexcept(
+			noexcept(std::is_nothrow_invocable_r_v<bool, decltype(bit_checker_type::operator[]), size_type>) and
+			noexcept(std::is_nothrow_invocable_v<decltype(bit_checker_type::set), size_type, bool>) and
+			noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
+		)
 		{
 			if (const auto real_index = index bitand mask; not bit_checker_[real_index])
 			{
@@ -217,8 +198,8 @@ namespace gal::toolbox {
 				else
 				{
 					allocator_trait_type::construct(allocator_,
-						std::next(buffer_, real_index),
-						std::forward<Args>(args)...);
+													std::next(buffer_, real_index),
+													std::forward<Args>(args)...);
 					bit_checker_.set(real_index);
 				}
 			}
@@ -234,8 +215,8 @@ namespace gal::toolbox {
 				else
 				{
 					allocator_trait_type::construct(allocator_,
-						std::next(buffer_, real_index),
-						std::forward<Args>(args)...);
+													std::next(buffer_, real_index),
+													std::forward<Args>(args)...);
 					bit_checker_.set(real_index);
 					return;
 				}
@@ -274,11 +255,6 @@ namespace gal::toolbox {
 				return end - begin;
 			}
 			return max_size - (begin - end);
-		}
-
-		const bit_checker_type bitand get_bit_checker() const noexcept
-		{
-			return bit_checker_;
 		}
 
 	private:
