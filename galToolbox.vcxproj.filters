@@ -20,6 +20,8 @@
     <ClCompile Include="test\test_ring_buffer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="test\test_fifo.cpp" />
+    <ClCompile Include="src\utils\random.ixx" />
+    <ClCompile Include="test\test_random.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
