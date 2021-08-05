@@ -9,10 +9,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\queue\ring_buffer.ixx">
+    <ClCompile Include="src\container\ring_buffer.ixx">
       <Filter>queue</Filter>
     </ClCompile>
-    <ClCompile Include="src\queue\fifo.ixx">
+    <ClCompile Include="src\container\fifo.ixx">
       <Filter>queue</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\assert.ixx" />
@@ -21,11 +21,14 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="test\test_fifo.cpp" />
     <ClCompile Include="src\utils\random.ixx" />
-    <ClCompile Include="test\test_random.cpp" />
+    <ClCompile Include="test\test_dynamic_bitset.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\container\dynamic_bitset.hpp" />
   </ItemGroup>
 </Project>
