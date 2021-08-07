@@ -37,7 +37,7 @@ namespace gal::toolbox {
 
 		constexpr static size_type max_size = Size;
 		constexpr static size_type mask = max_size - 1;
-		static_assert((max_size& mask) == 0, "capacity must be 2 xor n");
+		static_assert((max_size bitand mask) == 0, "capacity must be 2 xor n");
 
 		using bit_checker_type = std::bitset<max_size>;
 
@@ -293,7 +293,6 @@ namespace gal::toolbox {
 		pointer          buffer_;
 		bit_checker_type bit_checker_;
 
-		// todo: do we really need this allocator? Or is it worth it?
-		inline static allocator_type allocator_;
+		[[no_unique_address]] allocator_type allocator_;
 	};
 }
