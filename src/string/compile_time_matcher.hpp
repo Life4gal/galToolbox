@@ -5,289 +5,341 @@
 
 namespace gal::test
 {
-	class matcher;
-	
-	// https://en.cppreference.com/w/cpp/language/string_literal
-	template<typename T>
-	struct wildcard;
 
-	enum class wildcard_type
-	{
-		standard,
-		extended
-	};
+	// https://en.cppreference.com/w/cpp/language/string_literal
+	/**
+	 * default wildcard:
+	 *
+	 * basic part:
+	 * anything -> *
+	 * single -> ?
+	 * escape -> \
+	 *
+	 * extend part:
+	 *
+	 * [] + ! -> the content in [] must appear (at least one) or not appear at all, depending on whether it has `!`
+	 * example:
+	 *		[abc] means that one of `abc` appears at least once
+	 *		[!def] means that none of `def` appears
+	 *
+	 * () + | -> the content in () must appear (at least one of all the alternatives)
+	 * example:
+	 *		(a|b|c) means that one of `a`, `b`, `c` appears
+	 *		(|d|e|f) means that one of ``, `d`, `e`, `f` appears (`` is means empty, which means empty is acceptable)
+	 *
+	 *
+	 * users can specialize the template type they need, as long as the specified wildcards exist operator==
+	*/
+	template<typename T>
+	struct wildcard_type;
 
 	template<>
-	struct wildcard<char>
+	struct wildcard_type<char>
 	{
+		using value_type = char;
+		
 		// default
-		explicit constexpr wildcard(const wildcard_type type = wildcard_type::extended)
-			: set_enabled_(type == wildcard_type::extended),
-		alt_enabled_(type == wildcard_type::extended) {}
+		explicit constexpr wildcard_type() = default;
 
-		// standard
-		constexpr wildcard(const char anything, const char single, const char escape)
-			: anything_(anything),
-		single_(single),
-		escape_(escape){}
-
-		// extended
-		constexpr wildcard(
-			const char anything,
-			const char single,
-			const char escape,
-			const char set_open,
-			const char set_close,
-			const char set_not,
-			const char alt_open,
-			const char alt_close,
-			const char alt_or
+		// basic
+		constexpr wildcard_type(
+			const value_type customize_anything, 
+			const value_type customize_single, 
+			const value_type customize_escape
 		)
-			: anything_(anything),
-		single_(single),
-		escape_(escape),
-		set_open_(set_open),
-		set_close_(set_close),
-		set_not_(set_not),
-		alt_open_(alt_open),
-		alt_close_(alt_close),
-		alt_or_(alt_or) {}
+			:
+		anything_(customize_anything),
+		single_(customize_single),
+		escape_(customize_escape){}
+
+		// basic + extend
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape,
+					  
+			const value_type customize_set_open,
+			const value_type customize_set_close,
+			const value_type customize_set_not,
+					  
+			const value_type customize_alt_open,
+			const value_type customize_alt_close,
+			const value_type customize_alt_or
+		)
+			:
+		anything_(customize_anything),
+		single_(customize_single),
+		escape_(customize_escape),
+		set_open_(customize_set_open),
+		set_close_(customize_set_close),
+		set_not_(customize_set_not),
+		alt_open_(customize_alt_open),
+		alt_close_(customize_alt_close),
+		alt_or_(customize_alt_or) {}
 		
 		// standard
-		char anything_{ '*' };
-		char single_{ '?' };
-		char escape_{ '\\' };
+		value_type anything_{ '*' };
+		value_type single_{ '?' };
+		value_type escape_{ '\\' };
 
 		// extended
-		bool set_enabled_{ true };
-		char set_open_{ '[' };
-		char set_close_{ ']' };
-		char set_not_{ '!' };
+		value_type set_open_{ '[' };
+		value_type set_close_{ ']' };
+		value_type set_not_{ '!' };
 
-		bool alt_enabled_{ true };
-		char alt_open_{ '(' };
-		char alt_close_{ ')' };
-		char alt_or_{ '|' };
+		value_type alt_open_{ '(' };
+		value_type alt_close_{ ')' };
+		value_type alt_or_{ '|' };
 	};
 
 	template<>
-	struct wildcard<wchar_t>
+	struct wildcard_type<wchar_t>
 	{
+		using value_type = wchar_t;
+
 		// default
-		explicit constexpr wildcard(const wildcard_type type = wildcard_type::extended)
-			: set_enabled_(type == wildcard_type::extended),
-			alt_enabled_(type == wildcard_type::extended) {}
+		explicit constexpr wildcard_type() = default;
 
-		// standard
-		constexpr wildcard(const wchar_t anything, const wchar_t single, const wchar_t escape)
-			: anything_(anything),
-			single_(single),
-			escape_(escape) {}
-
-		// extended
-		constexpr wildcard(
-			const wchar_t anything,
-			const wchar_t single,
-			const wchar_t escape,
-			const wchar_t set_open,
-			const wchar_t set_close,
-			const wchar_t set_not,
-			const wchar_t alt_open,
-			const wchar_t alt_close,
-			const wchar_t alt_or
+		// basic
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape
 		)
-			: anything_(anything),
-			single_(single),
-			escape_(escape),
-			set_open_(set_open),
-			set_close_(set_close),
-			set_not_(set_not),
-			alt_open_(alt_open),
-			alt_close_(alt_close),
-			alt_or_(alt_or) {}
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape) {}
+
+		// basic + extend
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape,
+
+			const value_type customize_set_open,
+			const value_type customize_set_close,
+			const value_type customize_set_not,
+
+			const value_type customize_alt_open,
+			const value_type customize_alt_close,
+			const value_type customize_alt_or
+		)
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape),
+			set_open_(customize_set_open),
+			set_close_(customize_set_close),
+			set_not_(customize_set_not),
+			alt_open_(customize_alt_open),
+			alt_close_(customize_alt_close),
+			alt_or_(customize_alt_or) {}
 
 		// standard
-		wchar_t anything_{ L'*' };
-		wchar_t single_{ L'?' };
-		wchar_t escape_{ L'\\' };
+		value_type anything_{ L'*' };
+		value_type single_{ L'?' };
+		value_type escape_{ L'\\' };
 
 		// extended
-		bool set_enabled_{ true };
-		wchar_t set_open_{ L'[' };
-		wchar_t set_close_{ L']' };
-		wchar_t set_not_{ L'!' };
+		value_type set_open_{ L'[' };
+		value_type set_close_{ L']' };
+		value_type set_not_{ L'!' };
 
-		bool alt_enabled_{ true };
-		wchar_t alt_open_{ L'(' };
-		wchar_t alt_close_{ L')' };
-		wchar_t alt_or_{ L'|' };
+		value_type alt_open_{ L'(' };
+		value_type alt_close_{ L')' };
+		value_type alt_or_{ L'|' };
 	};
 
 	template<>
-	struct wildcard<char8_t>
+	struct wildcard_type<char8_t>
 	{
+		using value_type = char8_t;
+
 		// default
-		explicit constexpr wildcard(const wildcard_type type = wildcard_type::extended)
-			: set_enabled_(type == wildcard_type::extended),
-			alt_enabled_(type == wildcard_type::extended) {}
+		explicit constexpr wildcard_type() = default;
 
-		// standard
-		constexpr wildcard(const char8_t anything, const char8_t single, const char8_t escape)
-			: anything_(anything),
-			single_(single),
-			escape_(escape) {}
-
-		// extended
-		constexpr wildcard(
-			const char8_t anything,
-			const char8_t single,
-			const char8_t escape,
-			const char8_t set_open,
-			const char8_t set_close,
-			const char8_t set_not,
-			const char8_t alt_open,
-			const char8_t alt_close,
-			const char8_t alt_or
+		// basic
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape
 		)
-			: anything_(anything),
-			single_(single),
-			escape_(escape),
-			set_open_(set_open),
-			set_close_(set_close),
-			set_not_(set_not),
-			alt_open_(alt_open),
-			alt_close_(alt_close),
-			alt_or_(alt_or) {}
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape) {}
+
+		// basic + extend
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape,
+
+			const value_type customize_set_open,
+			const value_type customize_set_close,
+			const value_type customize_set_not,
+
+			const value_type customize_alt_open,
+			const value_type customize_alt_close,
+			const value_type customize_alt_or
+		)
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape),
+			set_open_(customize_set_open),
+			set_close_(customize_set_close),
+			set_not_(customize_set_not),
+			alt_open_(customize_alt_open),
+			alt_close_(customize_alt_close),
+			alt_or_(customize_alt_or) {}
 
 		// standard
-		char8_t anything_{ u8'*' };
-		char8_t single_{ u8'?' };
-		char8_t escape_{ u8'\\' };
+		value_type anything_{ u8'*' };
+		value_type single_{ u8'?' };
+		value_type escape_{ u8'\\' };
 
 		// extended
-		bool set_enabled_{ true };
-		char8_t set_open_{ u8'[' };
-		char8_t set_close_{ u8']' };
-		char8_t set_not_{ u8'!' };
+		value_type set_open_{ u8'[' };
+		value_type set_close_{ u8']' };
+		value_type set_not_{ u8'!' };
 
-		bool alt_enabled_{ true };
-		char8_t alt_open_{ u8'(' };
-		char8_t alt_close_{ u8')' };
-		char8_t alt_or_{ u8'|' };
+		value_type alt_open_{ u8'(' };
+		value_type alt_close_{ u8')' };
+		value_type alt_or_{ u8'|' };
 	};
 
 	template<>
-	struct wildcard<char16_t>
+	struct wildcard_type<char16_t>
 	{
+		using value_type = char16_t;
+
 		// default
-		explicit constexpr wildcard(const wildcard_type type = wildcard_type::extended)
-			: set_enabled_(type == wildcard_type::extended),
-			alt_enabled_(type == wildcard_type::extended) {}
+		explicit constexpr wildcard_type() = default;
 
-		// standard
-		constexpr wildcard(const char16_t anything, const char16_t single, const char16_t escape)
-			: anything_(anything),
-			single_(single),
-			escape_(escape) {}
-
-		// extended
-		constexpr wildcard(
-			const char16_t anything,
-			const char16_t single,
-			const char16_t escape,
-			const char16_t set_open,
-			const char16_t set_close,
-			const char16_t set_not,
-			const char16_t alt_open,
-			const char16_t alt_close,
-			const char16_t alt_or
+		// basic
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape
 		)
-			: anything_(anything),
-			single_(single),
-			escape_(escape),
-			set_open_(set_open),
-			set_close_(set_close),
-			set_not_(set_not),
-			alt_open_(alt_open),
-			alt_close_(alt_close),
-			alt_or_(alt_or) {}
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape) {}
+
+		// basic + extend
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape,
+
+			const value_type customize_set_open,
+			const value_type customize_set_close,
+			const value_type customize_set_not,
+
+			const value_type customize_alt_open,
+			const value_type customize_alt_close,
+			const value_type customize_alt_or
+		)
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape),
+			set_open_(customize_set_open),
+			set_close_(customize_set_close),
+			set_not_(customize_set_not),
+			alt_open_(customize_alt_open),
+			alt_close_(customize_alt_close),
+			alt_or_(customize_alt_or) {}
 
 		// standard
-		char16_t anything_{ u'*' };
-		char16_t single_{ u'?' };
-		char16_t escape_{ u'\\' };
+		value_type anything_{ u'*' };
+		value_type single_{ u'?' };
+		value_type escape_{ u'\\' };
 
 		// extended
-		bool set_enabled_{ true };
-		char16_t set_open_{ u'[' };
-		char16_t set_close_{ u']' };
-		char16_t set_not_{ u'!' };
+		value_type set_open_{ u'[' };
+		value_type set_close_{ u']' };
+		value_type set_not_{ u'!' };
 
-		bool alt_enabled_{ true };
-		char16_t alt_open_{ u'(' };
-		char16_t alt_close_{ u')' };
-		char16_t alt_or_{ u'|' };
+		value_type alt_open_{ u'(' };
+		value_type alt_close_{ u')' };
+		value_type alt_or_{ u'|' };
 	};
-
 	template<>
-	struct wildcard<char32_t>
+	struct wildcard_type<char32_t>
 	{
+		using value_type = char32_t;
+
 		// default
-		explicit constexpr wildcard(const wildcard_type type = wildcard_type::extended)
-			: set_enabled_(type == wildcard_type::extended),
-			alt_enabled_(type == wildcard_type::extended) {}
+		explicit constexpr wildcard_type() = default;
 
-		// standard
-		constexpr wildcard(const char32_t anything, const char32_t single, const char32_t escape)
-			: anything_(anything),
-			single_(single),
-			escape_(escape) {}
-
-		// extended
-		constexpr wildcard(
-			const char32_t anything,
-			const char32_t single,
-			const char32_t escape,
-			const char32_t set_open,
-			const char32_t set_close,
-			const char32_t set_not,
-			const char32_t alt_open,
-			const char32_t alt_close,
-			const char32_t alt_or
+		// basic
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape
 		)
-			: anything_(anything),
-			single_(single),
-			escape_(escape),
-			set_open_(set_open),
-			set_close_(set_close),
-			set_not_(set_not),
-			alt_open_(alt_open),
-			alt_close_(alt_close),
-			alt_or_(alt_or) {}
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape) {}
+
+		// basic + extend
+		constexpr wildcard_type(
+			const value_type customize_anything,
+			const value_type customize_single,
+			const value_type customize_escape,
+
+			const value_type customize_set_open,
+			const value_type customize_set_close,
+			const value_type customize_set_not,
+
+			const value_type customize_alt_open,
+			const value_type customize_alt_close,
+			const value_type customize_alt_or
+		)
+			:
+			anything_(customize_anything),
+			single_(customize_single),
+			escape_(customize_escape),
+			set_open_(customize_set_open),
+			set_close_(customize_set_close),
+			set_not_(customize_set_not),
+			alt_open_(customize_alt_open),
+			alt_close_(customize_alt_close),
+			alt_or_(customize_alt_or) {}
 
 		// standard
-		char32_t anything_{ U'*' };
-		char32_t single_{ U'?' };
-		char32_t escape_{ U'\\' };
+		value_type anything_{ U'*' };
+		value_type single_{ U'?' };
+		value_type escape_{ U'\\' };
 
 		// extended
-		bool set_enabled_{ true };
-		char32_t set_open_{ U'[' };
-		char32_t set_close_{ U']' };
-		char32_t set_not_{ U'!' };
+		value_type set_open_{ U'[' };
+		value_type set_close_{ U']' };
+		value_type set_not_{ U'!' };
 
-		bool alt_enabled_{ true };
-		char32_t alt_open_{ U'(' };
-		char32_t alt_close_{ U')' };
-		char32_t alt_or_{ U'|' };
+		value_type alt_open_{ U'(' };
+		value_type alt_close_{ U')' };
+		value_type alt_or_{ U'|' };
 	};
 
 	template<typename SequenceIterator, typename PatternIterator>
 	struct full_match_result
 	{
 		bool result;
-		[[no_unique_address]] SequenceIterator sequence_begin, sequence_end, match_result_sequence;
-		[[no_unique_address]] PatternIterator pattern_begin, pattern_end, match_result_pattern;
+		
+		[[no_unique_address]] SequenceIterator sequence_begin;
+		[[no_unique_address]] SequenceIterator sequence_end;
+		
+		[[no_unique_address]] PatternIterator pattern_begin;
+		[[no_unique_address]] PatternIterator pattern_end;
+
+		[[no_unique_address]] SequenceIterator  match_result_sequence;
+		[[no_unique_address]] PatternIterator  match_result_pattern;
 
 		// ReSharper disable once CppNonExplicitConversionOperator
 		constexpr operator bool() const noexcept
@@ -300,6 +352,7 @@ namespace gal::test
 	struct match_result
 	{
 		bool result;
+		
 		[[no_unique_address]] SequenceIterator sequence;
 		[[no_unique_address]] PatternIterator pattern;
 
@@ -319,76 +372,64 @@ namespace gal::test
 	{
 		return {
 			match_result.result,
-			sequence_begin, sequence_end, match_result.sequence,
-			pattern_begin, pattern_end, match_result.pattern
+			sequence_begin, sequence_end,
+			pattern_begin, pattern_end,
+			match_result.sequence,
+			match_result.pattern
 		};
 	}
 
-	template<typename ErrorType, typename T>
-	constexpr auto check_string(const char* args, T t = {})
-	{
-		if constexpr (std::is_same_v<T, bool>)
-		{
-			return args == nullptr ? false : throw ErrorType(args);
-		}
-		else
-		{
-			return args == nullptr ? t : throw ErrorType(args);
-		}
-	}
-
-	template<typename ErrorType, typename T>
-	constexpr auto emit_or_dumb(const char* message, T t = {})
-	{
-		return message == nullptr ? t : throw ErrorType(message);
-	}
-
+	// support type traits
+	template<typename Iterator>
+	using iterator_value_t = std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<Iterator>())>>;
+	template<typename Container>
+	using container_value_t = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Container>()))>>;
+	
 	enum class match_set_state
 	{
-		open,
-		not_or_first,
+		open, // -> `(`
+		not_or_first, // -> `!` or first
 		first,
-		next
+		next // -> `)`
+	};
+
+	enum class match_state
+	{
+		open, // -> `(`
+		not_or_first_in, // -> `!` or first
+		first_out, // first out
+		next_in, // next
+		next_out
 	};
 
 	/**
-	 * @brief check set
+	 * @brief determine whether the target pattern has a legal set
 	 * @tparam EmitError if true, throw a std::invalid_argument instead return end
 	 * @tparam PatternIterator iterator type
 	 * @param begin pattern begin
 	 * @param end pattern end
-	 * @param wild wildcard
-	 * @param state state
-	 * @return if the check is passed, it returns the last matched position and iterates one position backward, otherwise it returns end
+	 * @param wildcard wildcard
+	 * @param state users do not need to know the state, and generally start from the beginning (`(`) to parse
+	 * @return if it is, return the position after the last valid position (`)`) of the set, otherwise it returns end
 	*/
 	template<bool EmitError, typename PatternIterator>
-	constexpr PatternIterator check_set(
+	constexpr PatternIterator check_set_exist(
 		PatternIterator begin,
 		PatternIterator end,
-		const  wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>{},
+		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
 		match_set_state state = match_set_state::open
 	)
 	{
-		if (not wild.set_enabled_)
-		{
-			if constexpr (EmitError)
-			{
-				throw std::invalid_argument("the use of sets is disabled");
-			}
-			else
-			{
-				return end;
-			}
-		}
-
 		while (begin not_eq end)
 		{
 			switch (state)
 			{
-			case match_set_state::open:
+			case match_set_state::open: // -> `(`
 			{
-				if (*begin not_eq wild.set_open_)
+				// this character not_eq `(`
+				if (*begin not_eq wildcard.set_open_)
 				{
+					// emit error or not
 					if constexpr (EmitError)
 					{
 						throw std::invalid_argument("the given pattern is not a valid set");
@@ -398,30 +439,35 @@ namespace gal::test
 						return end;
 					}
 				}
+				// `(` is detected, then the next character should be `!` or the first option
 				state = match_set_state::not_or_first;
 				break;
 			}
-			case match_set_state::not_or_first:
+			case match_set_state::not_or_first: // -> '!'
 			{
-				if (*begin == wild.set_not_)
+				if (*begin == wildcard.set_not_)
 				{
+					// `!` is detected, then the next character should be the first option
 					state = match_set_state::first;
 				}
 				else
 				{
+					// the first option is detected, then the next character should be the next option
 					state = match_set_state::next;
 				}
 				break;
 			}
 			case match_set_state::first:
 			{
+				// the first option is detected, then the next character should be the next option
 				state = match_set_state::next;
 				break;
 			}
-			case match_set_state::next:
+			case match_set_state::next: // -> `)`
 			{
-				if (*begin == wild.set_close_)
+				if (*begin == wildcard.set_close_)
 				{
+					// `)` is detected, then the next character should be the next option
 					return std::next(begin);
 				}
 			}
@@ -440,58 +486,66 @@ namespace gal::test
 		}
 	}
 
-	enum class match_state
-	{
-		open,
-		not_or_first_in,
-		first_out,
-		next_in,
-		next_out
-	};
-
+	/**
+	 * @brief Determine whether the target pattern can match the sequence
+	 * @tparam SequenceIterator sequence iterator type
+	 * @tparam PatternIterator pattern iterator type
+	 * @tparam EqualTo used to determine whether two wildcards are equal, and can also be customized
+	 * @param sequence_begin sequence iterator begin
+	 * @param sequence_end sequence iterator end
+	 * @param pattern_begin pattern iterator begin
+	 * @param pattern_end pattern iterator end
+	 * @param wildcard wildcard
+	 * @param equal_to equal
+	 * @param state state users do not need to know the state, and generally start from the beginning (`(`) to parse
+	 * @return return a match_result, if the match is successful, the match_result has the position where the sequence matches the pattern, otherwise there is no guarantee
+	*/
 	template<typename SequenceIterator, typename PatternIterator, typename EqualTo = std::equal_to<>>
 	constexpr match_result<SequenceIterator, PatternIterator> match_set(
 		SequenceIterator sequence_begin, SequenceIterator sequence_end,
 		PatternIterator pattern_begin, PatternIterator pattern_end,
-		const  wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>{},
-		const EqualTo bitand equal_to = {},
+		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
+		const EqualTo bitand equal_to = EqualTo{},
 		match_state state = match_state::open
 	)
 	{
-		if(not wild.set_enabled_)
-		{
-			throw std::invalid_argument("the use of sets is disabled");
-		}
-
 		while(pattern_begin not_eq pattern_end)
 		{
 			switch (state)
 			{
-			case match_state::open:
+			case match_state::open: // -> '(`
 			{
-				if(*pattern_begin not_eq wild.set_open_)
+				// this character not_eq `(`
+				if(*pattern_begin not_eq wildcard.set_open_)
 				{
 					throw std::invalid_argument("the given pattern is not a valid set");
 				}
+
+				// `(` is detected, then the next character should be `!` or the first option
 				state = match_state::not_or_first_in;
 				break;
 			}
-			case match_state::not_or_first_in:
+			case match_state::not_or_first_in: // -> `!`
 			{
-				if(*pattern_begin == wild.set_not_)
+				if(*pattern_begin == wildcard.set_not_)
 				{
+					// `!` is detected, then the next character should be the first option
 					state = match_state::first_out;
 				}
 				else
 				{
+					// the first option is detected, then the next character should be the next option
+					// not a valid sequence
 					if(sequence_begin == sequence_end)
 					{
+						// just return match failed
 						return {
 							false,
 							sequence_begin,
 							pattern_begin
 						};
 					}
+					// match succeed
 					if(equal_to(*sequence_begin, *pattern_begin))
 					{
 						return {
@@ -501,13 +555,19 @@ namespace gal::test
 						};
 					}
 
+					// sequence is valid but match failed, continue to parse
 					state = match_state::next_in;
 				}
 				break;
 			}
 			case match_state::first_out:
 			{
-				if(sequence_begin == sequence_end or equal_to(*sequence_begin, *pattern_begin))
+				if(
+					// not a valid sequence
+					sequence_begin == sequence_end or
+					// the match should not succeed here
+					equal_to(*sequence_begin, *pattern_begin)
+					)
 				{
 					return {
 							false,
@@ -516,12 +576,17 @@ namespace gal::test
 					};
 				}
 
-				state = match_state::next_in;
+				state = match_state::next_out;
 				break;
 			}
 			case match_state::next_in:
 			{
-				if(*pattern_begin == wild.set_close_ or sequence_begin == sequence_end)
+				if(
+					// not a valid sequence
+					sequence_begin == sequence_end or
+					// pattern ended early
+					*pattern_begin == wildcard.set_close_
+					)
 				{
 					return {
 							false,
@@ -529,6 +594,7 @@ namespace gal::test
 							pattern_begin
 					};
 				}
+				// match succeed
 				if (equal_to(*sequence_begin, *pattern_begin))
 				{
 					return {
@@ -541,7 +607,8 @@ namespace gal::test
 			}
 			case match_state::next_out:
 			{
-				if(*pattern_begin == wild.set_close_)
+				// pattern just ended
+				if(*pattern_begin == wildcard.set_close_)
 				{
 					return {
 						true,
@@ -549,7 +616,12 @@ namespace gal::test
 						pattern_begin
 					};
 				}
-				if (sequence_begin == sequence_end or equal_to(*sequence_begin, *pattern_begin))
+				if (
+					// not a valid sequence
+					sequence_begin == sequence_end or
+					// the match should not succeed here
+					equal_to(*sequence_begin, *pattern_begin)
+					)
 				{
 					return {
 							false,
@@ -561,6 +633,7 @@ namespace gal::test
 			}
 			}
 
+			// move forward 1 step
 			std::advance(pattern_begin, 1);
 		}
 
@@ -569,40 +642,47 @@ namespace gal::test
 
 	enum class match_alt_state
 	{
-		open,
+		open, // -> `[`
+		next, // -> `|`
+		escape
+	};
+
+	enum class match_alt_sub_state
+	{
 		next,
 		escape
 	};
 
+	/**
+	 * @brief determine whether the target pattern has a legal alt
+	 * @tparam EmitError if true, throw a std::invalid_argument instead return end
+	 * @tparam PatternIterator iterator type
+	 * @param begin pattern begin
+	 * @param end pattern end
+	 * @param wildcard wildcard
+	 * @param state users do not need to know the state, and generally start from the beginning (`[`) to parse
+	 * @param depth users do not need to know the depth, this is just to confirm whether we have processed all the nested content
+	 * @return if it is, return the position after the last valid position (`]`) of the alt, otherwise it returns end
+	*/
 	template<bool EmitError, typename PatternIterator>
-	constexpr PatternIterator check_alt(
+	constexpr PatternIterator check_alt_exist(
 		PatternIterator begin,
 		PatternIterator end,
-		const  wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>{},
+		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
 		match_alt_state state = match_alt_state::open,
-		int depth = 0
+		std::size_t depth = 0
 	)
 	{
-		if (not wild.alt_enabled_)
-		{
-			if constexpr (EmitError)
-			{
-				throw std::invalid_argument("the use of alternatives is disabled");
-			}
-			else
-			{
-				return end;
-			}
-		}
-
 		while(begin not_eq end)
 		{
 			switch (state)
 			{
-			case match_alt_state::open:
+			case match_alt_state::open: // -> `[`
 			{
-				if(*begin not_eq wild.alt_open_)
+				// this character not_eq `[`
+				if(*begin not_eq wildcard.alt_open_)
 				{
+					// emit error or not
 					if constexpr (EmitError)
 					{
 						throw std::invalid_argument("the given pattern is not a valid alternative");
@@ -613,33 +693,40 @@ namespace gal::test
 					}
 				}
 
+				// `[` is detected, then the next character should the first option
 				state = match_alt_state::next;
 				++depth;
 				break;
 			}
 			case match_alt_state::next:
 			{
-				if(*begin == wild.escape_)
+				if(*begin == wildcard.escape_)
 				{
 					state = match_alt_state::escape;
 				}
 				else if(
-					wild.set_enabled_ and 
-					*begin == wild.set_open_ and 
-					check_set<false>(std::next(begin), end, wild, match_set_state::not_or_first) not_eq end
+					// if there is a nested set
+					*begin == wildcard.set_open_ and
+					// and it really exist
+					check_set_exist<false>(std::next(begin), end, wildcard, match_set_state::not_or_first) not_eq end
 					)
 				{
-					begin = std::prev(check_set<true>(std::next(begin), end, wild, match_set_state::not_or_first));
+					// reposition begin to a position where `)` is located after skipping this set
+					begin = std::prev(check_set_exist<true>(std::next(begin), end, wildcard, match_set_state::not_or_first));
 				}
-				else if(*begin == wild.alt_open_)
+				else if(*begin == wildcard.alt_open_)
 				{
+					// another nested alt
 					++depth;
-				}else if(*begin == wild.alt_close_)
+				}
+				else if(*begin == wildcard.alt_close_)
 				{
+					// current alt finished
 					--depth;
+					// all possible nested alts are matched
 					if(depth == 0)
 					{
-						return std::next(begin, 1);
+						return std::next(begin);
 					}
 				}
 				break;
@@ -664,59 +751,63 @@ namespace gal::test
 		}
 	}
 
-	enum class match_alt_sub_state
-	{
-		next,
-		escape
-	};
-
+	/**
+	 * @brief 
+	 * @tparam PatternIterator 
+	 * @param begin 
+	 * @param end 
+	 * @param wildcard 
+	 * @param state 
+	 * @param depth 
+	 * @return 
+	*/
 	template<typename PatternIterator>
 	constexpr PatternIterator check_alt_sub(
 		PatternIterator begin,
 		PatternIterator end,
-		const  wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>{},
+		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
 		match_alt_sub_state state = match_alt_sub_state::next,
-		int depth = 1
+		std::size_t depth = 1
 	)
 	{
-		if(not wild.alt_enabled_)
-		{
-			throw std::invalid_argument("the use of alternatives is disabled");
-		}
-
 		while(begin not_eq end)
 		{
 			switch (state)
 			{
 			case match_alt_sub_state::next:
 			{
-				if(*begin == wild.escape_)
+				if(*begin == wildcard.escape_)
 				{
 					state = match_alt_sub_state::escape;
 				}
 				else if (
-					wild.set_enabled_ and
-					*begin == wild.set_open_ and
-					check_set<false>(std::next(begin), end, wild, match_set_state::not_or_first) not_eq end
+					// if there is a nested set
+					*begin == wildcard.set_open_ and
+					// and it really exist
+					check_set_exist<false>(std::next(begin), end, wildcard, match_set_state::not_or_first) not_eq end
 					)
 				{
-					begin = std::prev(check_set<true>(std::next(begin), end, wild, match_set_state::not_or_first));
+					// reposition begin to a position where `)` is located after skipping this set
+					begin = std::prev(check_set_exist<true>(std::next(begin), end, wildcard, match_set_state::not_or_first));
 				}
-				else if(*begin == wild.alt_open_)
+				else if(*begin == wildcard.alt_open_)
 				{
+					// another nested alt
 					++depth;
 				}
-				else if(*begin == wild.alt_close_)
+				else if(*begin == wildcard.alt_close_)
 				{
+					// current alt finished
 					--depth;
-
+					// all possible nested alts are matched
 					if(depth == 0)
 					{
 						return begin;
 					}
 				}
-				else if(*begin == wild.alt_or_)
+				else if(*begin == wildcard.alt_or_)
 				{
+					// current alt finished
 					if(depth == 1)
 					{
 						return begin;
@@ -742,7 +833,7 @@ namespace gal::test
 	constexpr match_result<SequenceIterator, PatternIterator> match(
 		SequenceIterator sequence_begin, SequenceIterator sequence_end,
 		PatternIterator pattern_begin, PatternIterator pattern_end,
-		const wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>{},
+		const wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
 		const EqualTo bitand equal_to = EqualTo{},
 		bool partial = false,
 		bool escape = false
@@ -753,14 +844,14 @@ namespace gal::test
 		SequenceIterator sequence_begin, SequenceIterator sequence_end,
 		PatternIterator pattern1_begin, PatternIterator pattern1_end,
 		PatternIterator pattern2_begin, PatternIterator pattern2_end,
-		const wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>{},
+		const wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
 		const EqualTo bitand equal_to = EqualTo{},
 		bool partial = false
 	)
 	{
-		if(auto result1 = match(sequence_begin, sequence_end, pattern1_begin, pattern1_end, wild, equal_to, true); result1)
+		if(auto result1 = match(sequence_begin, sequence_end, pattern1_begin, pattern1_end, wildcard, equal_to, true); result1)
 		{
-			if(auto result2 = match(result1.sequence, sequence_end, pattern2_begin, pattern2_end, wild, equal_to, partial); result2)
+			if(auto result2 = match(result1.sequence, sequence_end, pattern2_begin, pattern2_end, wildcard, equal_to, partial); result2)
 			{
 				return result2;
 			}
@@ -777,14 +868,14 @@ namespace gal::test
 			};
 		}
 
-		return match_alt(sequence_begin, sequence_end, pattern1_begin, check_alt_sub(pattern1_begin, pattern2_begin, wild), pattern2_begin, pattern2_end, wild, equal_to, partial);
+		return match_alt(sequence_begin, sequence_end, pattern1_begin, check_alt_sub(pattern1_begin, pattern2_begin, wildcard), pattern2_begin, pattern2_end, wildcard, equal_to, partial);
 	}
 
 	template <typename SequenceIterator, typename PatternIterator, typename EqualTo>
 	constexpr match_result<SequenceIterator, PatternIterator> match(
 		SequenceIterator                                      sequence_begin, SequenceIterator sequence_end, 
 		PatternIterator                                       pattern_begin, PatternIterator   pattern_end, 
-		const wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<PatternIterator>())>>>bitand wild,
+		const wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard,
 		const EqualTo bitand                                        equal_to, 
 		bool                                                  partial,
 		bool                                            escape
@@ -810,12 +901,12 @@ namespace gal::test
 				};
 			}
 
-			return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wild, equal_to, partial);
+			return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial);
 		}
 
-		if(*pattern_begin == wild.anything_)
+		if(*pattern_begin == wildcard.anything_)
 		{
-			if(auto result = match(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wild, equal_to, partial); result)
+			if(auto result = match(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial); result)
 			{
 				return result;
 			}
@@ -829,10 +920,10 @@ namespace gal::test
 				};
 			}
 
-			return match(std::next(sequence_begin), sequence_end, pattern_begin, pattern_end, wild, equal_to, partial);
+			return match(std::next(sequence_begin), sequence_end, pattern_begin, pattern_end, wildcard, equal_to, partial);
 		}
 
-		if(*pattern_begin == wild.single_)
+		if(*pattern_begin == wildcard.single_)
 		{
 			if(sequence_begin == sequence_end)
 			{
@@ -843,37 +934,35 @@ namespace gal::test
 				};
 			}
 
-			return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wild, equal_to, partial);
+			return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial);
 		}
 
-		if(*pattern_begin == wild.escape_)
+		if(*pattern_begin == wildcard.escape_)
 		{
-			return match(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wild, equal_to, partial, true);
+			return match(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial, true);
 		}
 
 		if (
-			wild.set_enabled_ and
-			*pattern_begin == wild.set_open_ and
-			check_set<false>(std::next(pattern_begin), pattern_end, wild, match_set_state::not_or_first) not_eq pattern_end
+			*pattern_begin == wildcard.set_open_ and
+			check_set_exist<false>(std::next(pattern_begin), pattern_end, wildcard, match_set_state::not_or_first) not_eq pattern_end
 			)
 		{
-			if(auto result = match_set(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wild, equal_to, match_state::not_or_first_in); not result)
+			if(auto result = match_set(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, match_state::not_or_first_in); not result)
 			{
 				return result;
 			}
 
-			return match(std::next(sequence_begin), sequence_end, check_set<true>(std::next(pattern_begin), pattern_end, wild, match_set_state::not_or_first), pattern_end, wild, equal_to, partial);
+			return match(std::next(sequence_begin), sequence_end, check_set_exist<true>(std::next(pattern_begin), pattern_end, wildcard, match_set_state::not_or_first), pattern_end, wildcard, equal_to, partial);
 		}
 
 		if (
-			wild.alt_enabled_ and
-			*pattern_begin == wild.alt_open_ and
-			check_alt<false>(std::next(pattern_begin), pattern_end, wild, match_alt_state::next, 1)
+			*pattern_begin == wildcard.alt_open_ and
+			check_alt_exist<false>(std::next(pattern_begin), pattern_end, wildcard, match_alt_state::next, 1)
 			)
 		{
-			auto pattern_alt_end = check_alt<true>(std::next(pattern_begin), pattern_end, wild, match_alt_state::next, 1);
+			auto pattern_alt_end = check_alt_exist<true>(std::next(pattern_begin), pattern_end, wildcard, match_alt_state::next, 1);
 
-			return match_alt(sequence_begin, sequence_end, std::next(pattern_begin), check_alt_sub(std::next(pattern_begin), pattern_alt_end, wild), pattern_alt_end, pattern_end, wild, equal_to, partial);
+			return match_alt(sequence_begin, sequence_end, std::next(pattern_begin), check_alt_sub(std::next(pattern_begin), pattern_alt_end, wildcard), pattern_alt_end, pattern_end, wildcard, equal_to, partial);
 		}
 
 		if(sequence_begin == sequence_end or not equal_to(*sequence_begin, *pattern_begin))
@@ -885,7 +974,7 @@ namespace gal::test
 			};
 		}
 
-		return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wild, equal_to, partial);
+		return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial);
 	}
 
 
@@ -898,50 +987,32 @@ namespace gal::test
 	match(
 		Sequence and sequence,
 		Pattern and pattern,
-		const wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Pattern>()))>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Pattern>()))>>>{},
+		const wildcard_type<container_value_t<Pattern>>bitand wildcard = wildcard_type<container_value_t<Pattern>>{},
 		const EqualTo bitand equal_to = EqualTo{}
 	)
 	{
 		return make_full_result(
 			std::cbegin(sequence), std::cend(sequence),
 			std::cbegin(pattern), std::cend(pattern),
-			match(std::cbegin(sequence), std::cend(std::forward<Sequence>(sequence)), std::cbegin(pattern), std::cend(std::forward<Pattern>(pattern)), wild, equal_to)
+			match(std::cbegin(sequence), std::cend(std::forward<Sequence>(sequence)), std::cbegin(pattern), std::cend(std::forward<Pattern>(pattern)), wildcard, equal_to)
 		);
-	}
-
-	template<typename Sequence, typename Pattern, typename EqualTo = std::equal_to<>, typename = std::enable_if_t<not std::is_same_v<EqualTo, wildcard_type>>>
-		constexpr full_match_result<
-		std::remove_cv_t<std::remove_reference_t<decltype(std::cbegin(std::declval<Sequence>()))>>,
-		std::remove_cv_t<std::remove_reference_t<decltype(std::cbegin(std::declval<Pattern>()))>>
-		>
-		match(
-			Sequence and sequence,
-			Pattern and pattern,
-			const EqualTo bitand equal_to
-	)
-	{
-		return match(
-			std::forward<Sequence>(sequence),
-			std::forward<Pattern>(pattern),
-			wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Pattern>()))>>>{},
-			equal_to);
 	}
 
 	template<typename Pattern, typename EqualTo = std::equal_to<>>
 	class compile_time_matcher
 	{
 	public:
-		using value_type = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Pattern>()))>>;
+		using value_type = container_value_t<Pattern>;
 		using iterator = std::remove_cv_t<std::remove_reference_t<decltype(std::begin(std::declval<Pattern>()))>>;
 		using const_iterator = std::remove_cv_t<std::remove_reference_t<decltype(std::cbegin(std::declval<Pattern>()))>>;
 
 		constexpr explicit compile_time_matcher(
 			Pattern and pattern,
-			const wildcard<value_type> bitand wild = wildcard<value_type>{},
+			const wildcard_type<value_type> bitand wildcard = wildcard_type<value_type>{},
 			const EqualTo bitand equal_to = {}
 		) : begin_(std::cbegin(pattern)),
 		end_(std::cend(std::forward<Pattern>(pattern))),
-		wildcard_(wild),
+		wildcard_(wildcard),
 		equal_to_(equal_to) {}
 
 		constexpr compile_time_matcher(
@@ -963,14 +1034,14 @@ namespace gal::test
 	private:
 		const_iterator begin_;
 		const_iterator end_;
-		wildcard<value_type> wildcard_;
+		wildcard_type<value_type> wildcard_;
 		[[no_unique_address]] EqualTo equal_to_;
 	};
 
 	template<typename Pattern, typename EqualTo = std::equal_to<>>
 	constexpr compile_time_matcher<Pattern, EqualTo> make_matcher(
 		Pattern and pattern,
-		const wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Pattern>()))>>>bitand wild = wildcard<std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Pattern>()))>>>{},
+		const wildcard_type<container_value_t<Pattern>>bitand wild = wildcard_type<container_value_t<Pattern>>{},
 		const EqualTo bitand equal_to = EqualTo{}
 	)
 	{
