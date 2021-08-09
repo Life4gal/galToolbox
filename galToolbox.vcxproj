@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\container\dynamic_bitset.ixx" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\container\fifo.ixx" />
     <ClCompile Include="src\container\ring_buffer.ixx" />
@@ -33,9 +34,6 @@
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\container\dynamic_bitset.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

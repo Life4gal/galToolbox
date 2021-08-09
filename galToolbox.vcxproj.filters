@@ -22,13 +22,11 @@
     <ClCompile Include="test\test_fifo.cpp" />
     <ClCompile Include="src\utils\random.ixx" />
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
+    <ClCompile Include="src\container\dynamic_bitset.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\container\dynamic_bitset.hpp" />
   </ItemGroup>
 </Project>

@@ -1,14 +1,22 @@
-#pragma once
+export module gal.toolbox.dynamic_bitset;
 
-#include <array>
-#include <iosfwd>
-#include <locale>
-#include <memory>
-#include <string>
-#include <vector>
+import <array>;
+import <iosfwd>;
+import <locale>;
+import <memory>;
+import <string>;
+import <string_view>;
+import <vector>;
 
-namespace gal::test
+import gal.toolbox.assert;
+
+namespace gal::toolbox
 {
+	export
+	{
+		class basic_dynamic_bitset;
+	}
+
 	class basic_dynamic_bitset
 	{
 	public:
@@ -20,8 +28,11 @@ namespace gal::test
 
 		friend class bit_reference;
 		friend class bit_iterator;
+		
+		// todo: maybe we don't need 64-bit types
+		using dynamic_bitset_default_value_type = std::uint64_t;
 
-		using container = std::vector<std::uint64_t>;
+		using container = std::vector<dynamic_bitset_default_value_type>;
 
 		using value_type = container::value_type;
 		using size_type = container::size_type;
@@ -40,9 +51,10 @@ namespace gal::test
 		using const_self_reference = const basic_dynamic_bitset bitand;
 		using self_rreference = basic_dynamic_bitset and;
 
-		constexpr static size_type bits_of_type          = std::numeric_limits<value_type>::digits;
+		constexpr static size_type bits_of_type = std::numeric_limits<value_type>::digits;
 		constexpr static size_type bits_of_unsigned_long = std::numeric_limits<unsigned long>::digits;
-		constexpr static size_type npos                  = static_cast<size_type>(-1);
+		constexpr static size_type npos = static_cast<size_type>(-1);
+		constexpr static size_type overflow_size = static_cast<size_type>(-1);
 
 		class bit_trait
 		{
@@ -73,9 +85,9 @@ namespace gal::test
 			 * @return mask
 			 */
 			[[nodiscard]] constexpr static value_type bit_mask(const size_type pos)
-			noexcept(noexcept(bit_index(std::declval<size_type>())))
+				noexcept(noexcept(bit_index(std::declval<size_type>())))
 			{
-				return value_type{1} << bit_index(pos);
+				return value_type{ 1 } << bit_index(pos);
 			}
 
 			/**
@@ -87,14 +99,14 @@ namespace gal::test
 			[[nodiscard]] constexpr static value_type bit_mask(
 				const size_type first,
 				const size_type last
-				) noexcept
+			) noexcept
 			{
-				//GAL_ASSERT(first <= last);
-				//GAL_ASSERT(last < bits_of_type);
+				gal::toolbox::assert(first <= last);
+				gal::toolbox::assert(last < bits_of_type);
 				const auto res = (last == bits_of_type - 1)
-									? compl static_cast<value_type>(0) //static_cast<value_type>(compl 0)
-									: ((value_type{1} << (last + 1)) - 1);
-				return res xor ((value_type{1} << first) - 1);
+					? compl static_cast<value_type>(0) //static_cast<value_type>(compl 0)
+					: ((value_type{ 1 } << (last + 1)) - 1);
+				return res xor ((value_type{ 1 } << first) - 1);
 			}
 
 			/**
@@ -109,8 +121,8 @@ namespace gal::test
 				const value_type block,
 				const size_type  first,
 				const size_type  last,
-				const bool       set)
-			noexcept(noexcept(bit_mask(std::declval<size_type>(), std::declval<size_type>())))
+				const bool       set
+			) noexcept(noexcept(bit_mask(std::declval<size_type>(), std::declval<size_type>())))
 			{
 				if (set)
 				{
@@ -126,12 +138,14 @@ namespace gal::test
 			 * @param last end for get mask
 			 * @return block after set
 			 */
-			[[nodiscard]] constexpr static value_type set_block_partial(const value_type block, const size_type first,
-																		const size_type  last)
-			noexcept(noexcept(set_block_bits(std::declval<value_type>(),
-											std::declval<size_type>(),
-											std::declval<size_type>(),
-											std::declval<bool>())))
+			[[nodiscard]] constexpr static value_type set_block_partial(
+				const value_type block, 
+				const size_type first,
+				const size_type  last
+			) noexcept(noexcept(set_block_bits(std::declval<value_type>(),
+					std::declval<size_type>(),
+					std::declval<size_type>(),
+					std::declval<bool>())))
 			{
 				return set_block_bits(block, first, last, true);
 			}
@@ -154,11 +168,13 @@ namespace gal::test
 			 * @return block after reset
 			 */
 			[[nodiscard]] constexpr static value_type reset_block_partial(
-				const value_type block, const size_type first, const size_type last)
-			noexcept(noexcept(set_block_bits(std::declval<value_type>(),
-											std::declval<size_type>(),
-											std::declval<size_type>(),
-											std::declval<bool>())))
+				const value_type block, 
+				const size_type first, 
+				const size_type last
+			) noexcept(noexcept(set_block_bits(std::declval<value_type>(),
+					std::declval<size_type>(),
+					std::declval<size_type>(),
+					std::declval<bool>())))
 			{
 				return set_block_bits(block, first, last, false);
 			}
@@ -180,8 +196,10 @@ namespace gal::test
 			 * @return block after flip
 			 */
 			[[nodiscard]] constexpr static value_type flip_block_partial(
-				const value_type block, const size_type first, const size_type last)
-			noexcept(noexcept(bit_mask(std::declval<size_type>(), std::declval<size_type>())))
+				const value_type block, 
+				const size_type first, 
+				const size_type last
+			) noexcept(noexcept(bit_mask(std::declval<size_type>(), std::declval<size_type>())))
 			{
 				return block xor bit_mask(first, last);
 			}
@@ -209,21 +227,21 @@ namespace gal::test
 			using reference = real_reference;
 			using const_reference = real_const_reference;
 
-			using self_reference = bit_const_referencebitand;
-			using const_self_reference = const bit_const_referencebitand;
-			using self_rreference = bit_const_referenceand;
+			using self_reference = bit_const_reference bitand;
+			using const_self_reference = const bit_const_reference bitand;
+			using self_rreference = bit_const_reference and;
 
 		private:
 			constexpr bit_const_reference(const_reference value, const size_type offset) noexcept
 				: value_(value),
-				mask_(value_type{1} << offset)
+				mask_(value_type{ 1 } << offset)
 			{
-				// todo: assert
+				gal::toolbox::assert(offset < bits_of_type);
 			}
 
 			// let IDE stop prompting us to add explicit for implicit conversion
 			// ReSharper disable once CppNonExplicitConvertingConstructor
-			constexpr bit_const_reference(const bit_referencebitand other) noexcept
+			constexpr bit_const_reference(const bit_reference bitand other) noexcept
 				: value_(other.value_),
 				mask_(other.mask_) {}
 
@@ -261,16 +279,16 @@ namespace gal::test
 			using reference = real_reference;
 			using const_reference = real_const_reference;
 
-			using self_reference = bit_referencebitand;
-			using const_self_reference = const bit_referencebitand;
-			using self_rreference = bit_referenceand;
+			using self_reference = bit_reference bitand;
+			using const_self_reference = const bit_reference bitand;
+			using self_rreference = bit_reference and;
 
 		private:
 			constexpr bit_reference(reference value, const size_type offset) noexcept
 				: value_(value),
-				mask_(value_type{1} << offset)
+				mask_(value_type{ 1 } << offset)
 			{
-				// todo: assert
+				gal::toolbox::assert(offset < bits_of_type);
 			}
 
 			// constexpr compl bit_reference() = default;
@@ -365,7 +383,7 @@ namespace gal::test
 			// ReSharper disable once CppNonExplicitConversionOperator
 			constexpr operator bit_const_reference() const noexcept
 			{
-				return {*this};
+				return { *this };
 			}
 
 		private:
@@ -389,32 +407,32 @@ namespace gal::test
 			using iterator_category = iterator::iterator_category;
 			using difference_type = iterator::difference_type;
 
-			using self_reference = bit_const_iteratorbitand;
-			using const_self_reference = const bit_const_iteratorbitand;
-			using self_rreference = bit_const_iteratorand;
+			using self_reference = bit_const_iterator bitand;
+			using const_self_reference = const bit_const_iterator bitand;
+			using self_rreference = bit_const_iterator and;
 
 		private:
-			constexpr bit_const_iterator(const const_iteratorbitand it, const size_type offset)
-			// NOLINT(clang-diagnostic-invalid-constexpr)
+			constexpr bit_const_iterator(const const_iterator bitand it, const size_type offset)
+				// NOLINT(clang-diagnostic-invalid-constexpr)
 				: iterator_(it),
 				index_(offset) {}
 
 		public:
 			[[nodiscard]] constexpr bit_const_iterator operator+(const size_type n) const noexcept
 			{
-				// GAL_ASSERT(index + n > index);
-				return {iterator_, index_ + n};
+				gal::toolbox::assert(index_ + n > index_);
+				return { iterator_, index_ + n };
 			}
 
 			[[nodiscard]] constexpr bit_const_iterator operator-(const size_type n) const noexcept
 			{
-				// GAL_ASSERT(index >= n);
-				return {iterator_, index_ - n};
+				gal::toolbox::assert(index_ >= n);
+				return { iterator_, index_ - n };
 			}
 
 			[[nodiscard]] constexpr size_type distance(const_self_reference other) const noexcept
 			{
-				// GAL_ASSERT(other.index <= index);
+				gal::toolbox::assert(other.index_ <= index_);
 				return index_ - other.index_;
 			}
 
@@ -430,7 +448,7 @@ namespace gal::test
 
 			[[nodiscard]] constexpr value_type operator*() const noexcept // NOLINT(clang-diagnostic-invalid-constexpr)
 			{
-				return {*std::next(iterator_, bit_trait::block_index(index_)), bit_trait::bit_index(index_)};
+				return { *std::next(iterator_, bit_trait::block_index(index_)), bit_trait::bit_index(index_) };
 			}
 
 		private:
@@ -455,76 +473,76 @@ namespace gal::test
 			using iterator_category = iterator::iterator_category;
 			using difference_type = iterator::difference_type;
 
-			using self_reference = bit_iteratorbitand;
-			using const_self_reference = const bit_iteratorbitand;
-			using self_rreference = bit_iteratorand;
+			using self_reference = bit_iterator bitand;
+			using const_self_reference = const bit_iterator bitand;
+			using self_rreference = bit_iterator and;
 
 		private:
-			constexpr bit_iterator(const iteratorbitand it, const size_type offset)
-			// NOLINT(clang-diagnostic-invalid-constexpr)
+			constexpr bit_iterator(const iterator bitand it, const size_type offset)
+				// NOLINT(clang-diagnostic-invalid-constexpr)
 				: iterator_(it),
 				index_(offset) {}
 
 		public:
 			[[nodiscard]] constexpr bit_iterator operator++(int) noexcept
 			{
-				// GAL_ASSERT(index + 1 > index);
-				auto copy{*this};
+				gal::toolbox::assert(index_ + 1 > index_);
+				auto copy{ *this };
 				++index_;
 				return copy;
 			}
 
 			constexpr self_reference operator++() noexcept
 			{
-				// GAL_ASSERT(index + 1 > index);
+				gal::toolbox::assert(index_ + 1 > index_);
 				++index_;
 				return *this;
 			}
 
 			[[nodiscard]] constexpr bit_iterator operator--(int) noexcept
 			{
-				// GAL_ASSERT(index > 0);
-				auto copy{*this};
+				gal::toolbox::assert(index_ > 0);
+				auto copy{ *this };
 				--index_;
 				return copy;
 			}
 
 			constexpr self_reference operator--() noexcept
 			{
-				// GAL_ASSERT(index > 0);
+				gal::toolbox::assert(index_ > 0);
 				--index_;
 				return *this;
 			}
 
 			[[nodiscard]] constexpr bit_iterator operator+(const size_type n) const noexcept
 			{
-				// GAL_ASSERT(index + n > index);
-				return {iterator_, index_ + n};
+				gal::toolbox::assert(index_ + n > index_);
+				return { iterator_, index_ + n };
 			}
 
 			constexpr self_reference operator+=(size_type n) noexcept
 			{
-				// GAL_ASSERT(index + n > index);
+				gal::toolbox::assert(index_ + n > index_);
 				index_ += n;
 				return *this;
 			}
 
 			[[nodiscard]] constexpr bit_iterator operator-(size_type n) const noexcept
 			{
-				// GAL_ASSERT(index >= n);
-				return {iterator_, index_ - n};
+				gal::toolbox::assert(index_ >= n);
+				return { iterator_, index_ - n };
 			}
 
 			constexpr self_reference operator-=(size_type n) noexcept
 			{
-				// GAL_ASSERT(index >= n);
+				gal::toolbox::assert(index_ >= n);
 				index_ -= n;
 				return *this;
 			}
 
 			[[nodiscard]] constexpr size_type distance(const_self_reference other) const noexcept
 			{
-				// GAL_ASSERT(other.index <= index);
+				gal::toolbox::assert(other.index_ <= index_);
 				return index_ - other.index_;
 			}
 
@@ -540,14 +558,14 @@ namespace gal::test
 
 			[[nodiscard]] constexpr value_type operator*() const noexcept // NOLINT(clang-diagnostic-invalid-constexpr)
 			{
-				return {*std::next(iterator_, bit_trait::block_index(index_)), bit_trait::bit_index(index_)};
+				return { *std::next(iterator_, bit_trait::block_index(index_)), bit_trait::bit_index(index_) };
 			}
 
 			// let IDE stop prompting us to add explicit for implicit conversion
 			// ReSharper disable once CppNonExplicitConversionOperator
 			constexpr operator bit_const_iterator() const noexcept
 			{
-				return {iterator_, index_};
+				return { iterator_, index_ };
 			}
 
 		private:
@@ -569,7 +587,7 @@ namespace gal::test
 		 * @return container's size
 		 */
 		[[nodiscard]] constexpr size_type container_size() const
-		noexcept(noexcept(std::declval<container>().size()))
+			noexcept(noexcept(std::declval<container>().size()))
 		{
 			return container_.size();
 		}
@@ -579,14 +597,14 @@ namespace gal::test
 		 * @return max bits size
 		 */
 		[[nodiscard]] constexpr size_type max_size() const
-		noexcept(
-			noexcept(std::declval<container>().max_size())
-		)
+			noexcept(
+				noexcept(std::declval<container>().max_size())
+				)
 		{
 			const auto container_max = container_.max_size();
-			return container_max <= static_cast<size_type>(-1) / bits_of_type
-						? container_max * bits_of_type
-						: static_cast<size_type>(-1);
+			return container_max <= overflow_size / bits_of_type
+				? container_max * bits_of_type
+				: overflow_size;
 		}
 
 		/**
@@ -594,7 +612,7 @@ namespace gal::test
 		 * @return empty
 		 */
 		[[nodiscard]] constexpr bool empty() const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().size()))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().size()))
 		{
 			return size() == 0;
 		}
@@ -604,7 +622,7 @@ namespace gal::test
 		 * @return what capacity is now
 		 */
 		[[nodiscard]] constexpr size_type capacity() const
-		noexcept(noexcept(std::declval<container>().capacity()))
+			noexcept(noexcept(std::declval<container>().capacity()))
 		{
 			return container_.capacity() * bits_of_type;
 		}
@@ -616,9 +634,9 @@ namespace gal::test
 		 * @return it this bit set
 		 */
 		[[nodiscard]] constexpr bool unchecked_test(const size_type pos) const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			return (container_[bit_trait::block_index(pos)] bitand bit_trait::bit_mask(pos)) not_eq 0;
 		}
@@ -638,9 +656,9 @@ namespace gal::test
 		 * @return highest block
 		 */
 		[[nodiscard]] constexpr real_reference highest_block()
-		noexcept(noexcept(std::declval<container>().back()))
+			noexcept(noexcept(std::declval<container>().back()))
 		{
-			//GAL_ASSERT(size() > 0 && container_size() > 0);
+			gal::toolbox::assert(size() > 0 and container_size() > 0);
 			return container_.back();
 		}
 
@@ -649,9 +667,9 @@ namespace gal::test
 		 * @return highest block
 		 */
 		[[nodiscard]] constexpr real_const_reference highest_block() const
-		noexcept(noexcept(std::declval<container>().back()))
+			noexcept(noexcept(std::declval<container>().back()))
 		{
-			//GAL_ASSERT(size() > 0 && container_size() > 0);
+			gal::toolbox::assert(size() > 0 and container_size() > 0);
 			return container_.back();
 		}
 
@@ -661,11 +679,11 @@ namespace gal::test
 		 * @param value the value for init
 		 */
 		constexpr void init_from_value_type(const size_type size, value_type value)
-		noexcept(
-			noexcept(std::declval<container>().resize(calc_blocks_needed(std::declval<size_type>())))
-		)
+			noexcept(
+				noexcept(std::declval<container>().resize(calc_blocks_needed(std::declval<size_type>())))
+				)
 		{
-			//GAL_ASSERT(container_size() == 0);
+			gal::toolbox::assert(container_size() == 0);
 
 			container_.resize(calc_blocks_needed(size));
 			total_ = size;
@@ -674,7 +692,7 @@ namespace gal::test
 			// note that: num_bits == 0 implies value == 0
 			if (size < static_cast<size_type>(bits_of_unsigned_long))
 			{
-				value and_eq ((value_type{1} << size) - 1);
+				value and_eq ((value_type{ 1 } << size) - 1);
 			}
 
 			constexpr auto left_shifter = [](real_reference v) constexpr-> void
@@ -711,27 +729,27 @@ namespace gal::test
 		 */
 		template <typename Char, typename Traits, typename Allocator>
 		constexpr void init_from_basic_string(
-			const std::basic_string<Char, Traits, Allocator>bitand         str,
+			const std::basic_string<Char, Traits, Allocator>bitand str,
 			typename std::basic_string<Char, Traits, Allocator>::size_type pos,
 			typename std::basic_string<Char, Traits, Allocator>::size_type n,
 			size_type                                                      size)
-		noexcept(
-			noexcept(std::declval<container>().resize(std::declval<size_type>()))
-		)
+			noexcept(
+				noexcept(std::declval<container>().resize(std::declval<size_type>()))
+				)
 		{
-			//GAL_ASSERT(pos <= str.size());
-			//GAL_ASSERT(n <= size);
+			gal::toolbox::assert(pos <= str.size());
+			gal::toolbox::assert(n <= size);
 
 			// make sure the end pos is valid
-			auto len      = std::min(n, str.size() - pos);
+			auto len = std::min(n, str.size() - pos);
 			auto num_bits = size not_eq npos
-								? size
-								: len;
+				? size
+				: len;
 			container_.resize(calc_blocks_needed(num_bits));
 			total_ = num_bits;
 
-			autobitand fac  = std::use_facet<std::ctype<Char>>(std::locale());
-			auto       one  = fac.widen('1');
+			auto bitand fac = std::use_facet<std::ctype<Char>>(std::locale());
+			auto       one = fac.widen('1');
 			auto       zero = fac.widen('0');
 
 			auto shorter = std::min(num_bits, len);
@@ -769,23 +787,23 @@ namespace gal::test
 			typename std::basic_string_view<Char, Traits>::size_type pos,
 			typename std::basic_string_view<Char, Traits>::size_type n,
 			size_type                                                size)
-		noexcept(
-			noexcept(std::declval<container>().resize(std::declval<size_type>()))
-		)
+			noexcept(
+				noexcept(std::declval<container>().resize(std::declval<size_type>()))
+				)
 		{
-			//GAL_ASSERT(pos <= str.size());
-			//GAL_ASSERT(n <= size);
+			gal::toolbox::assert(pos <= str.size());
+			gal::toolbox::assert(n <= size);
 
 			// make sure the end pos is valid
-			auto len      = std::min(n, str.size() - pos);
+			auto len = std::min(n, str.size() - pos);
 			auto num_bits = size not_eq npos
-								? size
-								: len;
+				? size
+				: len;
 			container_.resize(calc_blocks_needed(num_bits));
 			total_ = num_bits;
 
-			autobitand fac  = std::use_facet<std::ctype<Char>>(std::locale());
-			auto       one  = fac.widen('1');
+			auto bitand fac = std::use_facet<std::ctype<Char>>(std::locale());
+			auto       one = fac.widen('1');
 			auto       zero = fac.widen('0');
 
 			auto shorter = std::min(num_bits, len);
@@ -819,18 +837,18 @@ namespace gal::test
 		constexpr self_reference range_operation(
 			const size_type pos,
 			const size_type len,
-			value_type (*   partial_block_operation)(value_type, size_type, size_type),
-			value_type (*   full_block_operation)(value_type))
-		noexcept(
-			// noexcept(bit_trait::block_index(0)) and
-			// noexcept(bit_trait::bit_index(0)) and
-			// noexcept(std::declval<container>()[0]) and
-			// std::is_nothrow_invocable_r_v<value_type, decltype(partial_block_operation), value_type, size_type, size_type>and
-			// std::is_nothrow_invocable_r_v<value_type, decltype(full_block_operation), value_type>
-			false
-		)
+			value_type(*partial_block_operation)(value_type, size_type, size_type),
+			value_type(*full_block_operation)(value_type))
+			noexcept(
+				// noexcept(bit_trait::block_index(0)) and
+				// noexcept(bit_trait::bit_index(0)) and
+				// noexcept(std::declval<container>()[0]) and
+				// std::is_nothrow_invocable_r_v<value_type, decltype(partial_block_operation), value_type, size_type, size_type>and
+				// std::is_nothrow_invocable_r_v<value_type, decltype(full_block_operation), value_type>
+				false
+				)
 		{
-			//GAL_ASSERT(pos + len <= total_size);
+			gal::toolbox::assert(pos + len <= total_);
 
 			// do nothing in case of zero length
 			if (len == 0)
@@ -841,12 +859,12 @@ namespace gal::test
 			// use an additional asserts in order to detect size_type overflow
 			// for example: pos = 10, len = size_type_limit - 2, pos + len = 7
 			// in case of overflow, 'pos + len' is always smaller than 'len'
-			//GAL_ASSERT(pos + len >= len);
+			gal::toolbox::assert(pos + len >= len);
 
 			// start and end blocks of the [pos : pos + len - 1] sequence
 			auto first_block = bit_trait::block_index(pos);
-			auto last_block  = bit_trait::block_index(pos + len - 1);
-			auto first_bit   = bit_trait::bit_index(pos);
+			auto last_block = bit_trait::block_index(pos + len - 1);
+			auto first_bit = bit_trait::bit_index(pos);
 
 			if (auto last_bit = bit_trait::bit_index(pos + len - 1); first_block == last_block)
 			{
@@ -857,16 +875,16 @@ namespace gal::test
 			{
 				// check if the corner blocks won't be fully filled with 'value'
 				const decltype(first_bit) first_block_shift = (first_bit == 0)
-																? 0
-																: 1;
+					? 0
+					: 1;
 				const decltype(last_bit) last_block_shift = (last_bit == bits_of_type - 1)
-																? 0
-																: 1;
+					? 0
+					: 1;
 
 				// middle
 				// blocks that will be filled with compl 0 or 0 at once
 				const decltype(first_block) first_full_block = first_block + first_block_shift;
-				const decltype(last_block)  last_full_block  = last_block - last_block_shift;
+				const decltype(last_block)  last_full_block = last_block - last_block_shift;
 
 				for (auto i = first_full_block; i <= last_full_block; ++i)
 				{
@@ -878,8 +896,8 @@ namespace gal::test
 				if (first_block_shift)
 				{
 					container_[first_block] = partial_block_operation(container_[first_block],
-																	first_bit,
-																	bits_of_type - 1);
+						first_bit,
+						bits_of_type - 1);
 				}
 
 				// right
@@ -898,9 +916,9 @@ namespace gal::test
 		 * @return extra bits
 		 */
 		[[nodiscard]] constexpr size_type count_extra_bits() const
-		noexcept(
-			noexcept(bit_trait::bit_index(std::declval<basic_dynamic_bitset>().size()))
-		)
+			noexcept(
+				noexcept(bit_trait::bit_index(std::declval<basic_dynamic_bitset>().size()))
+				)
 		{
 			return bit_trait::bit_index(size());
 		}
@@ -910,15 +928,15 @@ namespace gal::test
 		 * this function resets the unused bits (convenient for the implementation of many member functions)
 		 */
 		constexpr void zero_unused_bits()
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().highest_block())
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().highest_block())
+				)
 		{
-			//GAL_ASSERT(container_size() == calc_blocks_needed(total_));
+			gal::toolbox::assert(container_size() == calc_blocks_needed(total_));
 
 			if (const auto extra_bits = count_extra_bits(); extra_bits not_eq 0)
 			{
-				highest_block() and_eq (value_type{1} << extra_bits) - 1;
+				highest_block() and_eq (value_type{ 1 } << extra_bits) - 1;
 			}
 		}
 
@@ -927,9 +945,9 @@ namespace gal::test
 		 * @return is invariant
 		 */
 		[[nodiscard]] constexpr bool check_invariants() const
-		noexcept(
-			noexcept(calc_blocks_needed(std::declval<size_type>()))
-		)
+			noexcept(
+				noexcept(calc_blocks_needed(std::declval<size_type>()))
+				)
 		{
 			if (const auto extra_bits = count_extra_bits(); extra_bits > 0)
 			{
@@ -960,10 +978,10 @@ namespace gal::test
 		constexpr explicit basic_dynamic_bitset( // NOLINT(clang-diagnostic-invalid-constexpr)
 			const size_type  size,
 			const value_type value = {}
-			)
-		noexcept(
-			noexcept(init_from_value_type(std::declval<size_type>(), std::declval<value_type>()))
 		)
+			noexcept(
+				noexcept(init_from_value_type(std::declval<size_type>(), std::declval<value_type>()))
+				)
 		{
 			init_from_value_type(size, value);
 		}
@@ -980,22 +998,22 @@ namespace gal::test
 		 */
 		template <typename Char, typename Traits = std::char_traits<Char>, typename Allocator = std::allocator<Char>>
 		constexpr basic_dynamic_bitset(
-			const std::basic_string<Char, Traits, Allocator>bitand         str,
+			const std::basic_string<Char, Traits, Allocator>bitand str,
 			typename std::basic_string<Char, Traits, Allocator>::size_type pos,
 			typename std::basic_string<Char, Traits, Allocator>::size_type n,
 			size_type                                                      size = npos)
-		noexcept(
-			noexcept(init_from_basic_string(std::declval<decltype(str)>(),
-											std::declval<decltype(pos)>(),
-											std::declval<decltype(n)>(),
-											std::declval<decltype(size)>()))
-		)
+			noexcept(
+				noexcept(init_from_basic_string(std::declval<decltype(str)>(),
+					std::declval<decltype(pos)>(),
+					std::declval<decltype(n)>(),
+					std::declval<decltype(size)>()))
+				)
 		{
 			init_from_basic_string(
-									str,
-									pos,
-									n,
-									size);
+				str,
+				pos,
+				n,
+				size);
 		}
 
 		/**
@@ -1008,13 +1026,13 @@ namespace gal::test
 		 */
 		template <typename Char, typename Traits = std::char_traits<Char>, typename Allocator = std::allocator<Char>>
 		constexpr explicit basic_dynamic_bitset(
-			const std::basic_string<Char, Traits, Allocator>bitand         str,
+			const std::basic_string<Char, Traits, Allocator>bitand str,
 			typename std::basic_string<Char, Traits, Allocator>::size_type pos = {}
-			)
-		noexcept(
-			std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(str), decltype(pos), decltype(
-												std::basic_string<Char, Traits, Allocator>::npos), decltype(npos)>
 		)
+			noexcept(
+				std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(str), decltype(pos), decltype(
+					std::basic_string<Char, Traits, Allocator>::npos), decltype(npos)>
+				)
 			: basic_dynamic_bitset(str, pos, std::basic_string<Char, Traits, Allocator>::npos, npos) {}
 
 		/**
@@ -1032,15 +1050,15 @@ namespace gal::test
 			typename std::basic_string_view<Char, Traits>::size_type pos,
 			typename std::basic_string_view<Char, Traits>::size_type n,
 			size_type                                                size = npos)
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().init_from_basic_string_view(str, pos, n, size))
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().init_from_basic_string_view(str, pos, n, size))
+				)
 		{
 			init_from_basic_string_view(
-										str,
-										pos,
-										n,
-										size);
+				str,
+				pos,
+				n,
+				size);
 		}
 
 		/**
@@ -1054,11 +1072,11 @@ namespace gal::test
 		constexpr explicit basic_dynamic_bitset(
 			std::basic_string_view<Char, Traits>                     str,
 			typename std::basic_string_view<Char, Traits>::size_type pos = {}
-			)
-		noexcept(
-			std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(str), decltype(pos), decltype(
-												std::basic_string_view<Char, Traits>::npos), decltype(npos)>
 		)
+			noexcept(
+				std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(str), decltype(pos), decltype(
+					std::basic_string_view<Char, Traits>::npos), decltype(npos)>
+				)
 			: basic_dynamic_bitset(str, pos, std::basic_string_view<Char, Traits>::npos, npos) {}
 
 		template <typename Char>
@@ -1067,20 +1085,20 @@ namespace gal::test
 			size_type   pos,
 			size_type   n,
 			size_type   size = npos
-			) noexcept(
-			std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(std::basic_string_view<Char>{str}), decltype(
-												pos), decltype(n), decltype(size)>
-		)
+		) noexcept(
+			std::is_nothrow_constructible_v < basic_dynamic_bitset, decltype(std::basic_string_view<Char>{str}), decltype(
+				pos), decltype(n), decltype(size) >
+			)
 			: basic_dynamic_bitset(std::basic_string_view<Char>{str}, pos, n, size) {}
 
 		template <typename Char>
 		constexpr explicit basic_dynamic_bitset(
 			const Char* str,
 			size_type   pos)
-		noexcept(
-			std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(str), decltype(pos), decltype(npos), decltype
-											(npos)>
-		)
+			noexcept(
+				std::is_nothrow_constructible_v<basic_dynamic_bitset, decltype(str), decltype(pos), decltype(npos), decltype
+				(npos)>
+				)
 			: basic_dynamic_bitset(str, pos, npos, npos) {}
 
 		/**
@@ -1090,20 +1108,20 @@ namespace gal::test
 		 * @param last end iterator
 		 */
 		template <std::input_iterator ContainerInputIterator>
-			requires requires(ContainerInputIterator it)
-			{
-				std::is_convertible_v<decltype(*it), value_type>;
-			} and
+		requires requires(ContainerInputIterator it)
+		{
+			std::is_convertible_v<decltype(*it), value_type>;
+		}and
 			requires(container c)
-			{
-				c.insert(c.end(), ContainerInputIterator{}, ContainerInputIterator{});
-			}
+		{
+			c.insert(c.end(), ContainerInputIterator{}, ContainerInputIterator{});
+		}
 		constexpr basic_dynamic_bitset(
 			ContainerInputIterator first,
 			ContainerInputIterator last)
-		noexcept(
-			noexcept(std::declval<container>().insert(std::declval<container>().begin(), first, last))
-		)
+			noexcept(
+				noexcept(std::declval<container>().insert(std::declval<container>().begin(), first, last))
+				)
 		{
 			container_.insert(container_.begin(), first, last);
 			total_ += container_.size() * bits_of_type;
@@ -1118,7 +1136,7 @@ namespace gal::test
 		template <typename Char, typename Trait = std::char_traits<Char>>
 		explicit basic_dynamic_bitset(
 			std::basic_istream<Char, Trait>bitand is
-			)
+		)
 		{
 			is >> *this;
 		}
@@ -1128,18 +1146,18 @@ namespace gal::test
 		 * @param args args for init
 		 */
 		template <typename T>
-			requires std::is_convertible_v<T, value_type>
-		constexpr basic_dynamic_bitset(std::initializer_list<T> args)
-		noexcept(
-			std::is_nothrow_convertible_v<T, value_type> and
+		requires std::is_convertible_v<T, value_type>
+			constexpr basic_dynamic_bitset(std::initializer_list<T> args)
 			noexcept(
-				std::declval<container>().insert(
-												std::declval<container>().begin(),
-												std::declval<value_type>()
-												)
-			) and
-			noexcept(std::declval<container>().push_back(std::declval<value_type>()))
-		)
+				std::is_nothrow_convertible_v<T, value_type> and
+				noexcept(
+					std::declval<container>().insert(
+						std::declval<container>().begin(),
+						std::declval<value_type>()
+					)
+					) and
+				noexcept(std::declval<container>().push_back(std::declval<value_type>()))
+				)
 		{
 			if constexpr (std::is_same_v<T, value_type>)
 			{
@@ -1161,7 +1179,7 @@ namespace gal::test
 		 */
 		constexpr compl basic_dynamic_bitset()
 		{
-			// GAL_ASSERT(check_invariants());
+			gal::toolbox::assert(check_invariants());
 		}
 
 		/**
@@ -1169,7 +1187,7 @@ namespace gal::test
 		 * @param other another dynamic_bitset for copy
 		 */
 		constexpr basic_dynamic_bitset(const_self_reference other)
-		noexcept(std::is_nothrow_copy_constructible_v<container>) = default;
+			noexcept(std::is_nothrow_copy_constructible_v<container>) = default;
 
 		/**
 		 * @brief copy assign operator
@@ -1177,19 +1195,19 @@ namespace gal::test
 		 * @return self
 		 */
 		self_reference operator=(const_self_reference other) // NOLINT(misc-unconventional-assign-operator)
-		noexcept(std::is_nothrow_copy_assignable_v<container>) = default;
+			noexcept(std::is_nothrow_copy_assignable_v<container>) = default;
 
 		/**
 		 * @brief move ctor
 		 * @param other another dynamic_bitset for move
 		 */
 		basic_dynamic_bitset(self_rreference other)
-		noexcept(std::is_nothrow_move_constructible_v<container>)
+			noexcept(std::is_nothrow_move_constructible_v<container>)
 			: container_(std::move(other.container_)),
 			total_(other.total_)
 		{
-			// Required so that check_invariants() works.
-			// GAL_ASSERT((other.container_ = container{}).empty());// NOLINT
+			// required so that check_invariants() works.
+			gal::toolbox::assert((other.container_ = container{}).empty());// NOLINT
 			other.total_ = 0;
 		}
 
@@ -1199,16 +1217,16 @@ namespace gal::test
 		 * @return self
 		 */
 		self_reference operator=(self_rreference other)
-		noexcept(std::is_nothrow_move_assignable_v<container>)
+			noexcept(std::is_nothrow_move_assignable_v<container>)
 		{
 			if (std::addressof(other) == this)
 			{
 				return *this;
 			}
 			container_ = std::move(other.container_);
-			total_     = other.total_;
+			total_ = other.total_;
 			// Required so that check_invariants() works.
-			// GAL_ASSERT((other.container = container{}).empty());// NOLINT
+			gal::toolbox::assert((other.container_ = container{}).empty());// NOLINT
 			other.total_ = 0;
 			return *this;
 		}
@@ -1218,7 +1236,7 @@ namespace gal::test
 		 * @param other another dynamic_bitset
 		 */
 		constexpr void swap(self_reference other) // NOLINT(clang-diagnostic-invalid-constexpr)
-		noexcept(std::is_nothrow_swappable_v<container>)
+			noexcept(std::is_nothrow_swappable_v<container>)
 		{
 			std::swap(container_, other.container_);
 			std::swap(total_, other.total_);
@@ -1229,9 +1247,9 @@ namespace gal::test
 		 * @param size how many size we need reserve
 		 */
 		constexpr void reserve(const size_type size)
-		noexcept(
-			noexcept(std::declval<container>().reserve(std::declval<size_type>()))
-		)
+			noexcept(
+				noexcept(std::declval<container>().reserve(std::declval<size_type>()))
+				)
 		{
 			container_.reserve(calc_blocks_needed(size));
 		}
@@ -1240,10 +1258,10 @@ namespace gal::test
 		 * @brief shrink to fit (normally, make container shrink to fit)
 		 */
 		constexpr void shrink_to_fit()
-		noexcept(
-			// std::is_nothrow_swappable_v<container>
-			noexcept(std::declval<container>().shrink_to_fit())
-		)
+			noexcept(
+				// std::is_nothrow_swappable_v<container>
+				noexcept(std::declval<container>().shrink_to_fit())
+				)
 		{
 			// if (container_.size() < container_.capacity())
 			// {
@@ -1259,16 +1277,16 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference reset(const size_type pos, const size_type len)
-		noexcept(
 			noexcept(
-				std::declval<basic_dynamic_bitset>().range_operation(
-																	std::declval<size_type>(),
-																	std::declval<size_type>(),
-																	bitandbit_trait::reset_block_partial,
-																	bitandbit_trait::reset_block_full
-																	)
-			)
-		)
+				noexcept(
+					std::declval<basic_dynamic_bitset>().range_operation(
+						std::declval<size_type>(),
+						std::declval<size_type>(),
+						bitand bit_trait::reset_block_partial,
+						bitand bit_trait::reset_block_full
+					)
+					)
+				)
 		{
 			return range_operation(pos, len, bit_trait::reset_block_partial, bit_trait::reset_block_full);
 		}
@@ -1279,11 +1297,11 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference reset(const size_type pos)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			// GAL_ASSERT(pos < total_size);
+			gal::toolbox::assert(pos < total_);
 
 			container_[bit_trait::block_index(pos)] and_eq compl bit_trait::bit_mask(pos);
 			return *this;
@@ -1294,9 +1312,9 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference reset()
-		noexcept(
-			noexcept(std::declval<container>().begin())
-		)
+			noexcept(
+				noexcept(std::declval<container>().begin())
+				)
 		{
 			for (auto it = container_.begin(); it != container_.end(); ++it)
 			{
@@ -1313,24 +1331,24 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference set(size_type pos, size_type len, const bool set)
-		noexcept(
 			noexcept(
-				std::declval<basic_dynamic_bitset>().range_operation(
-																	std::declval<size_type>(),
-																	std::declval<size_type>(),
-																	bitandbit_trait::set_block_partial,
-																	bitandbit_trait::set_block_full
-																	)
-			) and
-			noexcept(
-				std::declval<basic_dynamic_bitset>().range_operation(
-																	std::declval<size_type>(),
-																	std::declval<size_type>(),
-																	bitandbit_trait::reset_block_partial,
-																	bitandbit_trait::reset_block_full
-																	)
-			)
-		)
+				noexcept(
+					std::declval<basic_dynamic_bitset>().range_operation(
+						std::declval<size_type>(),
+						std::declval<size_type>(),
+						bitand bit_trait::set_block_partial,
+						bitand bit_trait::set_block_full
+					)
+					) and
+				noexcept(
+					std::declval<basic_dynamic_bitset>().range_operation(
+						std::declval<size_type>(),
+						std::declval<size_type>(),
+						bitand bit_trait::reset_block_partial,
+						bitand bit_trait::reset_block_full
+					)
+					)
+				)
 		{
 			if (set)
 			{
@@ -1348,9 +1366,9 @@ namespace gal::test
 		constexpr self_reference set(const size_type pos, const bool set = true) noexcept(
 			noexcept(std::declval<container>()[0]) and
 			noexcept(std::declval<basic_dynamic_bitset>().reset(std::declval<size_type>()))
-		)
+			)
 		{
-			// GAL_ASSERT(pos < total_size);
+			gal::toolbox::assert(pos < total_);
 
 			if (set)
 			{
@@ -1368,9 +1386,9 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference set()
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
+				)
 		{
 			for (auto it = container_.begin(); it not_eq container_.end(); ++it)
 			{
@@ -1387,16 +1405,16 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference flip(const size_type pos, const size_type len)
-		noexcept(
 			noexcept(
-				std::declval<basic_dynamic_bitset>().range_operation(
-																	std::declval<size_type>(),
-																	std::declval<size_type>(),
-																	bitandbit_trait::flip_block_partial,
-																	bitandbit_trait::flip_block_full
-																	)
-			)
-		)
+				noexcept(
+					std::declval<basic_dynamic_bitset>().range_operation(
+						std::declval<size_type>(),
+						std::declval<size_type>(),
+						bitand bit_trait::flip_block_partial,
+						bitand bit_trait::flip_block_full
+					)
+					)
+				)
 		{
 			return range_operation(pos, len, bit_trait::flip_block_partial, bit_trait::flip_block_full);
 		}
@@ -1407,11 +1425,11 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference flip(const size_type pos)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			//GAL_ASSERT(pos < total_size);
+			gal::toolbox::assert(pos < total_);
 
 			container_[bit_trait::block_index(pos)] xor_eq bit_trait::bit_mask(pos);
 			return *this;
@@ -1422,9 +1440,9 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference flip()
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits())
+				)
 		{
 			for (size_type i = 0; i < container_size(); ++i)
 			{
@@ -1440,9 +1458,9 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool test(const size_type pos) const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().unchecked_test(std::declval<size_type>())))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().unchecked_test(std::declval<size_type>())))
 		{
-			//GAL_ASSERT(pos < total_size);
+			gal::toolbox::assert(pos < total_);
 			return unchecked_test(pos);
 		}
 
@@ -1453,10 +1471,10 @@ namespace gal::test
 		 * @return tested value
 		 */
 		[[nodiscard]] constexpr bool test_and_set(const size_type pos, const bool value)
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().test(std::declval<size_type>())) and
-			noexcept(std::declval<basic_dynamic_bitset>().set(std::declval<size_type>(), std::declval<bool>()))
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().test(std::declval<size_type>())) and
+				noexcept(std::declval<basic_dynamic_bitset>().set(std::declval<size_type>(), std::declval<bool>()))
+				)
 		{
 			const auto b = test(pos);
 			if (b not_eq value)
@@ -1471,9 +1489,9 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool all() const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			if (empty())
 			{
@@ -1483,9 +1501,9 @@ namespace gal::test
 			const auto extra = count_extra_bits();
 
 			if (const auto all_one =
-					compl static_cast<value_type>(0); //static_cast<value_type>(compl 0); 
+				compl static_cast<value_type>(0); //static_cast<value_type>(compl 0); 
 				extra == 0
-			)
+				)
 			{
 				for (size_type i = 0; i < container_size(); ++i)
 				{
@@ -1504,7 +1522,7 @@ namespace gal::test
 						return false;
 					}
 				}
-				if (highest_block() not_eq (value_type{1} << extra) - 1)
+				if (highest_block() not_eq (value_type{ 1 } << extra) - 1)
 				{
 					return false;
 				}
@@ -1517,9 +1535,9 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool any() const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			if (empty())
 			{
@@ -1540,8 +1558,8 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool none() const
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().any()))
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().any()))
 		{
 			return not any();
 		}
@@ -1551,8 +1569,8 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr size_type count() const
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().container_size()))
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().container_size()))
 		{
 			constexpr auto pop_count = [](value_type value) constexpr noexcept
 			{
@@ -1573,7 +1591,7 @@ namespace gal::test
 				while (value)
 				{
 					constexpr auto table_width = 8;
-					num += count_table[value bitand ((value_type{1} << table_width) - 1)];
+					num += count_table[value bitand ((value_type{ 1 } << table_width) - 1)];
 					value >>= table_width;
 				}
 				return num;
@@ -1593,9 +1611,9 @@ namespace gal::test
 		 * @return ref
 		 */
 		[[nodiscard]] constexpr reference operator[](const size_type index)
-		noexcept(std::is_nothrow_constructible_v<reference, real_reference, size_type>)
+			noexcept(std::is_nothrow_constructible_v<reference, real_reference, size_type>)
 		{
-			return {container_[bit_trait::block_index(index)], bit_trait::bit_index(index)};
+			return { container_[bit_trait::block_index(index)], bit_trait::bit_index(index) };
 		}
 
 		/**
@@ -1604,9 +1622,9 @@ namespace gal::test
 		 * @return ref
 		 */
 		[[nodiscard]] constexpr const_reference operator[](const size_type index) const
-		noexcept(std::is_nothrow_constructible_v<reference, real_reference, size_type>)
+			noexcept(std::is_nothrow_constructible_v<reference, real_reference, size_type>)
 		{
-			return {container_[bit_trait::block_index(index)], bit_trait::bit_index(index)};
+			return { container_[bit_trait::block_index(index)], bit_trait::bit_index(index) };
 		}
 
 		/**
@@ -1614,9 +1632,9 @@ namespace gal::test
 		 * @return iterator
 		 */
 		[[nodiscard]] constexpr iterator begin()
-		noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
+			noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
 		{
-			return {container_.begin(), 0};
+			return { container_.begin(), 0 };
 		}
 
 		/**
@@ -1624,9 +1642,9 @@ namespace gal::test
 		 * @return iterator
 		 */
 		[[nodiscard]] constexpr const_iterator begin() const
-		noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
+			noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
 		{
-			return {container_.begin(), 0};
+			return { container_.begin(), 0 };
 		}
 
 		/**
@@ -1634,9 +1652,9 @@ namespace gal::test
 		 * @return iterator
 		 */
 		[[nodiscard]] constexpr iterator end()
-		noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
+			noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
 		{
-			return {container_.begin(), total_};
+			return { container_.begin(), total_ };
 		}
 
 		/**
@@ -1644,9 +1662,9 @@ namespace gal::test
 		 * @return iterator
 		 */
 		[[nodiscard]] constexpr const_iterator end() const
-		noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
+			noexcept(std::is_nothrow_constructible_v<iterator, real_iterator, size_type>)
 		{
-			return {container_.begin(), total_};
+			return { container_.begin(), total_ };
 		}
 
 		/**
@@ -1655,17 +1673,17 @@ namespace gal::test
 		 * @param value value to set
 		 */
 		constexpr void resize(const size_type size, const bool value = false)
-		noexcept(
-			noexcept(std::declval<container>().resize(std::declval<size_type>(), std::declval<value_type>())) and
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>().resize(std::declval<size_type>(), std::declval<value_type>())) and
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			const auto old_size      = container_size();
+			const auto old_size = container_size();
 			const auto required_size = calc_blocks_needed(size);
 
 			const auto v = value
-								? compl value_type{0}
-								: value_type{0};
+				? compl value_type{ 0 }
+			: value_type{ 0 };
 
 			if (required_size != old_size)
 			{
@@ -1685,7 +1703,7 @@ namespace gal::test
 			{
 				if (const auto extra = count_extra_bits(); extra)
 				{
-					// GAL_ASSERT(old_size >= 1 && old_size <= container.size());
+					gal::toolbox::assert(old_size >= 1 and old_size <= container_.size());
 
 					// Set them.
 					container_[old_size - 1] or_eq (v << extra);
@@ -1700,7 +1718,7 @@ namespace gal::test
 		 * @brief clear container
 		 */
 		constexpr void clear()
-		noexcept(noexcept(std::declval<container>().clear()))
+			noexcept(noexcept(std::declval<container>().clear()))
 		{
 			container_.clear();
 			total_ = 0;
@@ -1711,9 +1729,9 @@ namespace gal::test
 		 * @param value bit's value
 		 */
 		constexpr void push_back(const bool value)
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().resize(std::declval<size_type>(), std::declval<bool>()))
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().resize(std::declval<size_type>(), std::declval<bool>()))
+				)
 		{
 			const auto sz = size();
 			resize(sz + 1, value);
@@ -1723,9 +1741,9 @@ namespace gal::test
 		 * @brief pop a bit from back
 		 */
 		constexpr void pop_back()
-		noexcept(
-			noexcept(zero_unused_bits())
-		)
+			noexcept(
+				noexcept(zero_unused_bits())
+				)
 		{
 			const auto old_size = container_size();
 
@@ -1742,10 +1760,10 @@ namespace gal::test
 		 * @param value value for append
 		 */
 		constexpr void append(const value_type value)
-		noexcept(
-			noexcept(std::declval<container>().push_back(std::declval<value_type>())) and
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>().push_back(std::declval<value_type>())) and
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			if (const auto extra = count_extra_bits(); extra == 0)
 			{
@@ -1759,7 +1777,7 @@ namespace gal::test
 			}
 
 			total_ += bits_of_type;
-			//GAL_ASSERT(check_invariants());
+			gal::toolbox::assert(check_invariants());
 		}
 
 		/**
@@ -1768,11 +1786,11 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference operator and_eq(const_self_reference other)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			// GAL_ASSERT(size() == other.size());
+			gal::toolbox::assert(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i)
 			{
 				container_[i] and_eq other.container_[i];
@@ -1786,11 +1804,11 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference operator or_eq(const_self_reference other)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			// GAL_ASSERT(size() == other.size());
+			gal::toolbox::assert(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i)
 			{
 				container_[i] or_eq other.container_[i];
@@ -1804,11 +1822,11 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference operator xor_eq(const_self_reference other)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			//GAL_ASSERT(size() == other.size());
+			gal::toolbox::assert(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i)
 			{
 				container_[i] xor_eq other.container_[i];
@@ -1822,11 +1840,11 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference operator-=(const_self_reference other)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			// GAL_ASSERT(size() == other.size());
+			gal::toolbox::assert(size() == other.size());
 			for (size_type i = 0; i < container_size(); ++i)
 			{
 				container_[i] and_eq compl other.container_[i];
@@ -1840,9 +1858,9 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference operator<<=(size_type n)
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			if (n >= total_)
 			{
@@ -1852,7 +1870,7 @@ namespace gal::test
 			// note that we store every bit from back to front, it means left shift actually is right shift
 			// from blocks_need_discard to total_blocks is the part we need save
 			// or container[blocks_need_discard : total_blocks]
-			auto total_blocks        = container_size() - 1;
+			auto total_blocks = container_size() - 1;
 			auto blocks_need_discard = bit_trait::block_index(n);
 
 			if (const auto remained_bits = bit_trait::bit_index(n); remained_bits == 0)
@@ -1875,7 +1893,7 @@ namespace gal::test
 				 *      extra_bits_in_block
 				 *
 				 * actually, we save extra_bits_in_block part (container[0] << remained_bits) in last block (container[blocks_need_discard])
-				 * and remained_bits part (container[i] >> extra_bits_in_block) | extra_bits_in_block part (container[i - 1] << remained_bits) in other block
+				 * and remained_bits part (container[i] >> extra_bits_in_block) bitor extra_bits_in_block part (container[i - 1] << remained_bits) in other block
 				 */
 
 				const auto extra_bits_in_block = bits_of_type - remained_bits;
@@ -1909,7 +1927,7 @@ namespace gal::test
 		 * @return self
 		 */
 		constexpr self_reference operator>>=(const size_type n)
-		noexcept(noexcept(operator<<=(std::declval<size_type>())))
+			noexcept(noexcept(operator<<=(std::declval<size_type>())))
 		{
 			if (n >= total_)
 			{
@@ -1919,7 +1937,7 @@ namespace gal::test
 			// note that we store every bit from back to front, it means right shift actually is left shift
 			// from 0 to blocks_need_discard is the part we need save
 			// or container[0 : blocks_need_discard]
-			auto total_blocks        = container_size() - 1;
+			auto total_blocks = container_size() - 1;
 			auto blocks_need_discard = bit_trait::block_index(n);
 
 			if (const auto remained_bits = bit_trait::bit_index(n); remained_bits == 0)
@@ -1942,14 +1960,14 @@ namespace gal::test
 				 *      remained_bits
 				 *
 				 * actually, we save extra_bits_in_block part (container[total_blocks] >> remained_bits) in first block (container[total_blocks - blocks_need_discard])
-				 * and remained_bits part (container[i + 1] << extra_bits_in_block) | extra_bits_in_block part (container[i] >> remained_bits) in other block
+				 * and remained_bits part (container[i + 1] << extra_bits_in_block) bitor extra_bits_in_block part (container[i] >> remained_bits) in other block
 				 */
 				const auto extra_bits_in_block = bits_of_type - bit_trait::bit_index(n);
 
 				for (decltype(blocks_need_discard) i = blocks_need_discard; i < total_blocks; ++i)
 				{
 					// store this block's remained_bits part and next (actually, is last block, but we store every bit from back to front) block's extra_bits_in_block part
-					container_[i - blocks_need_discard] = (container_[i + 1] << extra_bits_in_block) | (container_[i] >>
+					container_[i - blocks_need_discard] = (container_[i + 1] << extra_bits_in_block) bitor (container_[i] >>
 						remained_bits);
 				}
 				container_[total_blocks - blocks_need_discard] = container_[total_blocks] >> remained_bits;
@@ -1970,9 +1988,9 @@ namespace gal::test
 		 * @return copy
 		 */
 		[[nodiscard]] basic_dynamic_bitset operator<<(const size_type n) const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<<=(std::declval<size_type>())))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<<=(std::declval<size_type>())))
 		{
-			auto copy{*this};
+			auto copy{ *this };
 			copy <<= n;
 			return copy;
 		}
@@ -1983,9 +2001,9 @@ namespace gal::test
 		 * @return copy
 		 */
 		[[nodiscard]] basic_dynamic_bitset operator>>(const size_type n) const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator>>=(std::declval<size_type>())))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator>>=(std::declval<size_type>())))
 		{
-			auto copy{*this};
+			auto copy{ *this };
 			copy >>= n;
 			return copy;
 		}
@@ -1995,9 +2013,9 @@ namespace gal::test
 		 * @return copy
 		 */
 		[[nodiscard]] basic_dynamic_bitset operator compl() const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().flip()))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().flip()))
 		{
-			auto copy{*this};
+			auto copy{ *this };
 			copy.flip();
 			return copy;
 		}
@@ -2008,7 +2026,7 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool operator==(const_self_reference other) const
-		noexcept
+			noexcept
 		{
 			return total_ == other.total_ and container_ == other.container_;
 		}
@@ -2029,9 +2047,9 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool operator<(const_self_reference other) const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			if (other.empty())
 			{
@@ -2076,9 +2094,9 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool operator<=(const_self_reference other) const
-		noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().operator<(std::declval<const_self_reference>()))
-		)
+			noexcept(
+				noexcept(std::declval<basic_dynamic_bitset>().operator<(std::declval<const_self_reference>()))
+				)
 		{
 			return this->operator==(other) or this->operator<(other);
 		}
@@ -2089,7 +2107,7 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool operator>(const_self_reference other) const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<=(std::declval<const_self_reference>())))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<=(std::declval<const_self_reference>())))
 		{
 			return not this->operator<=(other);
 		}
@@ -2100,7 +2118,7 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool operator>=(const_self_reference other) const
-		noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<(std::declval<const_self_reference>())))
+			noexcept(noexcept(std::declval<basic_dynamic_bitset>().operator<(std::declval<const_self_reference>())))
 		{
 			return not this->operator<(other);
 		}
@@ -2124,8 +2142,8 @@ namespace gal::test
 			for (size_type i = size() - 1; i not_eq static_cast<size_type>(-1); --i)
 			{
 				str.push_back(this->operator[](i)
-								? one
-								: zero);
+					? one
+					: zero);
 			}
 			return str;
 		}
@@ -2138,9 +2156,9 @@ namespace gal::test
 		template <std::integral To = value_type>
 		// requires(sizeof(To) >= sizeof(value_type))
 		[[nodiscard]] constexpr To cast_to() const
-		noexcept(
-			noexcept(bit_trait::block_index(std::declval<size_type>()))
-		)
+			noexcept(
+				noexcept(bit_trait::block_index(std::declval<size_type>()))
+				)
 		{
 			if (empty())
 			{
@@ -2148,9 +2166,9 @@ namespace gal::test
 			}
 
 			const auto maximum_size = std::min(total_, static_cast<size_type>(std::numeric_limits<To>::digits));
-			const auto last_block   = bit_trait::block_index(maximum_size - 1);
+			const auto last_block = bit_trait::block_index(maximum_size - 1);
 
-			//GAL_ASSERT((last_block * bits_of_type) < static_cast<size_type>(detail::bits_of_type<To>()));
+			gal::toolbox::assert((last_block * bits_of_type) <= static_cast<size_type>(std::numeric_limits<To>::digits));
 
 			To result{};
 			for (size_type i = 0; i <= last_block; ++i)
@@ -2167,11 +2185,11 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool is_subset_of(const_self_reference other) const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			//GAL_ASSERT(size() == other.size());
+			gal::toolbox::assert(size() == other.size());
 
 			for (size_type i = 0; i < container_size(); ++i)
 			{
@@ -2189,12 +2207,12 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool is_proper_subset_of(const_self_reference other) const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
-			//GAL_ASSERT(size() == other.size());
-			//GAL_ASSERT(container_size() == other.container_size());
+			gal::toolbox::assert(size() == other.size());
+			gal::toolbox::assert(container_size() == other.container_size());
 
 			bool proper = false;
 			for (size_type i = 0; i < container_size(); ++i)
@@ -2221,9 +2239,9 @@ namespace gal::test
 		 * @return result
 		 */
 		[[nodiscard]] constexpr bool is_intersects(const_self_reference other) const
-		noexcept(
-			noexcept(std::declval<container>()[0])
-		)
+			noexcept(
+				noexcept(std::declval<container>()[0])
+				)
 		{
 			const auto intersect_size = std::min(container_size(), other.container_size());
 
@@ -2239,151 +2257,147 @@ namespace gal::test
 
 	private:
 		container container_;
-		size_type total_{0};
+		size_type total_{ 0 };
 	};
 
-	template <typename Char, typename Trait>
-	std::basic_ostream<Char, Trait>bitand operator<<(
-		std::basic_ostream<Char, Trait>bitand      os,
-		basic_dynamic_bitset::const_self_reference bitset
-		)
+	export
 	{
-		using size_type = basic_dynamic_bitset::size_type;
-
-		std::underlying_type_t<decltype(std::ios_base::goodbit)> err = std::ios_base::goodbit;
-
-		if (typename std::basic_ostream<Char, Trait>::sentry{os})
+		template <typename Char, typename Trait>
+		std::basic_ostream<Char, Trait>bitand operator<<(
+			std::basic_ostream<Char, Trait>bitand os,
+			basic_dynamic_bitset::const_self_reference bitset
+			)
 		{
-			autobitand fac  = std::use_facet<std::ctype<Char>>(os.getloc());
-			auto       zero = fac.widen('0');
-			auto       one  = fac.widen('1');
+			using size_type = basic_dynamic_bitset::size_type;
 
-			auto sz    = bitset.size();
-			auto buf   = os.rdbuf();
-			auto width = (os.width() <= 0)
-							? 0
-							: static_cast<size_type>(os.width());
-			auto pad = (width <= sz)
-							? 0
-							: width - sz;
+			std::underlying_type_t<decltype(std::ios_base::goodbit)> err = std::ios_base::goodbit;
 
-			auto fill = os.fill();
-
-			// if needed fill at left; pad is decreased along the way
-			if (auto adjust_filed = os.flags() bitand std::ios_base::adjustfield;
-				adjust_filed not_eq std::ios_base::left)
+			if (typename std::basic_ostream<Char, Trait>::sentry{ os })
 			{
-				for (; pad > 0; --pad)
+				auto bitand fac = std::use_facet<std::ctype<Char>>(os.getloc());
+				auto       zero = fac.widen('0');
+				auto       one = fac.widen('1');
+
+				auto sz = bitset.size();
+				auto buf = os.rdbuf();
+				auto width = (os.width() <= 0)
+					? 0
+					: static_cast<size_type>(os.width());
+				auto pad = (width <= sz)
+					? 0
+					: width - sz;
+
+				auto fill = os.fill();
+
+				// if needed fill at left; pad is decreased along the way
+				if (auto adjust_filed = os.flags() bitand std::ios_base::adjustfield;
+					adjust_filed not_eq std::ios_base::left)
 				{
-					if (Trait::eq_int_type(Trait::eof(), buf->sputc(fill)))
+					for (; pad > 0; --pad)
 					{
-						err or_eq std::ios_base::failbit;
-						break;
+						if (Trait::eq_int_type(Trait::eof(), buf->sputc(fill)))
+						{
+							err or_eq std::ios_base::failbit;
+							break;
+						}
 					}
 				}
-			}
 
-			if (err == std::ios::goodbit)
-			{
-				// output the bitset
-				for (size_type i = sz; i > 0; --i)
+				if (err == std::ios_base::goodbit)
 				{
-					if (auto ret = buf->sputc(bitset.test(i - 1)
-												? one
-												: zero);
-						Trait::eq_int_type(Trait::eof(), ret))
+					// output the bitset
+					for (size_type i = sz; i > 0; --i)
 					{
-						err or_eq std::ios_base::failbit;
-						break;
+						if (auto ret = buf->sputc(bitset.test(i - 1)
+							? one
+							: zero);
+							Trait::eq_int_type(Trait::eof(), ret))
+						{
+							err or_eq std::ios_base::failbit;
+							break;
+						}
 					}
 				}
-			}
 
-			if (err == std::ios_base::goodbit)
-			{
-				// if needed fill at right
-				for (; pad > 0; --pad)
+				if (err == std::ios_base::goodbit)
 				{
-					if (Trait::eq_int_type(Trait::eof(), buf->sputc(fill)))
+					// if needed fill at right
+					for (; pad > 0; --pad)
 					{
-						err or_eq std::ios_base::failbit;
-						break;
+						if (Trait::eq_int_type(Trait::eof(), buf->sputc(fill)))
+						{
+							err or_eq std::ios_base::failbit;
+							break;
+						}
 					}
 				}
+
+				os.width(0);
 			}
 
-			os.width(0);
-		}
-
-		if (err not_eq std::ios_base::goodbit)
-		{
-			os.setstate(err);
-		}
-		return os;
-	}
-
-	template <typename Char, typename Trait>
-	std::basic_istream<Char, Trait>bitand operator>>(
-		std::basic_istream<Char, Trait>bitand is,
-		basic_dynamic_bitset::self_reference  bitset
-		)
-	{
-		using size_type = basic_dynamic_bitset::size_type;
-
-		auto width = is.width();
-		auto limit = (width > 0 and static_cast<size_type>(width) < bitset.max_size())
-						? static_cast<size_type>(width)
-						: bitset.max_size();
-
-		std::underlying_type_t<decltype(std::ios_base::goodbit)> err = std::ios_base::goodbit;
-
-		if (typename std::basic_istream<Char, Trait>::sentry{is})
-		{
-			autobitand fac  = std::use_facet<std::ctype<Char>>(is.getloc());
-			auto       zero = fac.widen('0');
-			auto       one  = fac.widen('1');
-
-			auto buf = is.rdbuf();
-			auto i   = buf->sgetc();
-			while (bitset.size() < limit)
+			if (err not_eq std::ios_base::goodbit)
 			{
-				if (Trait::eq_int_type(Trait::eof(), i))
+				os.setstate(err);
+			}
+			return os;
+		}
+
+		template <typename Char, typename Trait>
+		std::basic_istream<Char, Trait>bitand operator>>(
+			std::basic_istream<Char, Trait>bitand is,
+			basic_dynamic_bitset::self_reference  bitset
+			)
+		{
+			using size_type = basic_dynamic_bitset::size_type;
+
+			auto width = is.width();
+			auto limit = (width > 0 and static_cast<size_type>(width) < bitset.max_size())
+				? static_cast<size_type>(width)
+				: bitset.max_size();
+
+			std::underlying_type_t<decltype(std::ios_base::goodbit)> err = std::ios_base::goodbit;
+
+			if (typename std::basic_istream<Char, Trait>::sentry{ is })
+			{
+				auto bitand fac = std::use_facet<std::ctype<Char>>(is.getloc());
+				auto       zero = fac.widen('0');
+				auto       one = fac.widen('1');
+
+				auto buf = is.rdbuf();
+				auto i = buf->sgetc();
+				while (bitset.size() < limit)
 				{
-					err or_eq std::ios_base::eofbit;
-					break;
+					if (Trait::eq_int_type(Trait::eof(), i))
+					{
+						err or_eq std::ios_base::eofbit;
+						break;
+					}
+					auto c = Trait::to_char_type(i);
+
+					auto is_one = Trait::eq(c, one);
+
+					// check valid
+					if (not is_one and not Trait::eq(c, zero))
+					{
+						break;
+					}
+
+					bitset.push_back(is_one);
+					i = buf->snextc();
 				}
-				auto c = Trait::to_char_type(i);
 
-				auto is_one = Trait::eq(c, one);
-
-				// check valid
-				if (not is_one and not Trait::eq(c, zero))
-				{
-					break;
-				}
-
-				bitset.push_back(is_one);
-				i = buf->snextc();
+				is.width(0);
 			}
 
-			is.width(0);
+			if (bitset.empty())
+			{
+				err or_eq std::ios_base::failbit;
+			}
+			if (err not_eq std::ios_base::goodbit)
+			{
+				is.setstate(err);
+			}
+			return is;
 		}
-
-		if (bitset.empty())
-		{
-			err or_eq std::ios_base::failbit;
-		}
-		if (err not_eq std::ios_base::goodbit)
-		{
-			is.setstate(err);
-		}
-		return is;
 	}
 }
-
-namespace std
-{
-	template <>
-	struct iterator_traits<gal::test::basic_dynamic_bitset::bit_iterator>
-		: gal::test::basic_dynamic_bitset::bit_iterator {};
-} // namespace std
