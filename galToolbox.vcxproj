@@ -26,6 +26,7 @@
     <ClCompile Include="src\utils\assert.ixx" />
     <ClCompile Include="src\utils\crtp.ixx" />
     <ClCompile Include="src\utils\random.ixx" />
+    <ClCompile Include="test\test_compile_time_matcher.cpp" />
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
     <ClCompile Include="test\test_fifo.cpp" />
     <ClCompile Include="test\test_ring_buffer.cpp" />
@@ -34,6 +35,9 @@
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\string\compile_time_matcher.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -23,10 +23,14 @@
     <ClCompile Include="src\utils\random.ixx" />
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
     <ClCompile Include="src\container\dynamic_bitset.ixx" />
+    <ClCompile Include="test\test_compile_time_matcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\string\compile_time_matcher.hpp" />
   </ItemGroup>
 </Project>
