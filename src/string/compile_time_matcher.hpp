@@ -384,33 +384,45 @@ namespace gal::test
 	using iterator_value_t = std::remove_cv_t<std::remove_reference_t<decltype(*std::declval<Iterator>())>>;
 	template<typename Container>
 	using container_value_t = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(std::declval<Container>()))>>;
+
+	// todo: this shouldn't be needed
+	// gcc&clang: well, we do not restrict you to use throw in constexpr functions, as long as it is not actually executed
+	// MSVC: NO WAY!!!
+	template<typename T = std::nullptr_t>
+	constexpr auto just_throw_it(const char* message, T t = T{})
+	{
+		return message == nullptr ? t : throw std::invalid_argument(message);
+	}
 	
 	enum class check_set_state
 	{
 		open, // -> `[`
-		not_or_first, // -> `!` or first
-		first,
-		next // -> `]`
+		not_or_first, // -> `!` the first option
+		first, // the first option
+		next // other options
 	};
 
 	enum class match_set_state
 	{
 		open, // -> `[`
-		not_or_first_in, // -> `!` or first
-		first_out, // first out
-		next_in, // next
-		next_out
+		not_or_first_in, // -> `!` or the first option
+		first_out, // the first option that should be excluded
+		next_in, // other options that should be excluded
+		next_out // other options that should be included
 	};
 
 	/**
 	 * @brief determine whether the target pattern has a legal set
+	 * @note after detecting the first `[`, we always think that the next position is either the first option or `!` (further, the same is true after detecting `!`)
+	 * so the following `]` will always be ignored (so `[]` and `[!]` Is not a complete set)
+	 * and ignore all the `[` contained in it (so nested sets are not supported)
 	 * @tparam EmitError if true, throw a std::invalid_argument instead return end
 	 * @tparam PatternIterator iterator type
 	 * @param begin pattern begin
 	 * @param end pattern end
 	 * @param wildcard wildcard
 	 * @param state users do not need to know the state, and generally start from the beginning (`[`) to parse
-	 * @return if it is, return the position after the last valid position (`]`) of the set, otherwise it returns end
+	 * @return if it is, return the position after the last valid position (`]`) of the set, otherwise it returns begin (perhaps returning end is more intuitive, but in fact it may happen to reach end and the match is successful, so returning end is not necessarily a failure, but it is absolutely impossible to return begin when it succeeds)
 	*/
 	template<bool EmitError, typename PatternIterator>
 	constexpr PatternIterator check_set_exist(
@@ -420,6 +432,7 @@ namespace gal::test
 		check_set_state state = check_set_state::open
 	)
 	{
+		auto begin_bak = begin;
 		while (begin not_eq end)
 		{
 			switch (state)
@@ -432,11 +445,12 @@ namespace gal::test
 					// emit error or not
 					if constexpr (EmitError)
 					{
-						throw std::invalid_argument("the given pattern is not a valid set");
+						return just_throw_it("the given pattern is not a valid set", begin_bak);
+						// throw std::invalid_argument("the given pattern is not a valid set");
 					}
 					else
 					{
-						return end;
+						return begin_bak;
 					}
 				}
 				// `[` is detected, then the next character should be `!` or the first option
@@ -479,11 +493,12 @@ namespace gal::test
 
 		if constexpr (EmitError)
 		{
-			throw std::invalid_argument("the given pattern is not a valid set");
+			return just_throw_it("the given pattern is not a valid set", begin_bak);
+			// throw std::invalid_argument("the given pattern is not a valid set");
 		}
 		else
 		{
-			return end;
+			return begin_bak;
 		}
 	}
 
@@ -521,7 +536,8 @@ namespace gal::test
 				// this character not_eq `[`
 				if(*pattern_begin not_eq wildcard.set_open_)
 				{
-					throw std::invalid_argument("the given pattern is not a valid set");
+					return just_throw_it("the given pattern is not a valid set", match_result{ false, sequence_begin, pattern_begin });
+					// throw std::invalid_argument("the given pattern is not a valid set");
 				}
 
 				// `[` is detected, then the next character should be `!` or the first option
@@ -640,32 +656,35 @@ namespace gal::test
 			std::advance(pattern_begin, 1);
 		}
 
-		throw std::invalid_argument("the given pattern is not a valid set");
+		return just_throw_it("the given pattern is not a valid set", match_result{false, sequence_begin, pattern_begin});
+		// throw std::invalid_argument("the given pattern is not a valid set");
 	}
 
 	enum class check_alt_state
 	{
-		open, // -> `[`
-		next, // -> `|`
-		escape
+		open, // -> `(`
+		next, // not the first
+		escape // the next option after the `\\` does not have a special meaning (represented as the token we specified) and skip it (in short, treat it as a normal option)
 	};
 
 	enum class match_alt_sub_state
 	{
-		next, // -> `|`
-		escape
+		next, // not the first
+		escape // the next option after the `\\` does not have a special meaning (represented as the token we specified) and skip it (in short, treat it as a normal option)
 	};
 
 	/**
 	 * @brief determine whether the target pattern has a legal alt
+	 * @note the detection will ignore the nested set and alt, and return the position of the terminator corresponding to the outermost alt
 	 * @tparam EmitError if true, throw a std::invalid_argument instead return end
 	 * @tparam PatternIterator iterator type
 	 * @param begin pattern begin
 	 * @param end pattern end
 	 * @param wildcard wildcard
-	 * @param state users do not need to know the state, and generally start from the beginning (`[`) to parse
+	 * @param state users do not need to know the state, and generally start from the beginning (`(`) to parse
 	 * @param depth users do not need to know the depth, this is just to confirm whether we have processed all the nested content
-	 * @return if it is, return the position after the last valid position (`]`) of the alt, otherwise it returns end
+	 * @param is_sub users do not need to know the is_sub, this just indicates whether it is currently detecting sub-alts (`|`)
+	 * @return if it is, return the position after the last valid position (`)`) of the alt, otherwise it returns begin (perhaps returning end is more intuitive, but in fact it may happen to reach end and the match is successful, so returning end is not necessarily a failure, but it is absolutely impossible to return begin when it succeeds)
 	*/
 	template<bool EmitError, typename PatternIterator>
 	constexpr PatternIterator check_alt_exist(
@@ -673,30 +692,33 @@ namespace gal::test
 		PatternIterator end,
 		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
 		check_alt_state state = check_alt_state::open,
-		std::size_t depth = 0
+		std::size_t depth = 0,
+		bool is_sub = false
 	)
 	{
+		auto begin_bak = begin;
 		while(begin not_eq end)
 		{
 			switch (state)
 			{
-			case check_alt_state::open: // -> `[`
+			case check_alt_state::open: // -> `(`
 			{
-				// this character not_eq `[`
+				// this character not_eq `(`
 				if(*begin not_eq wildcard.alt_open_)
 				{
 					// emit error or not
 					if constexpr (EmitError)
 					{
-						throw std::invalid_argument("the given pattern is not a valid alternative");
+						return just_throw_it("the given pattern is not a valid alternative", begin_bak);
+						// throw std::invalid_argument("the given pattern is not a valid alternative");
 					}
 					else
 					{
-						return end;
+						return begin_bak;
 					}
 				}
 
-				// `[` is detected, then the next character should the first option
+				// `(` is detected, then the next character should the first option
 				state = check_alt_state::next;
 				++depth;
 				break;
@@ -707,15 +729,16 @@ namespace gal::test
 				{
 					state = check_alt_state::escape;
 				}
-				else if(
-					// if there is a nested set
-					*begin == wildcard.set_open_ and
-					// and it really exist
-					check_set_exist<false>(std::next(begin), end, wildcard, check_set_state::not_or_first) not_eq end
-					)
+				else if(*begin == wildcard.set_open_)
 				{
-					// reposition begin to a position where `)` is located after skipping this set
-					begin = std::prev(check_set_exist<true>(std::next(begin), end, wildcard, check_set_state::not_or_first));
+					// if there is a nested set
+					if(auto pattern_set_end = check_set_exist<false>(std::next(begin), end, wildcard, check_set_state::not_or_first); pattern_set_end not_eq std::next(begin))
+					{
+						// and it really exist
+						// reposition begin to a position where `]` is located after skipping this set
+						// why take prev one step back? because we will go one step further below
+						begin = std::prev(pattern_set_end);
+					}
 				}
 				else if(*begin == wildcard.alt_open_)
 				{
@@ -729,7 +752,19 @@ namespace gal::test
 					// all possible nested alts are matched
 					if(depth == 0)
 					{
+						if(is_sub)
+						{
+							return begin;
+						}
 						return std::next(begin);
+					}
+				}
+				else if(is_sub and *begin == wildcard.alt_or_)
+				{
+					// current alt finished
+					if (depth == 1)
+					{
+						return begin;
 					}
 				}
 				break;
@@ -746,11 +781,12 @@ namespace gal::test
 
 		if constexpr (EmitError)
 		{
-			throw std::invalid_argument("the use of sets is disabled");
+			return just_throw_it("of sets is disabled", begin_bak);
+			// throw std::invalid_argument("the use of sets is disabled");
 		}
 		else
 		{
-			return end;
+			return begin_bak;
 		}
 	}
 
@@ -760,76 +796,15 @@ namespace gal::test
 	 * @param begin pattern begin
 	 * @param end pattern end
 	 * @param wildcard wildcard
-	 * @param state users do not need to know the state, and generally start after the beginning (`[`) to parse
-	 * @param depth users do not need to know the depth, this is just to confirm whether we have processed all the nested content
 	 * @return guarantee to return the end position of the sub-alternative, and throw an exception if it does not exist
 	*/
 	template<typename PatternIterator>
 	constexpr PatternIterator check_sub_alt_exist(
 		PatternIterator begin,
 		PatternIterator end,
-		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{},
-		match_alt_sub_state state = match_alt_sub_state::next,
-		std::size_t depth = 1
-	)
+		const  wildcard_type<iterator_value_t<PatternIterator>>bitand wildcard = wildcard_type<iterator_value_t<PatternIterator>>{})
 	{
-		while(begin not_eq end)
-		{
-			switch (state)
-			{
-			case match_alt_sub_state::next:
-			{
-				if(*begin == wildcard.escape_)
-				{
-					state = match_alt_sub_state::escape;
-				}
-				else if (
-					// if there is a nested set
-					*begin == wildcard.set_open_ and
-					// and it really exist
-					check_set_exist<false>(std::next(begin), end, wildcard, check_set_state::not_or_first) not_eq end
-					)
-				{
-					// reposition begin to a position where `)` is located after skipping this set
-					begin = std::prev(check_set_exist<true>(std::next(begin), end, wildcard, check_set_state::not_or_first));
-				}
-				else if(*begin == wildcard.alt_open_)
-				{
-					// another nested alt
-					++depth;
-				}
-				else if(*begin == wildcard.alt_close_)
-				{
-					// current alt finished
-					--depth;
-					// all possible nested alts are matched
-					if(depth == 0)
-					{
-						return begin;
-					}
-				}
-				else if(*begin == wildcard.alt_or_)
-				{
-					// current alt finished
-					if(depth == 1)
-					{
-						return begin;
-					}
-				}
-
-				break;
-			}
-			case match_alt_sub_state::escape:
-			{
-				state = match_alt_sub_state::next;
-				break;
-			}
-			}
-
-			std::advance(begin, 1);
-		}
-
-		throw std::invalid_argument("the given pattern is not a valid alternative");
+		return check_alt_exist<true>(begin, end, wildcard, check_alt_state::next, 1, true);
 	}
 
 	/**
@@ -844,7 +819,7 @@ namespace gal::test
 	 * @param wildcard wildcard
 	 * @param equal_to equal to
 	 * @param partial it is a partial match
-	 * @param escape it is a escape match
+	 * @param escape escape means that the next content we will directly compare without considering it as a possible token we defined
 	 * @return does the target sequence can match the pattern?
 	*/
 	template<typename SequenceIterator, typename PatternIterator, typename EqualTo = std::equal_to<>>
@@ -960,14 +935,23 @@ namespace gal::test
 			}
 
 			// the current position is relatively successful, continue to compare the next position
-			return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial);
+			return match(
+				std::next(sequence_begin), sequence_end, 
+				std::next(pattern_begin), pattern_end, 
+				wildcard, equal_to, partial
+			);
 		}
 
 		if(*pattern_begin == wildcard.anything_)
 		{
 			// if the current position of the pattern is `*`, try to match the next position of the pattern
 			// if the match is still successful, skip the current `*`
-			if(auto result = match(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial); result)
+			if(auto result = match(
+				sequence_begin, sequence_end, 
+				std::next(pattern_begin), pattern_end, 
+				wildcard, equal_to, partial); 
+				result
+				)
 			{
 				return result;
 			}
@@ -983,7 +967,11 @@ namespace gal::test
 			}
 
 			// if the match is not successful, skip the current position of sequence
-			return match(std::next(sequence_begin), sequence_end, pattern_begin, pattern_end, wildcard, equal_to, partial);
+			return match(
+				std::next(sequence_begin), sequence_end, 
+				pattern_begin, pattern_end, 
+				wildcard, equal_to, partial
+			);
 		}
 
 		if(*pattern_begin == wildcard.single_)
@@ -1000,57 +988,73 @@ namespace gal::test
 			}
 
 			// try to match the next position of the pattern and sequence
-			return match(std::next(sequence_begin), sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial);
+			return match(
+				std::next(sequence_begin), sequence_end, 
+				std::next(pattern_begin), pattern_end, 
+				wildcard, equal_to, partial
+			);
 		}
 
 		if(*pattern_begin == wildcard.escape_)
 		{
 			// match the next position of the pattern
-			return match(sequence_begin, sequence_end, std::next(pattern_begin), pattern_end, wildcard, equal_to, partial, true);
-		}
-
-		if (
-			// if there is a nested set
-			*pattern_begin == wildcard.set_open_ and
-			// and it really exist
-			check_set_exist<false>(std::next(pattern_begin), pattern_end, wildcard, check_set_state::not_or_first) not_eq pattern_end
-			)
-		{
-			// if the nested set does not match successfully, the result will be returned directly (the match failed)
-			if(auto result = match_set(
+			return match(
 				sequence_begin, sequence_end, 
 				std::next(pattern_begin), pattern_end, 
-				wildcard, equal_to, match_set_state::not_or_first_in); 
-				not result
-				)
-			{
-				return result;
-			}
-
-			// after the match is successful, skip this nested set to continue matching
-			return match(
-				std::next(sequence_begin), sequence_end, 
-				check_set_exist<true>(std::next(pattern_begin), pattern_end, wildcard, check_set_state::not_or_first), pattern_end, 
-				wildcard, equal_to, partial
+				wildcard, equal_to, partial, true
 			);
 		}
 
-		if (
-			// if there is a nested alt
-			*pattern_begin == wildcard.alt_open_ and
-			// and it really exist
-			check_alt_exist<false>(std::next(pattern_begin), pattern_end, wildcard, check_alt_state::next, 1) not_eq pattern_end
-			)
+		if (*pattern_begin == wildcard.set_open_)
 		{
-			auto pattern_alt_end = check_alt_exist<true>(std::next(pattern_begin), pattern_end, wildcard, check_alt_state::next, 1);
+			// if there is a nested set
+			if(auto pattern_set_end = check_set_exist<false>(
+				std::next(pattern_begin), pattern_end, 
+				wildcard, check_set_state::not_or_first); 
+				pattern_set_end not_eq std::next(pattern_begin)
+				)
+			{
+				// and it really exist
 
-			// match one of the alternatives
-			return match_alt(
-				sequence_begin, sequence_end, 
-				std::next(pattern_begin), check_sub_alt_exist(std::next(pattern_begin), pattern_alt_end, wildcard), 
-				pattern_alt_end, pattern_end, 
-				wildcard, equal_to, partial
-			);
+				// if the nested set does not match successfully, the result will be returned directly (the match failed)
+				if (auto result = match_set(
+					sequence_begin, sequence_end,
+					std::next(pattern_begin), pattern_end,
+					wildcard, equal_to, match_set_state::not_or_first_in);
+					not result
+					)
+				{
+					return result;
+				}
+
+				// after the match is successful, skip this nested set to continue matching
+				return match(
+					std::next(sequence_begin), sequence_end,
+					pattern_set_end, pattern_end,
+					wildcard, equal_to, partial
+				);
+			}
+		}
+
+		if (*pattern_begin == wildcard.alt_open_)
+		{
+			// if there is a nested alt
+			if(auto pattern_alt_end = check_alt_exist<false>(
+				std::next(pattern_begin), pattern_end, 
+				wildcard, check_alt_state::next, 1); 
+				pattern_alt_end not_eq std::next(pattern_begin)
+				)
+			{
+				// and it really exist
+
+				// match one of the alternatives
+				return match_alt(
+					sequence_begin, sequence_end,
+					std::next(pattern_begin), check_sub_alt_exist(std::next(pattern_begin), pattern_alt_end, wildcard),
+					pattern_alt_end, pattern_end,
+					wildcard, equal_to, partial
+				);
+			}
 		}
 
 		if(
