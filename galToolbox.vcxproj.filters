@@ -24,6 +24,7 @@
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
     <ClCompile Include="src\container\dynamic_bitset.ixx" />
     <ClCompile Include="test\test_compile_time_matcher.cpp" />
+    <ClCompile Include="src\string\compile_time_matcher.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
