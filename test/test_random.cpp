@@ -1,20 +1,18 @@
 #include <gtest/gtest.h>
 
 // todo: module export problem
-// import gal.toolbox.random;
-#include "../src/utils/random.hpp"
-// import std.core;
+import gal.toolbox.random;
+
 #include <set>
 #include <iostream>
 #include <random>
 
 TEST(TestRandom, TestAll)
 {
-	// using namespace gal::toolbox;
-	using namespace gal::test;
+	using namespace gal::toolbox;
 
 	constexpr auto test_times = 10000;
-
+	
 	std::cout << std::fixed << std::setprecision(3);
 
 	std::cout << "\n# Test overlap1 (" << test_times << " times) \n";

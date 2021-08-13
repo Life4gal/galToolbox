@@ -30,6 +30,7 @@
     <ClCompile Include="test\test_compile_time_matcher.cpp" />
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
     <ClCompile Include="test\test_fifo.cpp" />
+    <ClCompile Include="test\test_random.cpp" />
     <ClCompile Include="test\test_ring_buffer.cpp" />
   </ItemGroup>
   <ItemGroup>

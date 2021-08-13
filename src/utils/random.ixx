@@ -7,8 +7,20 @@ import <type_traits>;
 import <cstdint>;
 
 namespace gal::toolbox {
+	template <typename T>
+	concept generated_type = requires
+	{
+		typename T::result_type;
+		typename T::state_type;
+	};
+
 	export {
 		struct random_trait;
+
+		// todo: we should not export engine_base, but this will cause the compiler to fail to recognize the constructor inherited from engine_base
+		// see: https://stackoverflow.com/questions/68665106/c-module-export-class
+		template <generated_type T>
+		class engine_base;
 
 		class xor_shift_rotate_256_plus_engine;
 		class xor_shift_rotate_256_plus_plus_engine;
@@ -66,13 +78,6 @@ namespace gal::toolbox {
 		}
 	};
 
-	template <typename T>
-	concept generated_type = requires
-	{
-		typename T::result_type;
-		typename T::state_type;
-	};
-
 	/**
 	 * Output: 64 bits
 	 * Period: 2 xor 64
@@ -87,12 +92,12 @@ namespace gal::toolbox {
 
 		constexpr result_type operator()() noexcept
 		{
-			seed_ += 0x9e3779b97f4a7c15; // 1001111000110111011110011011100101111111010010101000000000000000
+			seed_ += static_cast<result_type>(0x9e3779b97f4a7c15); // 1001111000110111011110011011100101111111010010101000000000000000
 
 			auto z = seed_;
-			z = (z xor (z >> 30)) * 0xbf58476d1ce4e5b9;
+			z = (z xor (z >> 30)) * static_cast<result_type>(0xbf58476d1ce4e5b9);
 			// 1011111101011000010001110110110100011100111001001110100000000000
-			z = (z xor (z >> 27)) * 0x94d049bb133111eb;
+			z = (z xor (z >> 27)) * static_cast<result_type>(0x94d049bb133111eb);
 			// 1001010011010000010010011011101100010011001100010001000000000000
 			return z xor (z >> 31);
 		}
@@ -129,7 +134,7 @@ namespace gal::toolbox {
 		constexpr explicit engine_base(result_type seed = random_trait::default_seed) noexcept
 			: state_(seed_generator<T>{seed}.generate_seeds()) {}
 
-		/* constexpr */ virtual               compl engine_base() = default;
+		constexpr virtual               compl engine_base() = default;
 		constexpr                       engine_base(const_engine_base_reference) = default;
 		constexpr engine_base_reference operator=(const_engine_base_reference) = default;
 		constexpr                       engine_base(engine_base_rreference) noexcept = default;
