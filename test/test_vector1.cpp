@@ -42,37 +42,37 @@ TEST(TestVector1, TestSelfOperator)
 		vector1<unsigned int> vec{ 42 };
 
 		vec += 10;
-		ASSERT_EQ(vec[0], 52);
+		ASSERT_EQ(vec, 52);
 
 		vec -= 20;
-		ASSERT_EQ(vec[0], 32);
+		ASSERT_EQ(vec, 32);
 
 		vec *= 2;
-		ASSERT_EQ(vec[0], 64);
+		ASSERT_EQ(vec, 64);
 
 		vec /= 32;
-		ASSERT_EQ(vec[0], 2);
+		ASSERT_EQ(vec, 2);
 
 		vec %= 2;
-		ASSERT_EQ(vec[0], 0);
+		ASSERT_EQ(vec, 0);
 
 		vec += 15;
-		ASSERT_EQ(vec[0], 15);
+		ASSERT_EQ(vec, 15);
 
 		vec &= 7;
-		ASSERT_EQ(vec[0], 7);
+		ASSERT_EQ(vec, 7);
 
 		vec |= 15;
-		ASSERT_EQ(vec[0], 15);
+		ASSERT_EQ(vec, 15);
 
 		vec ^= 24;
-		ASSERT_EQ(vec[0], 23);
+		ASSERT_EQ(vec, 23);
 
 		vec >>= 2;
-		ASSERT_EQ(vec[0], 5);
+		ASSERT_EQ(vec, 5);
 
 		vec <<= 3;
-		ASSERT_EQ(vec[0], 40);
+		ASSERT_EQ(vec, 40);
 	}
 }
 
@@ -89,91 +89,91 @@ TEST(TestVector1, TestOperator)
 
 		{
 			constexpr auto vec1 = vec_ull + vec_ll;
-			static_assert(vec1[0] == vec_ull_value + vec_ll_value);
+			static_assert(vec1 == vec_ull_value + vec_ll_value);
 
 			constexpr auto vec2 = vec_ull + vec_ll_value;
-			static_assert(vec2[0] == vec_ull_value + vec_ll_value);
+			static_assert(vec2 == vec_ull_value + vec_ll_value);
 
 			constexpr auto vec3 =  vec_ull_value + vec_ll;
-			static_assert(vec3[0] == vec_ull_value + vec_ll_value);
+			static_assert(vec3 == vec_ull_value + vec_ll_value);
 		}
 		{
 			constexpr auto vec1 = vec_ull - vec_ll;
-			static_assert(vec1[0] == vec_ull_value - vec_ll_value);
+			static_assert(vec1 == vec_ull_value - vec_ll_value);
 
 			constexpr auto vec2 = vec_ull - vec_ll_value;
-			static_assert(vec2[0] == vec_ull_value - vec_ll_value);
+			static_assert(vec2 == vec_ull_value - vec_ll_value);
 
 			constexpr auto vec3 = vec_ull_value - vec_ll;
-			static_assert(vec3[0] == vec_ull_value - vec_ll_value);
+			static_assert(vec3 == vec_ull_value - vec_ll_value);
 		}
 		{
 			constexpr auto vec1 = vec_ull * vec_ll;
-			static_assert(vec1[0] == vec_ull_value * vec_ll_value);
+			static_assert(vec1 == vec_ull_value * vec_ll_value);
 
 			constexpr auto vec2 = vec_ull * vec_ll_value;
-			static_assert(vec2[0] == vec_ull_value * vec_ll_value);
+			static_assert(vec2 == vec_ull_value * vec_ll_value);
 
 			constexpr auto vec3 = vec_ull_value * vec_ll;
-			static_assert(vec3[0] == vec_ull_value * vec_ll_value);
+			static_assert(vec3 == vec_ull_value * vec_ll_value);
 		}
 		{
 			constexpr auto vec1 = vec_ull / vec_ll;
-			static_assert(vec1[0] == vec_ull_value / vec_ll_value);
+			static_assert(vec1 == vec_ull_value / vec_ll_value);
 
 			constexpr auto vec2 = vec_ull / vec_ll_value;
-			static_assert(vec2[0] == vec_ull_value / vec_ll_value);
+			static_assert(vec2 == vec_ull_value / vec_ll_value);
 
 			constexpr auto vec3 = vec_ull_value / vec_ll;
-			static_assert(vec3[0] == vec_ull_value / vec_ll_value);
+			static_assert(vec3 == vec_ull_value / vec_ll_value);
 		}
 		{
 			constexpr auto vec1 = vec_ull % vec_ll;
-			static_assert(vec1[0] == vec_ull_value % vec_ll_value);
+			static_assert(vec1 == vec_ull_value % vec_ll_value);
 
 			constexpr auto vec2 = vec_ull % vec_ll_value;
-			static_assert(vec2[0] == vec_ull_value % vec_ll_value);
+			static_assert(vec2 == vec_ull_value % vec_ll_value);
 
 			constexpr auto vec3 = vec_ull_value % vec_ll;
-			static_assert(vec3[0] == vec_ull_value % vec_ll_value);
+			static_assert(vec3 == vec_ull_value % vec_ll_value);
 		}
 		{
 			constexpr auto vec1 = vec_ull & vec_ll;
-			static_assert(vec1[0] == (vec_ull_value & vec_ll_value));
+			static_assert(vec1 == (vec_ull_value & vec_ll_value));
 
 			constexpr auto vec2 = vec_ull & vec_ll_value;
-			static_assert(vec2[0] == (vec_ull_value & vec_ll_value));
+			static_assert(vec2 == (vec_ull_value & vec_ll_value));
 
 			constexpr auto vec3 = vec_ull_value & vec_ll;
-			static_assert(vec3[0] == (vec_ull_value & vec_ll_value));
+			static_assert(vec3 == (vec_ull_value & vec_ll_value));
 		}
 		{
 			constexpr auto vec1 = vec_ull | vec_ll;
-			static_assert(vec1[0] == (vec_ull_value | vec_ll_value));
+			static_assert(vec1 == (vec_ull_value | vec_ll_value));
 
 			constexpr auto vec2 = vec_ull | vec_ll_value;
-			static_assert(vec2[0] == (vec_ull_value | vec_ll_value));
+			static_assert(vec2 == (vec_ull_value | vec_ll_value));
 
 			constexpr auto vec3 = vec_ull_value | vec_ll;
-			static_assert(vec3[0] == (vec_ull_value | vec_ll_value));
+			static_assert(vec3 == (vec_ull_value | vec_ll_value));
 		}
 		{
 			constexpr auto vec1 = vec_ull ^ vec_ll;
-			static_assert(vec1[0] == (vec_ull_value ^ vec_ll_value));
+			static_assert(vec1 == (vec_ull_value ^ vec_ll_value));
 
 			constexpr auto vec2 = vec_ull ^ vec_ll_value;
-			static_assert(vec2[0] == (vec_ull_value ^ vec_ll_value));
+			static_assert(vec2 == (vec_ull_value ^ vec_ll_value));
 
 			constexpr auto vec3 = vec_ull_value ^ vec_ll;
-			static_assert(vec3[0] == (vec_ull_value ^ vec_ll_value));
+			static_assert(vec3 == (vec_ull_value ^ vec_ll_value));
 		}
 		{
 			constexpr auto vec = vec_ull << 12;
-			static_assert(vec[0] == (vec_ull_value << 12));
+			static_assert(vec == (vec_ull_value << 12));
 		}
 		{
 			constexpr auto vec = vec_ll >> 15;
-			static_assert(vec[0] == (vec_ll_value >>15));
+			static_assert(vec == (vec_ll_value >>15));
 		}
 	}
 }

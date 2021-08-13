@@ -1,9 +1,5 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=2dd222be_002D6cea_002D4739_002D8e69_002D4bbd4de3d4b3/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="TestName" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;GTest::AEED3BF5-FF64-46E5-AB5B-D262AA9D2125::.NETFramework,Version=v4.0::TestCaseName.TestName&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
+	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=683e9479_002D580a_002D4555_002Da8af_002D2cb421e8f007/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="TestName #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestFifo.TestPushAndPop&lt;/TestId&gt;&#xD;
@@ -20,5 +16,8 @@
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestVector1.TestAll&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestVector1.TestSelfOperator&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestVector1.TestOperator&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestVector2.TestBasic&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestVector1.TestBasic&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestVector2.TestSelfOperator&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

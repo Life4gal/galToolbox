@@ -15,20 +15,22 @@ namespace gal::test
 		template <vector_size_type Size, arithmetic U>
 		using acceptable_type = vector<Size, U, P>;
 
-		using value_type = T;
-		using size_type = vector_size_type;
+		using container_type = std::array<T, 1>;
+		using value_type = typename container_type::value_type;
+		using size_type = typename container_type::size_type;
 
-		using reference = value_type&;
-		using const_reference = const value_type&;
+		using reference = typename container_type::reference;
+		using const_reference = typename container_type::const_reference;
 
 		constexpr static size_type data_index = 0;
-		constexpr static size_type data_size  = 1;
+		constexpr static size_type data_size = 1;
 
 		constexpr          vector() noexcept = default;
-		constexpr explicit vector(value_type scalar) noexcept : data_({scalar}) {}
+		template<arithmetic U>
+		constexpr explicit vector(U scalar) noexcept : data_({static_cast<value_type>(scalar)}) {}
 
 		template <vector_size_type Size, typename U>
-			requires (Size >= 1)
+			requires (Size >= data_size)
 		constexpr explicit vector(const acceptable_type<Size, U>& other) noexcept
 			: data_({other[data_index]}) {}
 
@@ -128,6 +130,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator+=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
 		{
@@ -136,6 +139,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator-=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
 		{
@@ -144,6 +148,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator*=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
 		{
@@ -152,6 +157,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator/=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
 		{
@@ -160,6 +166,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator%=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
 		{
@@ -168,6 +175,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator&=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
 		{
@@ -176,6 +184,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator|=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
 		{
@@ -184,6 +193,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator^=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
 		{
@@ -192,6 +202,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator<<=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
 		{
@@ -200,6 +211,7 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
+		requires (Size >= data_size)
 		constexpr self_reference operator>>=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
 		{
@@ -439,15 +451,29 @@ namespace gal::test
 		}
 
 		template <typename U>
-		constexpr bool operator==(const acceptable_type<data_size, U>& other) const
+		requires std::is_convertible_v<U, value_type>
+		constexpr bool operator==(const acceptable_type<data_size, U>& other) const noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			return other[data_index] == data_[data_index];
+			return static_cast<value_type>(other[data_index]) == data_[data_index];
+		}
+
+		template<typename U>
+		requires std::is_convertible_v<U, value_type>
+		constexpr bool operator==(U u) const noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return static_cast<value_type>(u) == data_[data_index];
 		}
 
 		template <typename U>
-		constexpr bool operator!=(const acceptable_type<data_size, U>& other) const
+		constexpr bool operator!=(const acceptable_type<data_size, U>& other) const noexcept(noexcept(std::declval<self_type>().operator==(std::declval<const acceptable_type<data_size, U>&>())))
 		{
 			return !this->operator==(other);
+		}
+
+		template<typename U>
+		constexpr bool operator==(U u) const noexcept(noexcept(std::declval<self_type>().operator==(std::declval<U>())))
+		{
+			return !this->operator==(u);
 		}
 
 		// ReSharper disable once CppNonExplicitConversionOperator
@@ -457,6 +483,6 @@ namespace gal::test
 		}
 
 	private:
-		std::array<value_type, 1> data_;
+		container_type data_;
 	};
 }
