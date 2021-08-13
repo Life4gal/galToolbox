@@ -1,8 +1,7 @@
 #pragma once
 
 #include "precision.hpp"
-
-#include <variant>
+#include <array>
 
 namespace gal::test
 {
@@ -17,21 +16,21 @@ namespace gal::test
 		using acceptable_type = vector<Size, U, P>;
 
 		using value_type = T;
-		using container_type = vector<1, T, P>;
 		using size_type = vector_size_type;
 
 		using reference = value_type&;
 		using const_reference = const value_type&;
 
 		constexpr static size_type data_index = 0;
-		constexpr static size_type data_size = 1;
+		constexpr static size_type data_size  = 1;
 
 		constexpr          vector() noexcept = default;
-		constexpr explicit vector(value_type scalar) noexcept : x(scalar) {}
+		constexpr explicit vector(value_type scalar) noexcept : data_({scalar}) {}
 
 		template <vector_size_type Size, typename U>
+			requires (Size >= 1)
 		constexpr explicit vector(const acceptable_type<Size, U>& other) noexcept
-			: x(other[data_index]) {}
+			: data_({other[data_index]}) {}
 
 		constexpr static size_type size() noexcept
 		{
@@ -40,19 +39,19 @@ namespace gal::test
 
 		constexpr reference operator[](size_type) noexcept
 		{
-			return x;
+			return data_[data_index];
 		}
 
 		constexpr const_reference operator[](size_type) const noexcept
 		{
-			return x;
+			return data_[data_index];
 		}
 
 		template <typename U>
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator+=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x += static_cast<value_type>(scalar);
+			data_[data_index] += static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -60,7 +59,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator-=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x -= static_cast<value_type>(scalar);
+			data_[data_index] -= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -68,7 +67,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator*=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x *= static_cast<value_type>(scalar);
+			data_[data_index] *= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -76,7 +75,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator/=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x /= static_cast<value_type>(scalar);
+			data_[data_index] /= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -84,7 +83,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x %= static_cast<value_type>(scalar);
+			data_[data_index] %= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -92,7 +91,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator&=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x &= static_cast<value_type>(scalar);
+			data_[data_index] &= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -100,7 +99,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator|=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x |= static_cast<value_type>(scalar);
+			data_[data_index] |= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -108,7 +107,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator^=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x ^= static_cast<value_type>(scalar);
+			data_[data_index] ^= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -116,7 +115,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator<<=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x <<= static_cast<value_type>(scalar);
+			data_[data_index] <<= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -124,7 +123,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator>>=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			x >>= static_cast<value_type>(scalar);
+			data_[data_index] >>= static_cast<value_type>(scalar);
 			return *this;
 		}
 
@@ -210,7 +209,7 @@ namespace gal::test
 
 		constexpr self_reference operator--() noexcept
 		{
-			--x;
+			--data_[data_index];
 			return *this;
 		}
 
@@ -223,7 +222,7 @@ namespace gal::test
 
 		constexpr self_reference operator++() noexcept
 		{
-			++x;
+			++data_[data_index];
 			return *this;
 		}
 
@@ -236,206 +235,216 @@ namespace gal::test
 
 		constexpr self_type operator+() const noexcept
 		{
-			return self_type{x};
+			return self_type{data_[data_index]};
 		}
 
 		constexpr self_type operator-() const noexcept
 		{
-			return self_type{-x};
+			return self_type{-data_[data_index]};
 		}
 
 		constexpr self_type operator~() const noexcept
 		{
-			return self_type{~x};
+			return self_type{~data_[data_index]};
 		}
 
 		template <typename U>
 		constexpr self_type operator+(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy += scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator+(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator+=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator+=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy += self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator-(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy -= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator-(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator-=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator-=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy -= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator*(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy *= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator*(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator*=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator*=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy *= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator/(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy /= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator/(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator/=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator/=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy /= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator%(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy %= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator%(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator%=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator%=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy %= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator&(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy &= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator&(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator&=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator&=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy &= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator|(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy |= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator|(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator|=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator|=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy |= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator^(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy ^= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator^(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator^=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator^=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy ^= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator<<(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy <<= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator<<(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator<<=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator
+			<<=(std::declval<const_self_reference>())))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy <<= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator>>(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy >>= scalar;
 			return copy;
 		}
 
-		template<arithmetic U>
+		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator>>(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator>>=(std::declval<const_self_reference>())))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator
+			>>=(std::declval<const_self_reference>())))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy >>= self;
 			return copy;
 		}
 
-		template<typename U>
+		template <typename U>
 		constexpr bool operator==(const acceptable_type<data_size, U>& other) const
 		{
-			return other.x == x;
+			return other[data_index] == data_[data_index];
 		}
 
-		template<typename U>
+		template <typename U>
 		constexpr bool operator!=(const acceptable_type<data_size, U>& other) const
 		{
 			return !this->operator==(other);
@@ -444,9 +453,10 @@ namespace gal::test
 		// ReSharper disable once CppNonExplicitConversionOperator
 		constexpr explicit(!std::is_same_v<value_type, bool>) operator bool() const noexcept
 		{
-			return x;
+			return data_[data_index];
 		}
 
-		value_type x;
+	private:
+		std::array<value_type, 1> data_;
 	};
 }
