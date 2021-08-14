@@ -25,8 +25,10 @@ TEST(TestVector2, TestBasic)
 		constexpr vector2<int> vec_i1{ 10 };
 		constexpr vector2<int> vec_i2{ 10, 20 };
 		constexpr vector2<int> vec_i3{ -10, -20 };
+		constexpr vector2<double> vec_d0{ vec_f };
 		constexpr vector2<double> vec_d1{ vec_f, 123 };
 		constexpr vector2<double> vec_d2{ 456, vec_f };
+		constexpr vector2<double> vec_d3{ vec_f, vec_f };
 
 		static_assert(vec_u[0] == 10);
 		static_assert(vec_u[1] == 10);
@@ -42,18 +44,26 @@ TEST(TestVector2, TestBasic)
 		static_assert(vec_i3[0] == -10);
 		static_assert(vec_i3[1] == -20);
 
+		static_assert(vec_d0[0] == vec_f[0]);
+		static_assert(vec_d0[1] == vec_f[0]);
+		
 		static_assert(vec_d1[0] == vec_f[0]);
 		static_assert(vec_d1[1] == 123);
 
 		static_assert(vec_d2[0] == 456);
 		static_assert(vec_d2[1] == vec_f[0]);
 
+		static_assert(vec_d3[0] == vec_f[0]);
+		static_assert(vec_d3[1] == vec_f[0]);
+
 		static_assert(vec_i1 != vec_i2);
-		static_assert(+vec_i2 == -vec_i3);
+		static_assert((+vec_i2) == (-vec_i3));
 		static_assert(vec_u == vec_i1);
 
-		static_assert(~vec_i2[0] == ~10);
-		static_assert(~vec_i2[1] == ~20);
+		static_assert((~vec_i2)[0] == ~10);
+		static_assert((~vec_i2)[1] == ~20);
+		static_assert((~vec_d0)[0] == ~vec_f);
+		static_assert((~vec_d0)[1] == ~vec_f);
 	}
 }
 
@@ -62,47 +72,48 @@ TEST(TestVector2, TestSelfOperator)
 	using namespace gal::test;
 
 	{
+		constexpr vector1<float> vec0{ 3.14f };
 		constexpr vector1<int> vec1{ 10 };
 		vector2<unsigned long> vec2{ 42, 128 };
 
-		vec2 += 10;
-		ASSERT_EQ(vec2[0], 42 + vec1);
-		ASSERT_EQ(vec2[1], 128 + vec1);
+		vec2 += vec0;
+		ASSERT_EQ(vec2[0], 42 + vec0);
+		ASSERT_EQ(vec2[1], 128 + vec0);
 		
 		vec2 -= vec1;
-		ASSERT_EQ(vec2[0], 52 - vec1);
-		ASSERT_EQ(vec2[1], 138 - vec1);
+		ASSERT_EQ(vec2[0], 45 - vec1);
+		ASSERT_EQ(vec2[1], 131 - vec1);
 
-		vec2 *= vec1;
-		ASSERT_EQ(vec2[0], 42 * vec1);
-		ASSERT_EQ(vec2[1], 128 * vec1);
+		vec2 *= vec1 + vec0; // *= 13
+		ASSERT_EQ(vec2[0], 35 * (vec1 + vec0));
+		ASSERT_EQ(vec2[1], 121 * (vec1 + vec0));
 
 		vec2 /= (vec1 - 8);
-		ASSERT_EQ(vec2[0], 420 / 2);
-		ASSERT_EQ(vec2[1], 1280 / 2);
+		ASSERT_EQ(vec2[0], 455 / 2);
+		ASSERT_EQ(vec2[1], 1573 / 2);
 
-		vec2 %= (vec1 + 5);
-		ASSERT_EQ(vec2[0], 0);
-		ASSERT_EQ(vec2[1], 10);
+		vec2 %= (vec1 + 10);
+		ASSERT_EQ(vec2[0], 7);
+		ASSERT_EQ(vec2[1], 6);
 
-		vec2 += 5;
-		ASSERT_EQ(vec2[0], 5);
-		ASSERT_EQ(vec2[1], 15);
+		vec2 += vec0;
+		ASSERT_EQ(vec2[0], 10);
+		ASSERT_EQ(vec2[1], 9);
 
 		vec2 &= 7;
-		ASSERT_EQ(vec2[0], 5);
-		ASSERT_EQ(vec2[1], 7);
+		ASSERT_EQ(vec2[0], 2);
+		ASSERT_EQ(vec2[1], 1);
 
 		vec2 |= 22;
-		ASSERT_EQ(vec2[0], 23);
+		ASSERT_EQ(vec2[0], 22);
 		ASSERT_EQ(vec2[1], 23);
 
 		vec2 ^= 13;
-		ASSERT_EQ(vec2[0], 26);
+		ASSERT_EQ(vec2[0], 27);
 		ASSERT_EQ(vec2[1], 26);
 
 		vec2 >>= 2;
-		ASSERT_EQ(vec2[0], 26 >> 2);
+		ASSERT_EQ(vec2[0], 27 >> 2);
 		ASSERT_EQ(vec2[1], 26 >> 2);
 
 		vec2 <<= vec1;

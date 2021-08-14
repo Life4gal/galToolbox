@@ -165,9 +165,14 @@ namespace gal::test
 			else
 			{
 				auto& value = data_[data_index];
-				while(scalar-- > 0)
+				while (true)
 				{
+					scalar -= 1;
 					value *= 2;
+					if (scalar < 1)
+					{
+						break;
+					}
 				}
 			}
 			return *this;
@@ -184,9 +189,14 @@ namespace gal::test
 			else
 			{
 				auto& value = data_[data_index];
-				while (scalar-- > 0)
+				while (true)
 				{
+					scalar -= 1;
 					value /= 2;
+					if (scalar < 1)
+					{
+						break;
+					}
 				}
 			}
 			return *this;
@@ -284,7 +294,7 @@ namespace gal::test
 
 		constexpr self_reference operator--() noexcept
 		{
-			--data_[data_index];
+			data_[data_index] -= 1;
 			return *this;
 		}
 
@@ -297,7 +307,7 @@ namespace gal::test
 
 		constexpr self_reference operator++() noexcept
 		{
-			++data_[data_index];
+			data_[data_index] += 1;
 			return *this;
 		}
 
