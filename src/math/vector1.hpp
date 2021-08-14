@@ -27,21 +27,15 @@ namespace gal::test
 
 		constexpr vector() noexcept = default;
 
-		constexpr explicit vector(value_type scalar) noexcept : data_({scalar}) {}
-
 		template <arithmetic U>
-		constexpr explicit vector(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		constexpr explicit vector(U scalar)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 			: data_({static_cast<value_type>(scalar)}) {}
-
-		template <vector_size_type Size>
-			requires (Size >= data_size)
-		constexpr explicit vector(const acceptable_type<Size, value_type>& other) noexcept
-			: data_({other[data_index]}) {}
 
 		template <vector_size_type Size, typename U>
 			requires (Size >= data_size)
-		constexpr explicit vector(
-			const acceptable_type<Size, U>& other) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		constexpr explicit vector(const acceptable_type<Size, U>& other)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 			: data_({static_cast<value_type>(other[data_index])}) {}
 
 		constexpr static size_type size() noexcept

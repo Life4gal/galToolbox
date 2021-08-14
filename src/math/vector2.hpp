@@ -29,23 +29,14 @@ namespace gal::test
 
 		constexpr vector() noexcept = default;
 
-		constexpr explicit vector(value_type scalar) noexcept : data_({scalar, scalar}) {}
-
 		template <arithmetic U>
 		constexpr explicit vector(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 			: data_({static_cast<value_type>(scalar), static_cast<value_type>(scalar)}) {}
-
-		constexpr vector(value_type x, value_type y) noexcept : data_({x, y}) {}
 
 		template <arithmetic U1, arithmetic U2>
 		constexpr vector(U1 x, U2 y)
 		noexcept(std::is_nothrow_convertible_v<U1, value_type> && std::is_nothrow_convertible_v<U2, value_type>)
 			: data_({static_cast<value_type>(x), static_cast<value_type>(y)}) {}
-
-		template <vector_size_type Size>
-			requires (Size >= data_size)
-		constexpr explicit vector(const acceptable_type<Size, value_type>& other) noexcept
-			: data_({other[vector1_type::data_index], other[data_index]}) {}
 
 		template <vector_size_type Size, typename U>
 			requires (Size >= data_size)
@@ -55,13 +46,6 @@ namespace gal::test
 						static_cast<value_type>(other[vector1_type::data_index]),
 						static_cast<value_type>(other[data_index])
 					}) {}
-
-		template <vector1_type Size1, vector_size_type Size2>
-			requires (Size1 >= vector1_type::data_size && Size2 >= vector1_type::data_size)
-		constexpr vector(
-			const acceptable_type<Size1, value_type>& v1,
-			const acceptable_type<Size2, value_type>&  v2) noexcept
-			: data_({v1[vector1_type::data_index], v2[vector1_type::data_index]}) {}
 
 		template <vector_size_type Size1, typename U1, vector_size_type Size2, typename U2>
 			requires (Size1 >= vector1_type::data_size && Size2 >= vector1_type::data_size)
@@ -74,23 +58,11 @@ namespace gal::test
 						static_cast<value_type>(v2[vector1_type::data_index])
 					}) {}
 
-		template <vector_size_type Size, typename A>
-			requires (Size >= vector1_type::data_size) && std::is_convertible_v<A, value_type>
-		constexpr vector(const acceptable_type<Size, value_type>& other, A scalar)
-		noexcept(std::is_nothrow_convertible_v<A, value_type>)
-			: data_(other[vector1_type::data_index], static_cast<value_type>(scalar)) {}
-
 		template <vector_size_type Size, typename U, typename A>
 			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type> && std::is_convertible_v<A, value_type>
 		constexpr vector(const acceptable_type<Size, U>& other,A scalar)
 		noexcept(std::is_nothrow_convertible_v<U, value_type> && std::is_nothrow_convertible_v<A, value_type>)
 			: data_({static_cast<value_type>(other[vector1_type::data_index]), static_cast<value_type>(scalar)}) {}
-
-		template <vector_size_type Size, typename U>
-			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type>
-		constexpr vector(value_type scalar, const acceptable_type<Size, U>& other)
-		noexcept(std::is_nothrow_convertible_v<U, value_type>)
-			: data_({scalar, static_cast<value_type>(other[vector1_type::data_index])}) {}
 
 		template <vector_size_type Size, typename U, typename A>
 			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type> && std::is_convertible_v<A, value_type>

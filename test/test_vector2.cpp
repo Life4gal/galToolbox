@@ -118,7 +118,7 @@ TEST(TestVector2, TestOperator)
 		constexpr unsigned long long vec_ull_value2 = 8080808;
 
 		constexpr long long vec_ll_value1 = 123456789;
-		constexpr long long vec_ll_value2 = -987654321;
+		constexpr long long vec_ll_value2 = 987654321;
 
 		constexpr vector2<unsigned long long> vec_ull{ vec_ull_value1, vec_ull_value2 };
 		constexpr vector2<long long> vec_ll{ vec_ll_value1, vec_ll_value2 };
