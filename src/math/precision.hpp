@@ -1,7 +1,5 @@
 #pragma once
 
-#include <concepts>
-
 namespace gal::test
 {
 	enum class precision
