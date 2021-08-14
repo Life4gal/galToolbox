@@ -30,6 +30,8 @@ TEST(TestVector2, TestBasic)
 
 		static_assert(vec_u[0] == 10);
 		static_assert(vec_u[1] == 10);
+		static_assert((-vec_u)[0] == -10);
+		static_assert((-vec_u)[1] == -10);
 
 		static_assert(vec_i1[0] == 10);
 		static_assert(vec_i1[1] == 10);

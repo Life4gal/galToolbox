@@ -33,6 +33,14 @@ namespace gal::test
 		constexpr explicit vector(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 			: data_({static_cast<value_type>(scalar), static_cast<value_type>(scalar)}) {}
 
+		template <typename U>
+		constexpr explicit vector(const acceptable_type<vector1_type::data_size, U>& other)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		: data_({
+					static_cast<value_type>(other[vector1_type::data_index]),
+					static_cast<value_type>(other[vector1_type::data_index])
+			}) {}
+
 		template <arithmetic U1, arithmetic U2>
 		constexpr vector(U1 x, U2 y)
 		noexcept(std::is_nothrow_convertible_v<U1, value_type> && std::is_nothrow_convertible_v<U2, value_type>)
@@ -193,8 +201,29 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] %= static_cast<value_type>(scalar);
-			data_[data_index] %= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[vector1_type::data_index] %= static_cast<value_type>(scalar);
+				data_[data_index] %= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				constexpr auto f = [](value_type& value, U s) constexpr -> void
+				{
+					auto v = value;
+					while (true)
+					{
+						v -= static_cast<value_type>(s);
+						if (v < static_cast<value_type>(s))
+						{
+							value = v;
+							break;
+						}
+					}
+				};
+				f(data_[vector1_type::data_index], scalar);
+				f(data_[data_index], scalar);
+			}
 			return *this;
 		}
 
@@ -209,8 +238,27 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] %= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[data_index] %= static_cast<value_type>(other[data_index]);
+				if constexpr (std::is_integral_v<value_type>)
+				{
+					data_[vector1_type::data_index] %= other[vector1_type::data_index];
+					data_[data_index] %= other[data_index];
+				}
+				else
+				{
+					constexpr auto f = [](value_type& value, U s) constexpr -> void
+					{
+						while (true)
+						{
+							value -= static_cast<value_type>(s);
+							if (value < static_cast<value_type>(s))
+							{
+								break;
+							}
+						}
+					};
+					f(data_[vector1_type::data_index], other[vector1_type::data_index]);
+					f(data_[data_index], other[data_index]);
+				}
 			}
 			return *this;
 		}
@@ -378,9 +426,20 @@ namespace gal::test
 			return self_type{data_[vector1_type::data_index], data_[data_index]};
 		}
 
-		constexpr self_type operator-() const noexcept
+		constexpr auto operator-() const noexcept
 		{
-			return self_type{-data_[vector1_type::data_index], -data_[data_index]};
+			if constexpr(std::is_unsigned_v<value_type>)
+			{
+				using signed_type = std::make_signed_t<value_type>;
+				return acceptable_type<data_size, signed_type>{
+					-static_cast<signed_type>(data_[vector1_type::data_index]),
+					-static_cast<signed_type>(data_[data_index])
+				};
+			}
+			else
+			{
+				return self_type{ -data_[vector1_type::data_index], -data_[data_index] };
+			}
 		}
 
 		constexpr self_type operator~() const noexcept

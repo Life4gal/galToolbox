@@ -89,7 +89,22 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] %= static_cast<value_type>(scalar);
+			if constexpr(std::is_integral_v<value_type>)
+			{
+				data_[data_index] %= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				auto& value = data_[data_index];
+				while(true)
+				{
+					value -= static_cast<value_type>(scalar);
+					if(value < static_cast<value_type>(scalar))
+					{
+						break;
+					}
+				}
+			}
 			return *this;
 		}
 
@@ -97,7 +112,15 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator&=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] &= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[data_index] &= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				// do nothing here
+			}
+			
 			return *this;
 		}
 
@@ -105,7 +128,14 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator|=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] |= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[data_index] |= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				// do nothing here
+			}
 			return *this;
 		}
 
@@ -113,7 +143,14 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator^=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] ^= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[data_index] ^= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				// do nothing here
+			}
 			return *this;
 		}
 
@@ -121,7 +158,18 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator<<=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] <<= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[data_index] <<= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				auto& value = data_[data_index];
+				while(scalar-- > 0)
+				{
+					value *= 2;
+				}
+			}
 			return *this;
 		}
 
@@ -129,7 +177,18 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator>>=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] >>= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[data_index] >>= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				auto& value = data_[data_index];
+				while (scalar-- > 0)
+				{
+					value /= 2;
+				}
+			}
 			return *this;
 		}
 
@@ -254,14 +313,30 @@ namespace gal::test
 			return self_type{data_[data_index]};
 		}
 
-		constexpr self_type operator-() const noexcept
+		constexpr auto operator-() const noexcept
 		{
-			return self_type{-data_[data_index]};
+			if constexpr (std::is_unsigned_v<value_type>)
+			{
+				using signed_type = std::make_signed_t<value_type>;
+				return acceptable_type<data_size, signed_type>{-static_cast<signed_type>(data_[data_index])};
+			}
+			else
+			{
+				return self_type{-data_[data_index]};
+			}
 		}
 
 		constexpr self_type operator~() const noexcept
 		{
-			return self_type{~data_[data_index]};
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				return self_type{~data_[data_index]};
+			}
+			else
+			{
+				// do nothing here
+				return *this;
+			}
 		}
 
 		template <typename U>

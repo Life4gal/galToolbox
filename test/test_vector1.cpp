@@ -19,18 +19,28 @@ TEST(TestVector1, TestBasic)
 	{
 		constexpr vector1<int> vec1{ 10 };
 		constexpr vector1<long> vec2{ -10 };
+		constexpr vector1<double> vec3{ -10 };
+		constexpr vector1<unsigned long> vec4{ 10 };
 		
 		// index is ignored
 		static_assert(vec1[0] == 10);
 		static_assert(vec1[1] == 10);
 		static_assert(vec2[0] == -10);
 		static_assert(vec2[1] == -10);
+		static_assert(vec3[0] == -10);
+		static_assert(vec3[1] == -10);
+		static_assert(vec4[0] == 10);
+		static_assert(vec4[1] == 10);
 
 		static_assert(vec1 != vec2);
-		static_assert(+vec1 == -vec2);
+		static_assert((+vec1) == (-vec2));
+		static_assert(vec2 == vec3);
+		static_assert(vec1 == vec4);
 
-		static_assert(~vec1[0] == ~10);
-		static_assert(~vec2[0] == ~-10);
+		static_assert((~vec1)[0] == ~10);
+		static_assert((~vec2)[0] == ~-10);
+		static_assert((~vec3)[0] == -10);
+		static_assert((~vec4)[0] == ~10);
 	}
 }
 
@@ -39,40 +49,63 @@ TEST(TestVector1, TestSelfOperator)
 	using namespace gal::test;
 	
 	{
-		vector1<unsigned int> vec{ 42 };
+		vector1<unsigned int> vec1{ 42 };
+		vector1<double> vec2{ 42 };
 
-		vec += 10;
-		ASSERT_EQ(vec, 52);
+		vec1 += 10;
+		vec2 += 10;
+		ASSERT_EQ(vec1, 52);
+		ASSERT_EQ(vec2, 52);
 
-		vec -= 20;
-		ASSERT_EQ(vec, 32);
+		vec1 -= 20;
+		vec2 -= 20;
+		ASSERT_EQ(vec1, 32);
+		ASSERT_EQ(vec2, 32);
 
-		vec *= 2;
-		ASSERT_EQ(vec, 64);
+		vec1 *= 2;
+		vec2 *= 2;
+		ASSERT_EQ(vec1, 64);
+		ASSERT_EQ(vec2, 64);
 
-		vec /= 32;
-		ASSERT_EQ(vec, 2);
+		vec1 /= 32;
+		vec2 /= 32;
+		ASSERT_EQ(vec1, 2);
+		ASSERT_EQ(vec2, 2);
 
-		vec %= 2;
-		ASSERT_EQ(vec, 0);
+		vec1 %= 2;
+		vec2 %= 2;
+		ASSERT_EQ(vec1, 0);
+		ASSERT_EQ(vec2, 0);
 
-		vec += 15;
-		ASSERT_EQ(vec, 15);
+		vec1 += 15;
+		vec2 += 10;
+		ASSERT_EQ(vec1, 15);
+		ASSERT_EQ(vec2, 10);
 
-		vec &= 7;
-		ASSERT_EQ(vec, 7);
+		vec1 &= 7;
+		vec2 &= 7;
+		ASSERT_EQ(vec1, 7);
+		ASSERT_EQ(vec2, 10);
 
-		vec |= 15;
-		ASSERT_EQ(vec, 15);
+		vec1 |= 15;
+		vec2 |= 15;
+		ASSERT_EQ(vec1, 15);
+		ASSERT_EQ(vec2, 10);
 
-		vec ^= 24;
-		ASSERT_EQ(vec, 23);
+		vec1 ^= 24;
+		vec2 ^= 24;
+		ASSERT_EQ(vec1, 23);
+		ASSERT_EQ(vec2, 10);
 
-		vec >>= 2;
-		ASSERT_EQ(vec, 5);
+		vec1 >>= 2;
+		vec2 >>= 2;
+		ASSERT_EQ(vec1, 5);
+		ASSERT_EQ(vec2, 2.5);
 
-		vec <<= 3;
-		ASSERT_EQ(vec, 40);
+		vec1 <<= 3;
+		vec2 <<= 3;
+		ASSERT_EQ(vec1, 40);
+		ASSERT_EQ(vec2, 20);
 	}
 }
 
@@ -174,6 +207,123 @@ TEST(TestVector1, TestOperator)
 		{
 			constexpr auto vec = vec_ll >> 15;
 			static_assert(vec == (vec_ll_value >>15));
+		}
+	}
+	{
+		constexpr double vec_d_value = 3.1415926;
+		constexpr unsigned int vec_u_value = 1010101;
+
+		constexpr vector1<double> vec_d{ vec_d_value };
+		constexpr vector1<unsigned int> vec_u{ vec_u_value };
+
+		{
+			constexpr auto vec1 = vec_d + vec_u;
+			static_assert(vec1 == vec_d_value + vec_u_value);
+
+			constexpr auto vec2 = vec_d + vec_u_value;
+			static_assert(vec2 == vec_d_value + vec_u_value);
+
+			constexpr auto vec3 = vec_d_value + vec_u;
+			static_assert(vec3 == vec_d_value + vec_u_value);
+		}
+		{
+			constexpr auto vec1 = vec_d - vec_u;
+			static_assert(vec1 == vec_d_value - vec_u_value);
+
+			constexpr auto vec2 = vec_d - vec_u_value;
+			static_assert(vec2 == vec_d_value - vec_u_value);
+
+			constexpr auto vec3 = vec_d_value - vec_u;
+			static_assert(vec3 == vec_d_value - vec_u_value);
+		}
+		{
+			constexpr auto vec1 = vec_d * vec_u;
+			static_assert(vec1 == vec_d_value * vec_u_value);
+
+			constexpr auto vec2 = vec_d * vec_u_value;
+			static_assert(vec2 == vec_d_value * vec_u_value);
+
+			constexpr auto vec3 = vec_d_value * vec_u;
+			static_assert(vec3 == vec_d_value * vec_u_value);
+		}
+		{
+			constexpr auto vec1 = vec_d / vec_u;
+			static_assert(vec1 == vec_d_value / vec_u_value);
+
+			constexpr auto vec2 = vec_d / vec_u_value;
+			static_assert(vec2 == vec_d_value / vec_u_value);
+
+			constexpr auto vec3 = vec_d_value / vec_u;
+			static_assert(vec3 == vec_d_value / vec_u_value);
+		}
+		{
+			constexpr auto f = []<typename T>(T value, auto scalar) constexpr -> auto
+			{
+				while (true)
+				{
+					value -= static_cast<T>(scalar);
+					if (value < static_cast<T>(scalar))
+					{
+						break;
+					}
+				}
+				return value;
+			};
+			
+			constexpr auto vec1 = vec_d % vec_u;
+			static_assert(vec1 == f(vec_d_value, vec_u_value));
+
+			constexpr auto vec2 = vec_d % vec_u_value;
+			static_assert(vec2 == f(vec_d_value, vec_u_value));
+
+			constexpr auto vec3 = vec_d_value % vec_u;
+			static_assert(vec3 == f(vec_d_value, vec_u_value));
+		}
+		{
+			constexpr auto vec1 = vec_d & vec_u;
+			static_assert(vec1 == (vec_d_value));
+
+			constexpr auto vec2 = vec_d & vec_u_value;
+			static_assert(vec2 == (vec_d_value));
+
+			constexpr auto vec3 = vec_d_value & vec_u;
+			static_assert(vec3 == (vec_d_value));
+		}
+		{
+			constexpr auto vec1 = vec_d | vec_u;
+			static_assert(vec1 == (vec_d_value));
+
+			constexpr auto vec2 = vec_d | vec_u_value;
+			static_assert(vec2 == (vec_d_value));
+
+			constexpr auto vec3 = vec_d_value | vec_u;
+			static_assert(vec3 == (vec_d_value));
+		}
+		{
+			constexpr auto vec1 = vec_d ^ vec_u;
+			static_assert(vec1 == (vec_d_value));
+
+			constexpr auto vec2 = vec_d ^ vec_u_value;
+			static_assert(vec2 == (vec_d_value));
+
+			constexpr auto vec3 = vec_d_value ^ vec_u;
+			static_assert(vec3 == (vec_d_value));
+		}
+		{
+			constexpr auto vec = vec_d << 12;
+			constexpr auto f = [](auto value, auto scalar) constexpr -> auto
+			{
+				while (scalar-- > 0)
+				{
+					value *= 2;
+				}
+				return value;
+			};
+			static_assert(vec == (f(vec_d_value, 12)));
+		}
+		{
+			constexpr auto vec = vec_u >> 15;
+			static_assert(vec == (vec_u_value >> 15));
 		}
 	}
 }
