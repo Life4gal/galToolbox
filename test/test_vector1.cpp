@@ -257,27 +257,18 @@ TEST(TestVector1, TestOperator)
 			static_assert(vec3 == vec_d_value / vec_u_value);
 		}
 		{
-			constexpr auto f = []<typename T>(T value, auto scalar) constexpr -> auto
-			{
-				while (true)
-				{
-					value -= static_cast<T>(scalar);
-					if (value < static_cast<T>(scalar))
-					{
-						break;
-					}
-				}
-				return value;
-			};
+			constexpr vector1<double> v{ -123.456 };
+			static_assert((v % -100)[0] <= -23.456 + 0.00000000000001);
+			static_assert((v % -100)[0] >= -23.456 - 0.00000000000001);
 			
 			constexpr auto vec1 = vec_d % vec_u;
-			static_assert(vec1 == f(vec_d_value, vec_u_value));
+			static_assert(vec1 == 3.1415926);
 
 			constexpr auto vec2 = vec_d % vec_u_value;
-			static_assert(vec2 == f(vec_d_value, vec_u_value));
+			static_assert(vec2 == 3.1415926);
 
 			constexpr auto vec3 = vec_d_value % vec_u;
-			static_assert(vec3 == f(vec_d_value, vec_u_value));
+			static_assert(vec3 == 3.1415926);
 		}
 		{
 			constexpr auto vec1 = vec_d & vec_u;
@@ -310,16 +301,18 @@ TEST(TestVector1, TestOperator)
 			static_assert(vec3 == (vec_d_value));
 		}
 		{
-			constexpr auto vec = vec_d << 12;
-			constexpr auto f = [](auto value, auto scalar) constexpr -> auto
+			constexpr auto pow = [](auto value, int p) constexpr -> auto
 			{
-				while (scalar-- > 0)
+				auto ret = value;
+				while (--p)
 				{
-					value *= 2;
+					ret *= value;
 				}
-				return value;
+				return ret;
 			};
-			static_assert(vec == (f(vec_d_value, 12)));
+			
+			constexpr auto vec = vec_d << 12;
+			static_assert(vec == vec_d_value * pow(2, 12));
 		}
 		{
 			constexpr auto vec = vec_u >> 15;

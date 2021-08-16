@@ -38,14 +38,14 @@ namespace gal::test
 						static_cast<value_type>(scalar)
 					}) {}
 
-		template<typename U>
+		template <typename U>
 		constexpr explicit vector(const acceptable_type<vector1_type::data_size, U>& other)
-			noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 			: data_({
 						static_cast<value_type>(other[vector1_type::data_index]),
 						static_cast<value_type>(other[vector1_type::data_index]),
 						static_cast<value_type>(other[vector1_type::data_index])
-				}) {}
+					}) {}
 
 		template <arithmetic U1, arithmetic U2, arithmetic U3>
 		constexpr vector(U1 x, U2 y, U3 z)
@@ -84,7 +84,7 @@ namespace gal::test
 					}) {}
 
 		template <typename U1, vector_size_type Size, typename U2>
-			requires (Size >= vector1_type::data_size)
+			requires (Size > vector1_type::data_size)
 		constexpr vector(const acceptable_type<vector2_type::data_size, U1>& v1, const acceptable_type<Size, U2>& v2)
 		noexcept(std::is_nothrow_convertible_v<U1, value_type> && std::is_nothrow_convertible_v<U2, value_type>)
 			: data_({
@@ -94,7 +94,7 @@ namespace gal::test
 					}) {}
 
 		template <vector_size_type Size, typename U1, typename U2>
-			requires (Size >= vector1_type::data_size)
+			requires (Size > vector1_type::data_size)
 		constexpr vector(const acceptable_type<Size, U1>& v1, const acceptable_type<vector2_type::data_size, U2>& v2)
 		noexcept(std::is_nothrow_convertible_v<U1, value_type> && std::is_nothrow_convertible_v<U2, value_type>)
 			: data_({
@@ -199,8 +199,8 @@ namespace gal::test
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator+=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator+=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
 			data_[vector1_type::data_index] += static_cast<value_type>(scalar);
 			data_[vector2_type::data_index] += static_cast<value_type>(scalar);
@@ -209,9 +209,9 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator+=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator+=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -227,8 +227,8 @@ namespace gal::test
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator-=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator-=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
 			data_[vector1_type::data_index] -= static_cast<value_type>(scalar);
 			data_[vector2_type::data_index] -= static_cast<value_type>(scalar);
@@ -237,9 +237,9 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator-=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator-=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -255,8 +255,8 @@ namespace gal::test
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator*=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator*=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
 			data_[vector1_type::data_index] *= static_cast<value_type>(scalar);
 			data_[vector2_type::data_index] *= static_cast<value_type>(scalar);
@@ -265,9 +265,9 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator*=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator*=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -283,8 +283,8 @@ namespace gal::test
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator/=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator/=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
 			data_[vector1_type::data_index] /= static_cast<value_type>(scalar);
 			data_[vector2_type::data_index] /= static_cast<value_type>(scalar);
@@ -293,9 +293,9 @@ namespace gal::test
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator/=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator/=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -311,19 +311,17 @@ namespace gal::test
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] %= static_cast<value_type>(scalar);
-			data_[vector2_type::data_index] %= static_cast<value_type>(scalar);
-			data_[data_index] %= static_cast<value_type>(scalar);
+			this->percent_support(scalar, scalar, scalar);
 			return *this;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator%=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator%=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -331,27 +329,35 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] %= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[vector2_type::data_index] %= static_cast<value_type>(other[vector2_type::data_index]);
-				data_[data_index] %= static_cast<value_type>(other[data_index]);
+				this->percent_support(other[vector1_type::data_index],
+									other[vector2_type::data_index],
+									other[data_index]);
 			}
 			return *this;
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator&=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator&=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] &= static_cast<value_type>(scalar);
-			data_[vector2_type::data_index] &= static_cast<value_type>(scalar);
-			data_[data_index] &= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[vector1_type::data_index] &= static_cast<value_type>(scalar);
+				data_[vector2_type::data_index] &= static_cast<value_type>(scalar);
+				data_[data_index] &= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				// do nothing here
+			}
+
 			return *this;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator&=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator&=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -359,27 +365,42 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] &= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[vector2_type::data_index] &= static_cast<value_type>(other[vector2_type::data_index]);
-				data_[data_index] &= static_cast<value_type>(other[data_index]);
+				if constexpr (std::is_integral_v<value_type>)
+				{
+					data_[vector1_type::data_index] &= static_cast<value_type>(other[vector1_type::data_index]);
+					data_[vector2_type::data_index] &= static_cast<value_type>(other[vector2_type::data_index]);
+					data_[data_index] &= static_cast<value_type>(other[data_index]);
+				}
+				else
+				{
+					// do nothing here
+				}
 			}
 			return *this;
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator|=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator|=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] |= static_cast<value_type>(scalar);
-			data_[vector2_type::data_index] |= static_cast<value_type>(scalar);
-			data_[data_index] |= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[vector1_type::data_index] |= static_cast<value_type>(scalar);
+				data_[vector2_type::data_index] |= static_cast<value_type>(scalar);
+				data_[data_index] |= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				// do nothing here
+			}
+
 			return *this;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator|=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator|=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -387,27 +408,42 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] |= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[vector2_type::data_index] |= static_cast<value_type>(other[vector2_type::data_index]);
-				data_[data_index] |= static_cast<value_type>(other[data_index]);
+				if constexpr (std::is_integral_v<value_type>)
+				{
+					data_[vector1_type::data_index] |= static_cast<value_type>(other[vector1_type::data_index]);
+					data_[vector2_type::data_index] |= static_cast<value_type>(other[vector2_type::data_index]);
+					data_[data_index] |= static_cast<value_type>(other[data_index]);
+				}
+				else
+				{
+					// do nothing here
+				}
 			}
 			return *this;
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator^=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator^=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] ^= static_cast<value_type>(scalar);
-			data_[vector2_type::data_index] ^= static_cast<value_type>(scalar);
-			data_[data_index] ^= static_cast<value_type>(scalar);
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[vector1_type::data_index] ^= static_cast<value_type>(scalar);
+				data_[vector2_type::data_index] ^= static_cast<value_type>(scalar);
+				data_[data_index] ^= static_cast<value_type>(scalar);
+			}
+			else
+			{
+				// do nothing here
+			}
+
 			return *this;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator^=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator^=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -415,27 +451,32 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] ^= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[vector2_type::data_index] ^= static_cast<value_type>(other[vector2_type::data_index]);
-				data_[data_index] ^= static_cast<value_type>(other[data_index]);
+				if constexpr (std::is_integral_v<value_type>)
+				{
+					data_[vector1_type::data_index] ^= static_cast<value_type>(other[vector1_type::data_index]);
+					data_[vector2_type::data_index] ^= static_cast<value_type>(other[vector2_type::data_index]);
+					data_[data_index] ^= static_cast<value_type>(other[data_index]);
+				}
+				else
+				{
+					// do nothing here
+				}
 			}
 			return *this;
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator<<=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator<<=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] <<= static_cast<value_type>(scalar);
-			data_[vector2_type::data_index] <<= static_cast<value_type>(scalar);
-			data_[data_index] <<= static_cast<value_type>(scalar);
+			this->template shift_support<true>(scalar, scalar, scalar);
 			return *this;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator<<=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator<<=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -443,27 +484,23 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] <<= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[vector2_type::data_index] <<= static_cast<value_type>(other[vector2_type::data_index]);
-				data_[data_index] <<= static_cast<value_type>(other[data_index]);
+				this->template shift_support<true>(other[vector1_type::data_index], other[vector2_type::data_index], other[data_index]);
 			}
 			return *this;
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr self_reference operator>>=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr self_reference operator>>=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[vector1_type::data_index] >>= static_cast<value_type>(scalar);
-			data_[vector2_type::data_index] >>= static_cast<value_type>(scalar);
-			data_[data_index] >>= static_cast<value_type>(scalar);
+			this->template shift_support<false>(scalar, scalar, scalar);
 			return *this;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			constexpr self_reference operator>>=(const acceptable_type<Size, U>& other)
-			noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		constexpr self_reference operator>>=(const acceptable_type<Size, U>& other)
+		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
 		{
 			if constexpr (Size == vector1_type::data_size)
 			{
@@ -471,49 +508,47 @@ namespace gal::test
 			}
 			else
 			{
-				data_[vector1_type::data_index] >>= static_cast<value_type>(other[vector1_type::data_index]);
-				data_[vector2_type::data_index] >>= static_cast<value_type>(other[vector2_type::data_index]);
-				data_[data_index] >>= static_cast<value_type>(other[data_index]);
+				this->template shift_support<false>(other[vector1_type::data_index], other[vector2_type::data_index], other[data_index]);
 			}
 			return *this;
 		}
 
 		constexpr self_reference operator--() noexcept
 		{
-			--data_[vector1_type::data_index];
-			--data_[vector2_type::data_index];
-			--data_[data_index];
+			data_[vector1_type::data_index] -= 1;
+			data_[vector2_type::data_index] -= 1;
+			data_[data_index] -= 1;
 			return *this;
 		}
 
 		constexpr self_type operator--(int) noexcept
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			this->operator--();
 			return copy;
 		}
 
 		constexpr self_reference operator++() noexcept
 		{
-			++data_[vector1_type::data_index];
-			++data_[vector2_type::data_index];
-			++data_[data_index];
+			data_[vector1_type::data_index] += 1;
+			data_[vector2_type::data_index] += 1;
+			data_[data_index] += 1;
 			return *this;
 		}
 
 		constexpr self_type operator++(int) noexcept
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			this->operator++();
 			return copy;
 		}
 
 		constexpr self_type operator+() const noexcept
 		{
-			return self_type{ data_[vector1_type::data_index], data_[vector2_type::data_index], data_[data_index] };
+			return self_type{data_[vector1_type::data_index], data_[vector2_type::data_index], data_[data_index]};
 		}
 
-		constexpr self_type operator-() const noexcept
+		constexpr auto operator-() const noexcept
 		{
 			if constexpr (std::is_unsigned_v<value_type>)
 			{
@@ -521,334 +556,350 @@ namespace gal::test
 				return acceptable_type<data_size, signed_type>{
 					-static_cast<signed_type>(data_[vector1_type::data_index]),
 					-static_cast<signed_type>(data_[vector2_type::data_index]),
-						-static_cast<signed_type>(data_[data_index])
+					-static_cast<signed_type>(data_[data_index])
 				};
 			}
 			else
 			{
-				return self_type{ -data_[vector1_type::data_index], -data_[vector2_type::data_index],-data_[data_index] };
+				return self_type{
+					-data_[vector1_type::data_index], -data_[vector2_type::data_index], -data_[data_index]
+				};
 			}
 		}
 
 		constexpr self_type operator~() const noexcept
 		{
-			return self_type{ ~data_[vector1_type::data_index], ~data_[vector2_type::data_index],~data_[data_index] };
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				return self_type{
+					~data_[vector1_type::data_index], ~data_[vector2_type::data_index], ~data_[data_index]
+				};
+			}
+			else
+			{
+				// do nothing here
+				return *this;
+			}
 		}
 
 		template <typename U>
 		constexpr self_type operator+(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy += scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator+(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator+=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator+=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy += self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator+(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator+=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator+(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator+=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy += self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator-(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy -= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator-(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator-=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator-=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy -= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator-(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator-=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator-(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator-=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy -= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator*(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy *= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator*(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator*=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator*=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy *= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator*(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator*=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator*(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator*=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy *= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator/(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy /= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator/(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator/=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator/=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy /= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator/(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator/=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator/(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator/=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy /= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator%(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy %= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator%(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator%=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator%=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy %= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator%(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator%=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator%(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator%=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy %= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator&(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy &= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator&(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator&=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator&=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy &= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator&(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator&=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator&(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator&=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy &= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator|(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy |= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator|(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator|=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator|=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy |= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator|(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator|=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator|(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator|=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy |= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator^(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy ^= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator^(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator^=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator^=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy ^= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator^(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator^=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator^(const acceptable_type<Size, U>& vec,
+																const_self_reference             self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator^=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy ^= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator<<(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy <<= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator<<(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator<<=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator
+			<<=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy <<= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator<<(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator<<=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator<<(const acceptable_type<Size, U>& vec,
+																const_self_reference              self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator
+			<<=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy <<= self;
 			return copy;
 		}
 
 		template <typename U>
 		constexpr self_type operator>>(U scalar) const
-			noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
+		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
 		{
-			auto copy{ *this };
+			auto copy{*this};
 			copy >>= scalar;
 			return copy;
 		}
 
 		template <arithmetic U>
 		friend constexpr acceptable_type<data_size, U> operator>>(U scalar, const_self_reference self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator>>=(std::declval<const_self_reference>())
-				))
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator
+			>>=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ scalar };
+			acceptable_type<data_size, U> copy{scalar};
 			copy >>= self;
 			return copy;
 		}
 
 		template <vector_size_type Size, typename U>
-		requires (Size == vector1_type::data_size || Size >= data_size)
-			friend constexpr acceptable_type<data_size, U> operator>>(const acceptable_type<Size, U>& vec,
-				const_self_reference             self)
-			noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator>>=(std::declval<const_self_reference>())
-				))
+			requires (Size == vector1_type::data_size || Size >= data_size)
+		friend constexpr acceptable_type<data_size, U> operator>>(const acceptable_type<Size, U>& vec,
+																const_self_reference              self)
+		noexcept(noexcept(std::declval<acceptable_type<data_size, U>>().operator
+			>>=(std::declval<const_self_reference>())
+		))
 		{
-			acceptable_type<data_size, U> copy{ vec };
+			acceptable_type<data_size, U> copy{vec};
 			copy >>= self;
 			return copy;
 		}
 
 		template <typename U>
-		requires std::is_convertible_v<U, value_type>
-			constexpr bool operator==(
-				const acceptable_type<data_size, U>& other) const noexcept(std::is_nothrow_convertible_v<U, value_type>)
+			requires std::is_convertible_v<U, value_type>
+		constexpr bool operator==(
+			const acceptable_type<data_size, U>& other) const noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
 			return
 				static_cast<value_type>(other[vector1_type::data_index]) == data_[vector1_type::data_index] &&
@@ -859,7 +910,7 @@ namespace gal::test
 		template <typename U>
 		constexpr bool operator!=(
 			const acceptable_type<data_size, U>& other) const noexcept(noexcept(std::declval<self_type>().operator
-				==(std::declval<const acceptable_type<data_size, U>&>())))
+			==(std::declval<const acceptable_type<data_size, U>&>())))
 		{
 			return !this->operator==(other);
 		}
@@ -869,8 +920,143 @@ namespace gal::test
 		{
 			return data_[vector1_type::data_index] && data_[data_index];
 		}
-	
+
 	private:
 		container_type data_;
+
+		template <typename U>
+		constexpr void percent_support(U s1, U s2, U s3) noexcept
+		{
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[vector1_type::data_index] %= static_cast<value_type>(s1);
+				data_[vector2_type::data_index] %= static_cast<value_type>(s2);
+				data_[data_index] %= static_cast<value_type>(s3);
+			}
+			else
+			{
+				if constexpr (std::is_signed_v<U>)
+				{
+					if (s1 < 0)
+					{
+						s1 = -s1;
+					}
+					if (s2 < 0)
+					{
+						s2 = -s2;
+					}
+				}
+
+				constexpr auto f = [](value_type& value, U s) constexpr -> void
+				{
+					if (value < 0)
+					{
+						auto n = static_cast<std::conditional_t<
+							(sizeof(value_type) > sizeof(std::int32_t)), std::int64_t, std::int32_t>>(-value /
+							static_cast<value_type>(s));
+						value += static_cast<value_type>(n) * static_cast<value_type>(s);
+					}
+					else
+					{
+						auto n = static_cast<std::conditional_t<
+							(sizeof(value_type) > sizeof(std::uint32_t)), std::uint64_t, std::uint32_t>>(value /
+							static_cast<value_type>(s));
+						value -= static_cast<value_type>(n) * static_cast<value_type>(s);
+					}
+				};
+				f(data_[vector1_type::data_index], s1);
+				f(data_[vector2_type::data_index], s2);
+				f(data_[data_index], s3);
+			}
+		}
+
+		template <bool Left, typename U>
+		constexpr void shift_support(U s1, U s2, U s3) noexcept
+		{
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				if constexpr (Left)
+				{
+					data_[vector1_type::data_index] <<= static_cast<value_type>(s1);
+					data_[vector2_type::data_index] <<= static_cast<value_type>(s2);
+					data_[data_index] <<= static_cast<value_type>(s3);
+				}
+				else
+				{
+					data_[vector1_type::data_index] >>= static_cast<value_type>(s1);
+					data_[vector2_type::data_index] >>= static_cast<value_type>(s2);
+					data_[data_index] >>= static_cast<value_type>(s3);
+				}
+			}
+			else
+			{
+				bool s1_lt_0 = false;
+				bool s2_lt_0 = false;
+				bool s3_lt_0 = false;
+				if constexpr (std::is_signed_v<U>)
+				{
+					if (s1 < 0)
+					{
+						s1_lt_0 = true;
+						s1      = -s1;
+					}
+					if (s2 < 0)
+					{
+						s2_lt_0 = true;
+						s2      = -s2;
+					}
+					if (s3 < 0)
+					{
+						s3_lt_0 = true;
+						s3      = -s3;
+					}
+				}
+
+				if constexpr (
+					constexpr auto shift = [](value_type& value, const bool left, auto scalar) constexpr -> void
+					{
+						if (
+							constexpr auto pow = [](auto v, auto p) constexpr -> auto
+							{
+								auto ret = v;
+								while (--p)
+								{
+									ret *= v;
+								}
+								return ret;
+							}; left)
+						{
+							value *= pow(2,
+										static_cast<std::conditional_t<
+											(sizeof(U) > sizeof(std::conditional_t<
+												std::is_signed_v<U>, std::int32_t, std::uint32_t>)),
+											std::conditional_t<std::is_signed_v<U>, std::int64_t, std::uint64_t>,
+											std::conditional_t<std::is_signed_v<U>, std::int32_t, std::uint32_t>>>(
+											scalar));
+						}
+						else
+						{
+							value /= pow(2,
+										static_cast<std::conditional_t<
+											(sizeof(U) > sizeof(std::conditional_t<
+												std::is_signed_v<U>, std::int32_t, std::uint32_t>)),
+											std::conditional_t<std::is_signed_v<U>, std::int64_t, std::uint64_t>,
+											std::conditional_t<std::is_signed_v<U>, std::int32_t, std::uint32_t>>>(
+											scalar));
+						}
+					}; Left)
+				{
+					shift(data_[vector1_type::data_index], !s1_lt_0, s1);
+					shift(data_[vector2_type::data_index], !s2_lt_0, s2);
+					shift(data_[data_index], !s3_lt_0, s3);
+				}
+				else
+				{
+					shift(data_[vector1_type::data_index], s1_lt_0, s1);
+					shift(data_[vector2_type::data_index], s2_lt_0, s2);
+					shift(data_[data_index], s3_lt_0, s3);
+				}
+			}
+		}
 	};
 }

@@ -36,10 +36,10 @@ namespace gal::test
 		template <typename U>
 		constexpr explicit vector(const acceptable_type<vector1_type::data_size, U>& other)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		: data_({
-					static_cast<value_type>(other[vector1_type::data_index]),
-					static_cast<value_type>(other[vector1_type::data_index])
-			}) {}
+			: data_({
+						static_cast<value_type>(other[vector1_type::data_index]),
+						static_cast<value_type>(other[vector1_type::data_index])
+					}) {}
 
 		template <arithmetic U1, arithmetic U2>
 		constexpr vector(U1 x, U2 y)
@@ -59,7 +59,7 @@ namespace gal::test
 			requires (Size1 >= vector1_type::data_size && Size2 >= vector1_type::data_size)
 		constexpr vector(
 			const acceptable_type<Size1, U1>& v1,
-			const acceptable_type<Size2, U2>&  v2)
+			const acceptable_type<Size2, U2>& v2)
 		noexcept(std::is_nothrow_convertible_v<U1, value_type> && std::is_nothrow_convertible_v<U2, value_type>)
 			: data_({
 						static_cast<value_type>(v1[vector1_type::data_index]),
@@ -67,13 +67,15 @@ namespace gal::test
 					}) {}
 
 		template <vector_size_type Size, typename U, typename A>
-			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type> && std::is_convertible_v<A, value_type>
-		constexpr vector(const acceptable_type<Size, U>& other,A scalar)
+			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type> && std::is_convertible_v<
+				A, value_type>
+		constexpr vector(const acceptable_type<Size, U>& other, A scalar)
 		noexcept(std::is_nothrow_convertible_v<U, value_type> && std::is_nothrow_convertible_v<A, value_type>)
 			: data_({static_cast<value_type>(other[vector1_type::data_index]), static_cast<value_type>(scalar)}) {}
 
 		template <vector_size_type Size, typename U, typename A>
-			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type> && std::is_convertible_v<A, value_type>
+			requires (Size >= vector1_type::data_size) && std::is_convertible_v<U, value_type> && std::is_convertible_v<
+				A, value_type>
 		constexpr vector(A scalar, const acceptable_type<Size, U>& other)
 		noexcept(std::is_nothrow_convertible_v<U, value_type> && std::is_nothrow_convertible_v<A, value_type>)
 			: data_({static_cast<value_type>(scalar), static_cast<value_type>(other[vector1_type::data_index])}) {}
@@ -201,27 +203,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[vector1_type::data_index] %= static_cast<value_type>(scalar);
-				data_[data_index] %= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				constexpr auto f = [](value_type& value, U s) constexpr -> void
-				{
-					while (true)
-					{
-						value -= static_cast<value_type>(s);
-						if (value < static_cast<value_type>(s))
-						{
-							break;
-						}
-					}
-				};
-				f(data_[vector1_type::data_index], scalar);
-				f(data_[data_index], scalar);
-			}
+			this->percent_support(scalar, scalar);
 			return *this;
 		}
 
@@ -236,27 +218,7 @@ namespace gal::test
 			}
 			else
 			{
-				if constexpr (std::is_integral_v<value_type>)
-				{
-					data_[vector1_type::data_index] %= other[vector1_type::data_index];
-					data_[data_index] %= other[data_index];
-				}
-				else
-				{
-					constexpr auto f = [](value_type& value, U s) constexpr -> void
-					{
-						while (true)
-						{
-							value -= static_cast<value_type>(s);
-							if (value < static_cast<value_type>(s))
-							{
-								break;
-							}
-						}
-					};
-					f(data_[vector1_type::data_index], other[vector1_type::data_index]);
-					f(data_[data_index], other[data_index]);
-				}
+				this->percent_support(other[vector1_type::data_index], other[data_index]);
 			}
 			return *this;
 		}
@@ -274,7 +236,7 @@ namespace gal::test
 			{
 				// do nothing here
 			}
-			
+
 			return *this;
 		}
 
@@ -299,7 +261,7 @@ namespace gal::test
 					// do nothing here
 				}
 			}
-			
+
 			return *this;
 		}
 
@@ -316,7 +278,7 @@ namespace gal::test
 			{
 				// do nothing here
 			}
-			
+
 			return *this;
 		}
 
@@ -341,7 +303,7 @@ namespace gal::test
 					// do nothing here
 				}
 			}
-			
+
 			return *this;
 		}
 
@@ -358,7 +320,7 @@ namespace gal::test
 			{
 				// do nothing here
 			}
-			
+
 			return *this;
 		}
 
@@ -383,7 +345,7 @@ namespace gal::test
 					// do nothing here
 				}
 			}
-			
+
 			return *this;
 		}
 
@@ -391,27 +353,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator<<=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[vector1_type::data_index] <<= static_cast<value_type>(scalar);
-				data_[data_index] <<= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				auto& value1 = data_[vector1_type::data_index];
-				auto& value2 = data_[data_index];
-				while (true)
-				{
-					scalar -= 1;
-					value1 *= 2;
-					value2 *= 2;
-					if (scalar < 1)
-					{
-						break;
-					}
-				}
-			}
-			
+			this->template shift_support<true>(scalar, scalar);
 			return *this;
 		}
 
@@ -426,28 +368,7 @@ namespace gal::test
 			}
 			else
 			{
-				if constexpr (std::is_integral_v<value_type>)
-				{
-					data_[vector1_type::data_index] <<= static_cast<value_type>(other[vector1_type::data_index]);
-					data_[data_index] <<= static_cast<value_type>(other[data_index]);
-				}
-				else
-				{
-					constexpr auto f = [](value_type& value, U scalar) constexpr -> void
-					{
-						while (true)
-						{
-							scalar -= 1;
-							value *= 2;
-							if (scalar < 1)
-							{
-								break;
-							}
-						}
-					};
-					f(data_[vector1_type::data_index], other[vector1_type::data_index]);
-					f(data_[data_index], other[data_index]);
-				}
+				this->template shift_support<true>(other[vector1_type::data_index], other[data_index]);
 			}
 			return *this;
 		}
@@ -456,27 +377,7 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator>>=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[vector1_type::data_index] >>= static_cast<value_type>(scalar);
-				data_[data_index] >>= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				auto& value1 = data_[vector1_type::data_index];
-				auto& value2 = data_[data_index];
-				while (true)
-				{
-					scalar -= 1;
-					value1 /= 2;
-					value2 /= 2;
-					if (scalar < 1)
-					{
-						break;
-					}
-				}
-			}
-			
+			this->template shift_support<false>(scalar, scalar);
 			return *this;
 		}
 
@@ -491,28 +392,7 @@ namespace gal::test
 			}
 			else
 			{
-				if constexpr (std::is_integral_v<value_type>)
-				{
-					data_[vector1_type::data_index] >>= static_cast<value_type>(other[vector1_type::data_index]);
-					data_[data_index] >>= static_cast<value_type>(other[data_index]);
-				}
-				else
-				{
-					constexpr auto f = [](value_type& value, U scalar) constexpr -> void
-					{
-						while (true)
-						{
-							scalar -= 1;
-							value /= 2;
-							if (scalar < 1)
-							{
-								break;
-							}
-						}
-					};
-					f(data_[vector1_type::data_index], other[vector1_type::data_index]);
-					f(data_[data_index], other[data_index]);
-				}
+				this->template shift_support<true>(other[vector1_type::data_index], other[data_index]);
 			}
 			return *this;
 		}
@@ -521,7 +401,7 @@ namespace gal::test
 		{
 			data_[vector1_type::data_index] -= 1;
 			data_[data_index] -= 1;
-			
+
 			return *this;
 		}
 
@@ -553,7 +433,7 @@ namespace gal::test
 
 		constexpr auto operator-() const noexcept
 		{
-			if constexpr(std::is_unsigned_v<value_type>)
+			if constexpr (std::is_unsigned_v<value_type>)
 			{
 				using signed_type = std::make_signed_t<value_type>;
 				return acceptable_type<data_size, signed_type>{
@@ -563,7 +443,7 @@ namespace gal::test
 			}
 			else
 			{
-				return self_type{ -data_[vector1_type::data_index], -data_[data_index] };
+				return self_type{-data_[vector1_type::data_index], -data_[data_index]};
 			}
 		}
 
@@ -915,5 +795,126 @@ namespace gal::test
 
 	private:
 		container_type data_;
+
+		template <typename U>
+		constexpr void percent_support(U s1, U s2) noexcept
+		{
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				data_[vector1_type::data_index] %= static_cast<value_type>(s1);
+				data_[data_index] %= static_cast<value_type>(s2);
+			}
+			else
+			{
+				if constexpr (std::is_signed_v<U>)
+				{
+					if (s1 < 0)
+					{
+						s1 = -s1;
+					}
+					if (s2 < 0)
+					{
+						s2 = -s2;
+					}
+				}
+
+				constexpr auto f = [](value_type& value, U s) constexpr -> void
+				{
+					if (value < 0)
+					{
+						auto n = static_cast<std::conditional_t<
+							(sizeof(value_type) > sizeof(std::int32_t)), std::int64_t, std::int32_t>>(-value / static_cast<value_type>(s));
+						value += static_cast<value_type>(n) * static_cast<decltype(n)>(s);
+					}
+					else
+					{
+						auto n = static_cast<std::conditional_t<
+							(sizeof(value_type) > sizeof(std::uint32_t)), std::uint64_t, std::uint32_t>>(value / static_cast<value_type>(s));
+						value -= static_cast<value_type>(n) * static_cast<decltype(n)>(s);
+					}
+				};
+				f(data_[vector1_type::data_index], s1);
+				f(data_[data_index], s2);
+			}
+		}
+
+		template <bool Left, typename U>
+		constexpr void shift_support(U s1, U s2) noexcept
+		{
+			if constexpr (std::is_integral_v<value_type>)
+			{
+				if constexpr (Left)
+				{
+					data_[vector1_type::data_index] <<= static_cast<value_type>(s1);
+					data_[data_index] <<= static_cast<value_type>(s2);
+				}
+				else
+				{
+					data_[vector1_type::data_index] >>= static_cast<value_type>(s1);
+					data_[data_index] >>= static_cast<value_type>(s2);
+				}
+			}
+			else
+			{
+				bool s1_lt_0 = false;
+				bool s2_lt_0 = false;
+				if constexpr (std::is_signed_v<U>)
+				{
+					if (s1 < 0)
+					{
+						s1_lt_0 = true;
+						s1      = -s1;
+					}
+					if (s2 < 0)
+					{
+						s2_lt_0 = true;
+						s2      = -s2;
+					}
+				}
+
+				if constexpr (
+					constexpr auto shift = [](value_type& value, const bool left, auto scalar) constexpr -> void
+					{
+						if (
+							constexpr auto pow = [](auto v, auto p) constexpr -> auto
+							{
+								auto ret = v;
+								while (--p)
+								{
+									ret *= v;
+								}
+								return ret;
+							}; left)
+						{
+							value *= pow(2,
+										static_cast<std::conditional_t<
+											(sizeof(U) > sizeof(std::conditional_t<
+												std::is_signed_v<U>, std::int32_t, std::uint32_t>)),
+											std::conditional_t<std::is_signed_v<U>, std::int64_t, std::uint64_t>,
+											std::conditional_t<std::is_signed_v<U>, std::int32_t, std::uint32_t>>>(
+											scalar));
+						}
+						else
+						{
+							value /= pow(2,
+										static_cast<std::conditional_t<
+											(sizeof(U) > sizeof(std::conditional_t<
+												std::is_signed_v<U>, std::int32_t, std::uint32_t>)),
+											std::conditional_t<std::is_signed_v<U>, std::int64_t, std::uint64_t>,
+											std::conditional_t<std::is_signed_v<U>, std::int32_t, std::uint32_t>>>(
+											scalar));
+						}
+					}; Left)
+				{
+					shift(data_[vector1_type::data_index], !s1_lt_0, s1);
+					shift(data_[data_index], !s2_lt_0, s2);
+				}
+				else
+				{
+					shift(data_[vector1_type::data_index], s1_lt_0, s1);
+					shift(data_[data_index], s2_lt_0, s2);
+				}
+			}
+		}
 	};
 }
