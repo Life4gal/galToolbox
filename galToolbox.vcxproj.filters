@@ -41,5 +41,6 @@
     <ClInclude Include="src\math\vector1.hpp" />
     <ClInclude Include="src\math\vector2.hpp" />
     <ClInclude Include="src\math\vector3.hpp" />
+    <ClInclude Include="src\math\vector_trait.hpp" />
   </ItemGroup>
 </Project>

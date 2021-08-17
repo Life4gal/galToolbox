@@ -33,7 +33,7 @@ TEST(TestVector1, TestBasic)
 		static_assert(vec4[1] == 10);
 
 		static_assert(vec1 != vec2);
-		static_assert((+vec1) == (-vec2));
+		static_assert(vec1 == (-vec2));
 		static_assert(vec2 == vec3);
 		static_assert(vec1 == vec4);
 

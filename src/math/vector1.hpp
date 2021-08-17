@@ -1,6 +1,7 @@
 #pragma once
 
 #include "precision.hpp"
+#include "vector_trait.hpp"
 #include <array>
 
 namespace gal::test
@@ -57,7 +58,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator+=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] += static_cast<value_type>(scalar);
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_add<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -65,7 +68,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator-=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] -= static_cast<value_type>(scalar);
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_minus<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -73,7 +78,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator*=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] *= static_cast<value_type>(scalar);
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_multi<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -81,7 +88,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator/=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			data_[data_index] /= static_cast<value_type>(scalar);
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_div<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -89,8 +98,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator%=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			this->percent_support(scalar);
-
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_percent<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -98,15 +108,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator&=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[data_index] &= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				// do nothing here
-			}
-
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_and<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -114,14 +118,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator|=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[data_index] |= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				// do nothing here
-			}
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_or<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -129,14 +128,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator^=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[data_index] ^= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				// do nothing here
-			}
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_xor<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -144,7 +138,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator<<=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			this->template shift_support<true>(scalar);
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_left_shift<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -152,7 +148,9 @@ namespace gal::test
 			requires std::is_convertible_v<U, value_type>
 		constexpr self_reference operator>>=(U scalar) noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			this->template shift_support<false>(scalar);
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_right_shift<value_type, U>,
+											scalar);
 			return *this;
 		}
 
@@ -161,6 +159,9 @@ namespace gal::test
 		constexpr self_reference operator+=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_add<value_type, U>);
 			this->operator+=(other[data_index]);
 			return *this;
 		}
@@ -170,6 +171,9 @@ namespace gal::test
 		constexpr self_reference operator-=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_minus<value_type, U>);
 			this->operator-=(other[data_index]);
 			return *this;
 		}
@@ -179,6 +183,9 @@ namespace gal::test
 		constexpr self_reference operator*=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_multi<value_type, U>);
 			this->operator*=(other[data_index]);
 			return *this;
 		}
@@ -188,6 +195,9 @@ namespace gal::test
 		constexpr self_reference operator/=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_div<value_type, U>);
 			this->operator/=(other[data_index]);
 			return *this;
 		}
@@ -197,6 +207,9 @@ namespace gal::test
 		constexpr self_reference operator%=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_percent<value_type, U>);
 			this->operator%=(other[data_index]);
 			return *this;
 		}
@@ -206,6 +219,9 @@ namespace gal::test
 		constexpr self_reference operator&=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_and<value_type, U>);
 			this->operator&=(other[data_index]);
 			return *this;
 		}
@@ -215,6 +231,9 @@ namespace gal::test
 		constexpr self_reference operator|=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_or<value_type, U>);
 			this->operator|=(other[data_index]);
 			return *this;
 		}
@@ -224,6 +243,9 @@ namespace gal::test
 		constexpr self_reference operator^=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_xor<value_type, U>);
 			this->operator^=(other[data_index]);
 			return *this;
 		}
@@ -233,6 +255,9 @@ namespace gal::test
 		constexpr self_reference operator<<=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_left_shift<value_type, U>);
 			this->operator<<=(other[data_index]);
 			return *this;
 		}
@@ -242,13 +267,18 @@ namespace gal::test
 		constexpr self_reference operator>>=(const acceptable_type<Size, U>& other)
 		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
 		{
+			// vector_trait::invoke_vec<data_size>(data_,
+			// 	other,
+			// 	vector_trait::operator_right_shift<value_type, U>);
 			this->operator>>=(other[data_index]);
 			return *this;
 		}
 
 		constexpr self_reference operator--() noexcept
 		{
-			data_[data_index] -= 1;
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_minus<value_type, value_type>,
+											1);
 			return *this;
 		}
 
@@ -261,7 +291,9 @@ namespace gal::test
 
 		constexpr self_reference operator++() noexcept
 		{
-			data_[data_index] += 1;
+			vector_trait::invoke<data_size>(data_,
+											vector_trait::operator_add<value_type, value_type>,
+											1);
 			return *this;
 		}
 
@@ -272,35 +304,34 @@ namespace gal::test
 			return copy;
 		}
 
-		constexpr self_type operator+() const noexcept
-		{
-			return self_type{data_[data_index]};
-		}
-
 		constexpr auto operator-() const noexcept
 		{
 			if constexpr (std::is_unsigned_v<value_type>)
 			{
 				using signed_type = std::make_signed_t<value_type>;
-				return acceptable_type<data_size, signed_type>{-static_cast<signed_type>(data_[data_index])};
+				acceptable_type<data_size, signed_type> copy{*this};
+				vector_trait::invoke<data_size>(copy,
+												vector_trait::operator_unary_minus<value_type>
+												);
+				return copy;
 			}
 			else
 			{
-				return self_type{-data_[data_index]};
+				self_type copy{*this};
+				vector_trait::invoke<data_size>(copy,
+												vector_trait::operator_unary_minus<value_type>
+												);
+				return copy;
 			}
 		}
 
 		constexpr self_type operator~() const noexcept
 		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				return self_type{~data_[data_index]};
-			}
-			else
-			{
-				// do nothing here
-				return *this;
-			}
+			self_type copy{*this};
+			vector_trait::invoke<data_size>(copy,
+											vector_trait::operator_unary_tilde<value_type>
+											);
+			return copy;
 		}
 
 		template <typename U>
@@ -498,14 +529,18 @@ namespace gal::test
 		constexpr bool operator==(
 			const acceptable_type<data_size, U>& other) const noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			return static_cast<value_type>(other[data_index]) == data_[data_index];
+			return vector_trait::invoke_vec_r<data_size>(data_,
+														other,
+														vector_trait::operator_equal_to<value_type, U>);
 		}
 
 		template <typename U>
 			requires std::is_convertible_v<U, value_type>
 		constexpr bool operator==(U u) const noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			return static_cast<value_type>(u) == data_[data_index];
+			return vector_trait::invoke_r<data_size>(data_,
+													vector_trait::operator_equal_to<value_type, U>,
+													u);
 		}
 
 		template <typename U>
@@ -525,113 +560,12 @@ namespace gal::test
 		// ReSharper disable once CppNonExplicitConversionOperator
 		constexpr explicit(!std::is_same_v<value_type, bool>) operator bool() const noexcept
 		{
-			return data_[data_index];
+			return vector_trait::invoke_r<data_size>(data_,
+													vector_trait::operator_to_bool<value_type>
+													);
 		}
 
 	private:
 		container_type data_;
-
-		template <typename U>
-		constexpr void percent_support(U scalar) noexcept
-		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				data_[data_index] %= static_cast<value_type>(scalar);
-			}
-			else
-			{
-				auto& value = data_[data_index];
-
-				if constexpr (std::is_signed_v<U>)
-				{
-					if (scalar < 0)
-					{
-						scalar = -scalar;
-					}
-				}
-
-				if (value < 0)
-				{
-					auto n = static_cast<std::conditional_t<
-						(sizeof(value_type) > sizeof(std::int32_t)), std::int64_t, std::int32_t>>(-value / static_cast<value_type>(scalar));
-					value += static_cast<value_type>(n) * static_cast<decltype(n)>(scalar);
-				}
-				else
-				{
-					auto n = static_cast<std::conditional_t<
-						(sizeof(value_type) > sizeof(std::uint32_t)), std::uint64_t, std::uint32_t>>(value / static_cast<value_type>(scalar));
-					value -= static_cast<value_type>(n) * static_cast<decltype(n)>(scalar);
-				}
-			}
-		}
-
-		template <bool Left, typename U>
-		constexpr void shift_support(U scalar) noexcept
-		{
-			if constexpr (std::is_integral_v<value_type>)
-			{
-				if constexpr (Left)
-				{
-					data_[data_index] <<= static_cast<value_type>(scalar);
-				}
-				else
-				{
-					data_[data_index] >>= static_cast<value_type>(scalar);
-				}
-			}
-			else
-			{
-				bool s_lt_0 = false;
-				if constexpr (std::is_signed_v<U>)
-				{
-					if (scalar < 0)
-					{
-						s_lt_0 = true;
-					}
-				}
-
-				if constexpr (
-					constexpr auto shift = [](value_type& value, const bool left, auto s) constexpr -> void
-					{
-						if (
-							constexpr auto pow = [](auto v, auto p) constexpr -> auto
-							{
-								auto ret = v;
-								while (--p)
-								{
-									ret *= v;
-								}
-								return ret;
-							};
-							left)
-						{
-							value *= pow(2,
-										static_cast<std::conditional_t<
-											(sizeof(U) > sizeof(std::conditional_t<
-												std::is_signed_v<U>, std::int32_t, std::uint32_t>)),
-											std::conditional_t<std::is_signed_v<U>, std::int64_t, std::uint64_t>,
-											std::conditional_t<std::is_signed_v<U>, std::int32_t, std::uint32_t>>>(
-											s));
-						}
-						else
-						{
-							value /= pow(2,
-										static_cast<std::conditional_t<
-											(sizeof(U) > sizeof(std::conditional_t<
-												std::is_signed_v<U>, std::int32_t, std::uint32_t>)),
-											std::conditional_t<std::is_signed_v<U>, std::int64_t, std::uint64_t>,
-											std::conditional_t<std::is_signed_v<U>, std::int32_t, std::uint32_t>>>(
-											s));
-						}
-					}; Left)
-				{
-					shift(data_[data_index], !s_lt_0, scalar);
-				}
-				else
-				{
-					shift(data_[data_index], s_lt_0, scalar);
-				}
-			}
-		}
 	};
 }
