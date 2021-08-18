@@ -28,17 +28,7 @@ namespace gal::test::math
 	 * @return tuple containing repeated parameters
 	*/
 	template <std::size_t N, typename T>
-	constexpr auto duplicate(const T& arg) noexcept
-	{
-		if constexpr (N == 0)
-		{
-			return std::make_tuple();
-		}
-		else
-		{
-			return std::tuple_cat(duplicate<N - 1>(arg), std::make_tuple(arg));
-		}
-	}
+	constexpr auto duplicate(const T& arg) noexcept;
 	//===============================
 
 	template <typename T>
@@ -58,10 +48,7 @@ namespace gal::test::math
 	};
 
 	template <typename T>
-	constexpr bool is_vector = vector_trait<T>::value;
-
-	template <typename T>
-	constexpr auto to_tuple(T&& t) noexcept
+	constexpr auto to_rref_tuple(T&& t) noexcept
 	{
 		using trait = vector_trait<std::remove_cvref_t<T>>;
 		if constexpr (trait::value)
@@ -74,6 +61,51 @@ namespace gal::test::math
 		else
 		{
 			return std::forward_as_tuple(std::forward<T>(t));
+		}
+	}
+
+	template <typename T>
+	constexpr auto to_tuple(const T& t) noexcept
+	{
+		using trait = vector_trait<std::remove_cvref_t<T>>;
+		if constexpr (trait::value)
+		{
+			return [&]<std::size_t...I>(std::index_sequence<I...>)
+			{
+				return std::make_tuple(t[I]...);
+			}(std::make_index_sequence<trait::size>{});
+		}
+		else
+		{
+			return std::make_tuple(t);
+		}
+	}
+
+	template <std::size_t N, typename T>
+	constexpr auto duplicate(const T& arg) noexcept
+	{
+		if constexpr (N == 0)
+		{
+			return std::make_tuple();
+		}
+		else
+		{
+			using trait = vector_trait<std::remove_cvref_t<T>>;
+			if constexpr (trait::value)
+			{
+				if constexpr (trait::size >= N)
+				{
+					return to_tuple(arg);
+				}
+				else
+				{
+					return std::tuple_cat(to_tuple(arg), duplicate<N - trait::size>(arg));
+				}
+			}
+			else
+			{
+				return std::tuple_cat(to_tuple(arg), duplicate<N - 1>(arg));
+			}
 		}
 	}
 
@@ -522,6 +554,10 @@ namespace gal::test::math
 
 		using reference = typename container_type::reference;
 		using const_reference = typename container_type::const_reference;
+		using iterator = typename container_type::iterator;
+		using const_iterator = typename container_type::const_iterator;
+		using reverse_iterator = typename container_type::reverse_iterator;
+		using const_reverse_iterator = typename container_type::const_reverse_iterator;
 
 		constexpr static size_type data_size = N;
 
@@ -542,7 +578,7 @@ namespace gal::test::math
 		 * @param tuple args tuple
 		*/
 		template <typename Tuple, size_type...I>
-		requires (sizeof...(I) <= data_size)
+			requires (sizeof...(I) <= data_size)
 		constexpr vector(Tuple&& tuple, std::index_sequence<I...>)
 			: data_({static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))...}) {}
 
@@ -558,25 +594,76 @@ namespace gal::test::math
 		// requires((vector_trait<std::remove_cvref_t<Args>>::size + ...) >= data_size)
 		constexpr explicit vector(Args&&...args)
 			:
-			// vector(std::tuple_cat(to_tuple(std::forward<Args>(args))...), std::make_index_sequence<data_size>{}) {}
-			vector(std::tuple_cat(to_tuple(std::forward<Args>(args))...),
+			// vector(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...), std::make_index_sequence<data_size>{}) {}
+			vector(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...),
 					std::make_index_sequence<std::min(data_size,
 													std::tuple_size_v<decltype(
-														std::tuple_cat(to_tuple(std::forward<Args>(args))...))>)>{}) {}
+														std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...))>)>
+					{}) {}
 
-		constexpr static size_type size() noexcept
+		[[nodiscard]] constexpr static size_type size() noexcept
 		{
 			return data_size;
 		}
 
-		constexpr reference operator[](size_type index) noexcept
+		[[nodiscard]] constexpr reference operator[](size_type index) noexcept
 		{
 			return data_[index];
 		}
 
-		constexpr const_reference operator[](size_type index) const noexcept
+		[[nodiscard]] constexpr const_reference operator[](size_type index) const noexcept
 		{
 			return data_[index];
+		}
+
+		[[nodiscard]] constexpr iterator begin() noexcept
+		{
+			return data_.begin();
+		}
+
+		[[nodiscard]] constexpr const_iterator begin() const noexcept
+		{
+			return data_.begin();
+		}
+
+		[[nodiscard]] constexpr iterator end() noexcept
+		{
+			return data_.end();
+		}
+
+		[[nodiscard]] constexpr const_iterator end() const noexcept
+		{
+			return data_.end();
+		}
+
+		[[nodiscard]] constexpr reverse_iterator rbegin() noexcept
+		{
+			return data_.rbegin();
+		}
+
+		[[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept
+		{
+			return data_.rbegin();
+		}
+
+		[[nodiscard]] constexpr reverse_iterator rend() noexcept
+		{
+			return data_.rend();
+		}
+
+		[[nodiscard]] constexpr const_reverse_iterator rend() const noexcept
+		{
+			return data_.rend();
+		}
+
+		[[nodiscard]] constexpr const_iterator cbegin() const noexcept
+		{
+			return data_.cbegin();
+		}
+
+		[[nodiscard]] constexpr const_iterator cend() const noexcept
+		{
+			return data_.cend();
 		}
 
 		/**
@@ -592,6 +679,15 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator+=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_add<value_type, vector_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename vector_trait<
+																						U>::value_type>()
+																					)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -642,6 +738,16 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator-=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_subtract<value_type, vector_trait<U>::value_type>(
+																							std::declval<value_type&>(),
+																							std::declval<typename
+																								vector_trait<
+																									U>::value_type>()
+																						)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -694,6 +800,16 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator*=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_multi<value_type, vector_trait<U>::value_type>(
+																						std::declval<value_type&>(),
+																						std::declval<typename
+																							vector_trait<
+																								U>::value_type>()
+																						)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -744,6 +860,15 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator/=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_div<value_type, vector_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename vector_trait<
+																						U>::value_type>()
+																					)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -794,6 +919,16 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator%=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_model<value_type, vector_trait<U>::value_type>(
+																						std::declval<value_type&>(),
+																						std::declval<typename
+																							vector_trait<
+																								U>::value_type>()
+																						)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -844,6 +979,15 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator&=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_and<value_type, vector_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename vector_trait<
+																						U>::value_type>()
+																					)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -894,6 +1038,15 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator|=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_or<value_type, vector_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename vector_trait<
+																						U>::value_type>()
+																					)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -944,6 +1097,15 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator^=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_xor<value_type, vector_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename vector_trait<
+																						U>::value_type>()
+																					)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -994,6 +1156,16 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator<<=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_left_shift<value_type, vector_trait<U>::value_type>(
+																							std::declval<value_type&>(),
+																							std::declval<typename
+																								vector_trait<
+																									U>::value_type>()
+																							)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -1046,6 +1218,16 @@ namespace gal::test::math
 		*/
 		template <typename U>
 		constexpr self_reference operator>>=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_right_shift<value_type, vector_trait<U>::value_type>(
+																							std::declval<value_type&>(),
+																							std::declval<typename
+																								vector_trait<
+																									U>::value_type>()
+																							)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -1086,7 +1268,18 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr bool operator==(const U& value) const noexcept
+		[[nodiscard]] constexpr bool operator==(const U& value) const
+		noexcept(
+			noexcept(
+				vector_invoker::operator_equal_to<value_type, vector_trait<U>::value_type>(
+																							std::declval<const
+																								value_type&>(),
+																							std::declval<const typename
+																								vector_trait<
+																									U>::value_type&>()
+																						)
+			)
+		)
 		{
 			using trait = vector_trait<U>;
 			if constexpr (trait::value)
@@ -1126,38 +1319,50 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr bool operator!=(const U& value) const noexcept
+		[[nodiscard]] constexpr bool operator!=(const U& value) const
+		noexcept(noexcept(std::declval<self_type>().operator==(std::declval<const U&>())))
 		{
-			return this->operator==(value);
+			return !this->operator==(value);
 		}
 
-		constexpr self_reference operator--() noexcept
+		constexpr self_reference operator--()
+		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<value_type>())))
 		{
 			this->operator-=(1);
 			return *this;
 		}
 
-		constexpr self_type operator--(int) noexcept
+		[[nodiscard]] constexpr self_type operator--(int)
+		noexcept(noexcept(std::declval<self_type>().operator--()))
 		{
 			auto copy{*this};
 			this->operator--();
 			return copy;
 		}
 
-		constexpr self_reference operator++() noexcept
+		constexpr self_reference operator++()
+		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<value_type>())))
 		{
 			this->operator+=(1);
 			return *this;
 		}
 
-		constexpr self_type operator++(int) noexcept
+		[[nodiscard]] constexpr self_type operator++(int)
+		noexcept(noexcept(std::declval<self_type>().operator++()))
 		{
 			auto copy{*this};
 			this->operator++();
 			return copy;
 		}
 
-		constexpr auto operator-() const noexcept
+		[[nodiscard]] constexpr auto operator-() const
+		noexcept(
+			noexcept(
+				vector_invoker::operator_unary_minus<value_type>(
+																std::declval<value_type&>()
+																)
+			)
+		)
 		{
 			if constexpr (std::is_unsigned_v<value_type>)
 			{
@@ -1180,7 +1385,14 @@ namespace gal::test::math
 			}
 		}
 
-		constexpr self_type operator~() const noexcept
+		[[nodiscard]] constexpr self_type operator~() const
+		noexcept(
+			noexcept(
+				vector_invoker::operator_unary_tilde<value_type>(
+																std::declval<value_type&>()
+																)
+			)
+		)
 		{
 			self_type copy{*this};
 			vector_invoker::invoke<data_size>(
@@ -1191,8 +1403,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator+(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator+(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy += scalar;
@@ -1200,7 +1412,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator+(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator+(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator+=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1209,8 +1421,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator-(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator-(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy -= scalar;
@@ -1218,7 +1430,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator-(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator-(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator-=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1227,8 +1439,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator*(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator*(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy *= scalar;
@@ -1236,7 +1448,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator*(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator*(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator*=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1245,8 +1457,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator/(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator/(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy /= scalar;
@@ -1254,7 +1466,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator/(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator/(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator/=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1263,8 +1475,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator%(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator%(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy %= scalar;
@@ -1272,7 +1484,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator%(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator%(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator%=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1281,8 +1493,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator&(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator&(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy &= scalar;
@@ -1290,7 +1502,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator&(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator&(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator&=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1299,8 +1511,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator|(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator|(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy |= scalar;
@@ -1308,7 +1520,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator|(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator|(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator|=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1317,8 +1529,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator^(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator^(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy ^= scalar;
@@ -1326,7 +1538,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator^(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator^(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator^=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1335,8 +1547,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator<<(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator<<(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy <<= scalar;
@@ -1344,7 +1556,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator<<(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator<<(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator<<=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
@@ -1353,8 +1565,8 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr self_type operator>>(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<U>())))
+		[[nodiscard]] constexpr self_type operator>>(const U& scalar) const
+		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<const U&>())))
 		{
 			auto copy{*this};
 			copy >>= scalar;
@@ -1362,7 +1574,7 @@ namespace gal::test::math
 		}
 
 		template <arithmetic U>
-		friend constexpr vector<U, data_size> operator>>(const U& scalar, self_const_reference self)
+		[[nodiscard]] friend constexpr vector<U, data_size> operator>>(const U& scalar, self_const_reference self)
 		noexcept(noexcept(std::declval<vector<U, data_size>>().operator>>=(std::declval<self_const_reference>())))
 		{
 			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};

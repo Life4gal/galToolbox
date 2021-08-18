@@ -15,32 +15,71 @@ TEST(TestVector, TestBasic)
 		static_assert(vec[0] == 0);
 	}
 	{
-		constexpr auto tuple1 = std::make_tuple(1, 2, 3, 4, 5, 6, 7, 8, 9);
-		constexpr vector3<int> vec1{ tuple1, std::index_sequence<0, 2, 4>{} };
+		constexpr auto         tuple1 = std::make_tuple(1, 2, 3, 4, 5, 6, 7, 8, 9);
+		constexpr vector3<int> vec1{tuple1, std::index_sequence<0, 2, 4>{}};
 		static_assert(vec1[0] == 1);
 		static_assert(vec1[1] == 3);
 		static_assert(vec1[2] == 5);
 
-		constexpr auto tuple2 = duplicate<10>(3);
+		constexpr auto tuple2 = duplicate<5>(3);
 		static_assert(std::get<0>(tuple2) == 3);
 		static_assert(std::get<1>(tuple2) == 3);
 		static_assert(std::get<2>(tuple2) == 3);
 		static_assert(std::get<3>(tuple2) == 3);
 		static_assert(std::get<4>(tuple2) == 3);
-		static_assert(std::get<5>(tuple2) == 3);
-		static_assert(std::get<6>(tuple2) == 3);
-		static_assert(std::get<7>(tuple2) == 3);
-		static_assert(std::get<8>(tuple2) == 3);
-		static_assert(std::get<9>(tuple2) == 3);
-		constexpr vector3<int> vec2{ tuple2, std::index_sequence<0, 2, 4>{} };
+
+		constexpr vector3<int> vec2{tuple2, std::index_sequence<0, 2, 4>{}};
 		static_assert(vec2[0] == 3);
 		static_assert(vec2[1] == 3);
 		static_assert(vec2[2] == 3);
+
+		constexpr auto tuple3 = duplicate<5>(vector1<int>{456});
+		static_assert(std::get<0>(tuple3) == 456);
+		static_assert(std::get<1>(tuple3) == 456);
+		static_assert(std::get<2>(tuple3) == 456);
+		static_assert(std::get<3>(tuple3) == 456);
+		static_assert(std::get<4>(tuple3) == 456);
+
+		constexpr auto tuple4 = duplicate<5>(vector2<int>{123, 456});
+		static_assert(std::get<0>(tuple4) == 123);
+		static_assert(std::get<1>(tuple4) == 456);
+		static_assert(std::get<2>(tuple4) == 123);
+		static_assert(std::get<3>(tuple4) == 456);
+		static_assert(std::get<4>(tuple4) == 123);
+
+		constexpr auto tuple5 = duplicate<5>(vec1);
+		static_assert(std::get<0>(tuple5) == 1);
+		static_assert(std::get<1>(tuple5) == 3);
+		static_assert(std::get<2>(tuple5) == 5);
+		static_assert(std::get<3>(tuple5) == 1);
+		static_assert(std::get<4>(tuple5) == 3);
+
+		constexpr auto tuple6 = duplicate<5>(vector4<int>{12, 34, 56, 78});
+		static_assert(std::get<0>(tuple6) == 12);
+		static_assert(std::get<1>(tuple6) == 34);
+		static_assert(std::get<2>(tuple6) == 56);
+		static_assert(std::get<3>(tuple6) == 78);
+		static_assert(std::get<4>(tuple6) == 12);
+
+		constexpr auto tuple7 = duplicate<5>(vector<int, 5>{12, 34, 56, 78, 90});
+		static_assert(std::get<0>(tuple7) == 12);
+		static_assert(std::get<1>(tuple7) == 34);
+		static_assert(std::get<2>(tuple7) == 56);
+		static_assert(std::get<3>(tuple7) == 78);
+		static_assert(std::get<4>(tuple7) == 90);
+
+		constexpr auto tuple8 = duplicate<5>(vector<int, 6>{12, 34, 56, 78, 90, 100});
+		static_assert(std::get<0>(tuple8) == 12);
+		static_assert(std::get<1>(tuple8) == 34);
+		static_assert(std::get<2>(tuple8) == 56);
+		static_assert(std::get<3>(tuple8) == 78);
+		static_assert(std::get<4>(tuple8) == 90);
+		static_assert(std::get<5>(tuple8) == 100);
 	}
 	{
-		constexpr vector1<int> vec1{ 123 };
-		constexpr vector2<long> vec2{ 123, 456 };
-		constexpr vector3<unsigned> vec3{ 123, 456, 789 };
+		constexpr vector1<int>      vec1{123};
+		constexpr vector2<long>     vec2{123, 456};
+		constexpr vector3<unsigned> vec3{123, 456, 789};
 
 		static_assert(vec1[0] == 123);
 
@@ -51,17 +90,17 @@ TEST(TestVector, TestBasic)
 		static_assert(vec3[1] == 456);
 		static_assert(vec3[2] == 789);
 
-		constexpr vector3<int> vec4{ vec1, vec2, vec3, vec1, vec2, vec3 };
+		constexpr vector3<int> vec4{vec1, vec2, vec3, vec1, vec2, vec3};
 		static_assert(decltype(vec4)::size() == 3);
 		static_assert(vec4[0] == 123);
 		static_assert(vec4[1] == 123);
 		static_assert(vec4[2] == 456);
 
-		constexpr vector2<unsigned> vec5{ vec1 };
+		constexpr vector2<unsigned> vec5{vec1};
 		static_assert(vec5[0] == 123);
 		static_assert(vec5[1] == 0);
 
-		constexpr vector3<long> vec6{ vec4 };
+		constexpr vector3<long> vec6{vec4};
 		static_assert(vec6[0] == 123);
 		static_assert(vec6[1] == 123);
 		static_assert(vec6[2] == 456);
@@ -73,10 +112,10 @@ TEST(TestVector, TestSelfOperator)
 	using namespace gal::test::math;
 
 	{
-		constexpr vector1<double> vec0{ 3.14 };
-		constexpr vector2<int>    vec1{ 42, 1 };
-		constexpr vector3<long>   vec2{ 100, 200, 300 };
-		vector3<unsigned long>    vec3{ 123, 456, 789 };
+		constexpr vector1<double> vec0{3.14};
+		constexpr vector2<int>    vec1{42, 1};
+		constexpr vector3<long>   vec2{100, 200, 300};
+		vector3<unsigned long>    vec3{123, 456, 789};
 
 		vec3 += vec0;
 		ASSERT_EQ(vec3[0], 123 + vec0);
@@ -145,8 +184,8 @@ TEST(TestVector, TestOperator)
 		constexpr float  vec_f_value2 = 1.23f;
 		constexpr float  vec_f_value3 = 0.123f;
 
-		constexpr vector3<double> vec_d{ vec_d_value1, vec_d_value2, vec_d_value3 };
-		constexpr vector3<float>  vec_f{ vec_f_value1, vec_f_value2, vec_f_value3 };
+		constexpr vector3<double> vec_d{vec_d_value1, vec_d_value2, vec_d_value3};
+		constexpr vector3<float>  vec_f{vec_f_value1, vec_f_value2, vec_f_value3};
 
 		{
 			constexpr auto vec1 = vec_d + vec_f;
@@ -309,7 +348,7 @@ TEST(TestVector, TestOperator)
 				return value;
 			};
 
-			constexpr vector3<double> vec{ 4, 5, 6 };
+			constexpr vector3<double> vec{4, 5, 6};
 
 			constexpr auto vec1 = vec_d << vec;
 			static_assert(vec1[0] == f(vec_d_value1, vec[0]));
@@ -341,7 +380,7 @@ TEST(TestVector, TestOperator)
 				return value;
 			};
 
-			constexpr vector3<double> vec{ 4, 5, 6 };
+			constexpr vector3<double> vec{4, 5, 6};
 
 			constexpr auto vec1 = vec_d >> vec;
 			static_assert(vec1[0] == f(vec_d_value1, vec[0]));
