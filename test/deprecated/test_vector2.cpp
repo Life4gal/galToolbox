@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../src/math/vector2.hpp"
-#include "../src/math/vector1.hpp"
+#include "../../src/math/deprecated/vector2.hpp"
+#include "../../src/math/deprecated/vector1.hpp"
 
 TEST(TestVector2, TestBasic)
 {

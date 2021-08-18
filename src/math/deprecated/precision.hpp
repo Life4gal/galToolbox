@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 namespace gal::test
 {
 	enum class precision

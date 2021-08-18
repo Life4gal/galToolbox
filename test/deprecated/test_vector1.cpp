@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/math/vector1.hpp"
+#include "../../src/math/deprecated/vector1.hpp"
 
 TEST(TestVector1, TestBasic)
 {
