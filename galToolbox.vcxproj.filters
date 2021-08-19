@@ -27,6 +27,7 @@
     <ClCompile Include="src\string\compile_time_matcher.ixx" />
     <ClCompile Include="test\test_random.cpp" />
     <ClCompile Include="test\test_vector.cpp" />
+    <ClCompile Include="test\test_matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -36,5 +37,8 @@
   <ItemGroup>
     <ClInclude Include="src\string\compile_time_matcher.hpp" />
     <ClInclude Include="src\math\vector.hpp" />
+    <ClInclude Include="src\math\matrix.hpp" />
+    <ClInclude Include="src\math\common_fwd.hpp" />
+    <ClInclude Include="src\math\utils.hpp" />
   </ItemGroup>
 </Project>

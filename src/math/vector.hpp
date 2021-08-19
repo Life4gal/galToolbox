@@ -1,113 +1,15 @@
 #pragma once
 
-#include <type_traits>
-#include <tuple>
 #include <array>
+
+#include "utils.hpp"
 
 namespace gal::test::math
 {
 	//===============================
-	template <typename T>
-	concept arithmetic = std::is_integral_v<T> || std::is_floating_point_v<T>;
 	template <arithmetic T, std::size_t N>
 	class vector;
-
-	template <arithmetic T>
-	using vector1 = vector<T, 1>;
-	template <arithmetic T>
-	using vector2 = vector<T, 2>;
-	template <arithmetic T>
-	using vector3 = vector<T, 3>;
-	template <arithmetic T>
-	using vector4 = vector<T, 4>;
-
-	/**
-	 * @brief vector construction assistance: can be used when trying to assign all values of the entire vector with one parameter
-	 * @tparam T arg type
-	 * @param arg arg
-	 * @return tuple containing repeated parameters
-	*/
-	template <std::size_t N, typename T>
-	constexpr auto duplicate(const T& arg) noexcept;
 	//===============================
-
-	template <typename T>
-	struct vector_trait
-	{
-		using value_type = T;
-		constexpr static bool        value = false;
-		constexpr static std::size_t size  = 1;
-	};
-
-	template <arithmetic T, std::size_t N>
-	struct vector_trait<vector<T, N>>
-	{
-		using value_type = T;
-		constexpr static bool        value = true;
-		constexpr static std::size_t size  = N;
-	};
-
-	template <typename T>
-	constexpr auto to_rref_tuple(T&& t) noexcept
-	{
-		using trait = vector_trait<std::remove_cvref_t<T>>;
-		if constexpr (trait::value)
-		{
-			return [&]<std::size_t...I>(std::index_sequence<I...>)
-			{
-				return std::forward_as_tuple(std::forward<T>(t)[I]...);
-			}(std::make_index_sequence<trait::size>{});
-		}
-		else
-		{
-			return std::forward_as_tuple(std::forward<T>(t));
-		}
-	}
-
-	template <typename T>
-	constexpr auto to_tuple(const T& t) noexcept
-	{
-		using trait = vector_trait<std::remove_cvref_t<T>>;
-		if constexpr (trait::value)
-		{
-			return [&]<std::size_t...I>(std::index_sequence<I...>)
-			{
-				return std::make_tuple(t[I]...);
-			}(std::make_index_sequence<trait::size>{});
-		}
-		else
-		{
-			return std::make_tuple(t);
-		}
-	}
-
-	template <std::size_t N, typename T>
-	constexpr auto duplicate(const T& arg) noexcept
-	{
-		if constexpr (N == 0)
-		{
-			return std::make_tuple();
-		}
-		else
-		{
-			using trait = vector_trait<std::remove_cvref_t<T>>;
-			if constexpr (trait::value)
-			{
-				if constexpr (trait::size >= N)
-				{
-					return to_tuple(arg);
-				}
-				else
-				{
-					return std::tuple_cat(to_tuple(arg), duplicate<N - trait::size>(arg));
-				}
-			}
-			else
-			{
-				return std::tuple_cat(to_tuple(arg), duplicate<N - 1>(arg));
-			}
-		}
-	}
 
 	struct vector_invoker
 	{
@@ -569,7 +471,7 @@ namespace gal::test::math
 		/**
 		 * @brief default construction
 		*/
-		constexpr vector() = default;
+		constexpr vector() noexcept(std::is_nothrow_default_constructible_v<container_type>) = default;
 
 		/**
 		 * @brief tuple composition parameter construction
@@ -580,6 +482,7 @@ namespace gal::test::math
 		template <typename Tuple, size_type...I>
 			requires (sizeof...(I) <= data_size)
 		constexpr vector(Tuple&& tuple, std::index_sequence<I...>)
+		noexcept((noexcept(static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))) && ...))
 			: data_({static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))...}) {}
 
 		/**
@@ -593,6 +496,7 @@ namespace gal::test::math
 		template <typename... Args>
 		// requires((vector_trait<std::remove_cvref_t<Args>>::size + ...) >= data_size)
 		constexpr explicit vector(Args&&...args)
+		noexcept(noexcept(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...)))
 			:
 			// vector(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...), std::make_index_sequence<data_size>{}) {}
 			vector(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...),

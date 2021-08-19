@@ -30,6 +30,7 @@
     <ClCompile Include="test\test_compile_time_matcher.cpp" />
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
     <ClCompile Include="test\test_fifo.cpp" />
+    <ClCompile Include="test\test_matrix.cpp" />
     <ClCompile Include="test\test_random.cpp" />
     <ClCompile Include="test\test_ring_buffer.cpp" />
     <ClCompile Include="test\test_vector.cpp" />
@@ -40,6 +41,9 @@
     <None Include="UNLICENSE" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\math\common_fwd.hpp" />
+    <ClInclude Include="src\math\matrix.hpp" />
+    <ClInclude Include="src\math\utils.hpp" />
     <ClInclude Include="src\math\vector.hpp" />
     <ClInclude Include="src\string\compile_time_matcher.hpp" />
   </ItemGroup>
