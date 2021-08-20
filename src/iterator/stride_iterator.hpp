@@ -86,7 +86,7 @@ namespace gal::test::iterator
 		}
 
 		/**
-		 * @bref get the underlying iterator
+		 * @brief get the underlying iterator
 		 */
 		[[nodiscard]] constexpr const iterator_type& base() const & noexcept
 		{
@@ -94,7 +94,7 @@ namespace gal::test::iterator
 		}
 
 		/**
-		 * @bref get the underlying iterator
+		 * @brief get the underlying iterator
 		 */
 		[[nodiscard]] constexpr iterator_type base() && noexcept(std::is_nothrow_move_constructible_v<iterator_type>)
 		{
@@ -102,7 +102,7 @@ namespace gal::test::iterator
 		}
 
 		/**
-		 * @bref get the count
+		 * @brief get the count
 		 */
 		[[nodiscard]] constexpr difference_type count() const noexcept
 		{
@@ -287,4 +287,32 @@ namespace gal::test::iterator
 	{
 		return stride_iterator<Stride, Iterator>{iterator, count};
 	}
+}
+
+namespace std
+{
+	template<std::size_t Stride, typename Iterator>
+	struct incrementable_traits<gal::test::iterator::stride_iterator<Stride, Iterator>>
+	{
+		using difference_type = typename gal::test::iterator::stride_iterator<Stride, Iterator>::difference_type;
+	};
+
+	template<std::size_t Stride, std::input_iterator Iterator>
+	struct iterator_traits<gal::test::iterator::stride_iterator<Stride, Iterator>> : iterator_traits<Iterator>
+	{
+		using pointer = void;
+	};
+
+	template<std::size_t Stride, contiguous_iterator Iterator>
+	struct pointer_traits<gal::test::iterator::stride_iterator<Stride, Iterator>>
+	{
+		using pointer = gal::test::iterator::stride_iterator<Stride, Iterator>;
+		using element_type = remove_reference_t<typename gal::test::iterator::stride_iterator<Stride, Iterator>::reference>;
+		using difference_type = typename gal::test::iterator::stride_iterator<Stride, Iterator>::difference_type;
+
+		[[nodiscard]] constexpr static element_type* to_address(const pointer iterator) noexcept
+		{
+			return std::to_address(iterator.base());
+		}
+	};
 }
