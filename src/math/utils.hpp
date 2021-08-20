@@ -1,27 +1,19 @@
 #pragma once
 
-#include "common_fwd.hpp"
+#include "math_fwd.hpp"
 #include <tuple>
 
 namespace gal::test::math
 {
 	template<typename T>
-	struct common_trait
+	struct common_trait : std::false_type
 	{
 		using value_type = T;
-		constexpr static bool value = false;
 		constexpr static std::size_t size = 1;
 	};
 
 	template <typename T>
-	struct vector_trait
-	{
-		using trait = common_trait<T>;
-
-		using value_type = typename trait::value_type;
-		constexpr static bool        value = trait::value;
-		constexpr static std::size_t size = trait::size;
-	};
+	struct vector_trait : common_trait<T>{};
 
 	template <arithmetic T, std::size_t N>
 	struct vector_trait<vector<T, N>>
@@ -32,14 +24,7 @@ namespace gal::test::math
 	};
 
 	template<typename T>
-	struct matrix_trait
-	{
-		using trait = common_trait<T>;
-
-		using value_type = typename trait::value_type;
-		constexpr static bool        value = trait::value;
-		constexpr static std::size_t size = trait::size;
-	};
+	struct matrix_trait : common_trait<T>{};
 
 	template<arithmetic T, std::size_t Row, std::size_t Column>
 	struct matrix_trait<matrix<T, Row, Column>>

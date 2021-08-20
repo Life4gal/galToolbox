@@ -1,9 +1,9 @@
 #pragma once
 
 #include <array>
-#include <ranges>
 
 #include "vector.hpp"
+#include "../iterator/stride_iterator.hpp"
 
 namespace gal::test::math
 {
@@ -26,6 +26,11 @@ namespace gal::test::math
 		constexpr static size_type row_size    = Column;
 		constexpr static size_type column_size = Row;
 		constexpr static size_type data_size   = row_size * column_size;
+
+		using row_stride_iterator = test::iterator::stride_iterator<1, iterator>;
+		using column_stride_iterator = test::iterator::stride_iterator<row_size, iterator>;
+		using const_row_stride_iterator = test::iterator::stride_iterator<1, const_iterator>;
+		using const_column_stride_iterator = test::iterator::stride_iterator<row_size, const_iterator>;
 
 		using row_type = vector<value_type, row_size>;
 		using column_type = vector<value_type, column_size>;
@@ -154,14 +159,14 @@ namespace gal::test::math
 			};
 		}
 
-		[[nodiscard]] constexpr auto get_row_view(size_type which_row) noexcept
+		[[nodiscard]] constexpr row_stride_iterator get_row_view(size_type which_row) noexcept
 		{
-			return data_ | std::views::drop(which_row * row_size) | std::views::take(row_size);
+			return { data_.begin() + which_row * row_size };
 		}
 
-		[[nodiscard]] constexpr auto get_row_view(size_type which_row) const noexcept
+		[[nodiscard]] constexpr const_row_stride_iterator get_row_view(size_type which_row) const noexcept
 		{
-			return data_ | std::views::drop(which_row * row_size) | std::views::take(row_size);
+			return { data_.cbegin() + which_row * row_size };
 		}
 
 		[[nodiscard]] constexpr column_type get_column(size_type which_column) const noexcept
@@ -171,58 +176,14 @@ namespace gal::test::math
 			};
 		}
 
-		[[nodiscard]] constexpr auto get_column_view(size_type which_column) noexcept
+		[[nodiscard]] constexpr column_stride_iterator get_column_view(size_type which_column) noexcept
 		{
-			// todo: we need a way to filter based on the target index or write an iterator supported by ranges and overload operator++
-			// return data_ | std::views::drop(which_column) |
-			// 	std::views::filter(
-			// 						[begin = data_.data() + which_column](const value_type& v) constexpr
-			// 						{
-			// 							return (std::addressof(v) - begin) % row_size == 0;
-			// 						}
-			// 					) |
-			// 	std::views::take(column_size);
-			return
-				std::views::iota(data_.begin() + which_column, data_.end() - (row_size - which_column - 1)) |
-				std::views::filter(
-									[begin = data_.begin() + which_column](iterator it)
-									{
-										return (it - begin) % row_size == 0;
-									}
-								) |
-				std::views::transform(
-									[](iterator it)
-									{
-										return *it;
-									}
-									);
+			return { data_.begin() + which_column };
 		}
 
-		[[nodiscard]] constexpr auto get_column_view(size_type which_column) const noexcept
+		[[nodiscard]] constexpr const_column_stride_iterator get_column_view(size_type which_column) const noexcept
 		{
-			// todo: we need a way to filter based on the target index or write an iterator supported by ranges and overload operator++
-			// return data_ | std::views::drop(which_column) |
-			// 	std::views::filter(
-			// 						[begin = data_.data() + which_column](const value_type& v) constexpr
-			// 						{
-			// 							return (std::addressof(v) - begin) % row_size == 0;
-			// 						}
-			// 					) |
-			// 	std::views::take(column_size);
-			return
-				std::views::iota(data_.cbegin() + which_column, data_.cend() - (row_size - which_column - 1)) |
-				std::views::filter(
-									[begin = data_.cbegin() + which_column](const_iterator it)
-									{
-										return (it - begin) % row_size == 0;
-									}
-								) |
-				std::views::transform(
-									[](const_iterator it)
-									{
-										return *it;
-									}
-									);
+			return { data_.cbegin() + which_column };
 		}
 
 	private:

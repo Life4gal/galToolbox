@@ -38,7 +38,8 @@
     <ClInclude Include="src\string\compile_time_matcher.hpp" />
     <ClInclude Include="src\math\vector.hpp" />
     <ClInclude Include="src\math\matrix.hpp" />
-    <ClInclude Include="src\math\common_fwd.hpp" />
+    <ClInclude Include="src\math\math_fwd.hpp" />
     <ClInclude Include="src\math\utils.hpp" />
+    <ClInclude Include="src\iterator\stride_iterator.hpp" />
   </ItemGroup>
 </Project>
