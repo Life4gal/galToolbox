@@ -4,137 +4,287 @@
 
 namespace gal::test::iterator
 {
-	template <std::size_t Stride, std::random_access_iterator Iterator>
-	struct stride_iterator
+	//=================================================
+
+	/**
+	 * @brief an iterator with counters that supports jumping
+	 * @tparam Stride number of steps per jump
+	 * @tparam Iterator iterator type (at least support input_or_output)
+	*/
+	template <std::size_t Stride, std::input_or_output_iterator Iterator>
+	class stride_iterator;
+	//=================================================
+	
+	template <std::size_t Stride, std::input_or_output_iterator Iterator>
+	class stride_iterator
 	{
+	public:
 		constexpr static auto stride = Stride;
+
 		using iterator_type = Iterator;
 		using value_type = std::iter_value_t<iterator_type>;
 		using difference_type = std::iter_difference_t<iterator_type>;
 		using reference = std::iter_reference_t<iterator_type>;
+		using rreference = std::iter_rvalue_reference_t<iterator_type>;
 
-		using iterator_concept = std::random_access_iterator_tag;
-		using iterator_category = std::random_access_iterator_tag;
+		static_assert(std::is_signed_v<difference_type>);
+	
+	private:
+		/**
+		 * @brief move base iterator and corresponding change count
+		 * @param step number of moves
+		*/
+		constexpr void move_base(difference_type step)
+		noexcept(noexcept(std::advance(
+										std::declval<const iterator_type>(),
+										std::declval<difference_type>()
+									)))
+		{
+			std::advance(base_, step * stride);
+			count_ -= step;
+		}
 
-		constexpr reference operator*() const noexcept(noexcept(*std::declval<iterator_type>()))
+	public:
+		/**
+		 * @brief all behaviors produced by using the default construction are undefined, and the only reason for the existence of this constructor is as follows
+		 * @see https://wg21.link/P2325R3
+		*/
+		constexpr stride_iterator() = default;
+
+		/**
+		 * @brief construct a stride_iterator and specify count
+		 * @param iterator base iterator
+		 * @param count count
+		*/
+		constexpr explicit stride_iterator(iterator_type iterator, difference_type count)
+		noexcept(std::is_nothrow_move_constructible_v<iterator_type>)
+			: base_(std::move(iterator)), count_(count) {}
+
+		/**
+		 * @brief copy construct a stride_iterator
+		 * @param other the object to be copied (must be the same as the stride of the other party)
+		*/
+		template <std::input_or_output_iterator I>
+			requires std::convertible_to<const I&, iterator_type>
+		constexpr explicit stride_iterator(const stride_iterator<stride, I>& other)
+		noexcept(std::is_nothrow_constructible_v<iterator_type, const I&>)
+			: base_(other.base()), count_(other.count()) {}
+
+		/**
+		 * @brief copy assign a stride_iterator
+		 * @param other other the object to be copied (must be the same as the stride of the other party)
+		 * @return copied object
+		*/
+		template <std::input_or_output_iterator I>
+			requires std::assignable_from<iterator_type&, const I&>
+		constexpr stride_iterator& operator=(const stride_iterator<stride, I>& other)
+		noexcept(std::is_nothrow_assignable_v<iterator_type, const I&>)
+		{
+			base_  = other.base();
+			count_ = other.count();
+			return *this;
+		}
+
+		/**
+		 * @bref get the underlying iterator
+		 */
+		[[nodiscard]] constexpr const iterator_type& base() const & noexcept
+		{
+			return base_;
+		}
+
+		/**
+		 * @bref get the underlying iterator
+		 */
+		[[nodiscard]] constexpr iterator_type base() && noexcept(std::is_nothrow_move_constructible_v<iterator_type>)
+		{
+			return std::move(base_);
+		}
+
+		/**
+		 * @bref get the count
+		 */
+		[[nodiscard]] constexpr difference_type count() const noexcept
+		{
+			return count_;
+		}
+
+		[[nodiscard]] constexpr decltype(auto) operator*()
+		noexcept(noexcept(*std::declval<iterator_type>()))
 		{
 			return *base_;
 		}
 
-		constexpr reference operator[](difference_type n) const noexcept(noexcept(std::declval<iterator_type>()[0]))
+		[[nodiscard]] constexpr decltype(auto) operator*() const
+		noexcept(noexcept(*std::declval<iterator_type>()))
+		{
+			return *base_;
+		}
+
+		[[nodiscard]] constexpr decltype(auto) operator[](difference_type n) const
+		noexcept(noexcept(std::declval<iterator_type>()[0]))
+			requires std::random_access_iterator<iterator_type>
 		{
 			return base_[n * stride];
 		}
 
-		constexpr stride_iterator& operator+=(difference_type n) noexcept(noexcept(std::declval<iterator_type>() += 1))
+		constexpr stride_iterator& operator++()
+		noexcept(noexcept(move_base(std::declval<difference_type>())))
 		{
-			base_ += n * stride;
+			move_base(1);
 			return *this;
 		}
 
-		constexpr stride_iterator& operator-=(difference_type n) noexcept(noexcept(std::declval<iterator_type>() -= 1))
+		constexpr decltype(auto) operator++(int)
+		noexcept(noexcept(move_base(std::declval<difference_type>())))
 		{
-			base_ -= n * stride;
+			auto it = base_;
+			move_base(1);
+			return it;
+		}
+
+		constexpr stride_iterator operator++(int)
+		noexcept(noexcept(move_base(std::declval<difference_type>())))
+			requires std::forward_iterator<iterator_type>
+		{
+			auto copy{*this};
+			move_base(1);
+			return copy;
+		}
+
+		constexpr stride_iterator& operator--()
+		noexcept(noexcept(move_base(std::declval<difference_type>())))
+			requires std::bidirectional_iterator<iterator_type>
+		{
+			move_base(-1);
 			return *this;
 		}
 
-		constexpr stride_iterator& operator++() noexcept(noexcept(std::declval<iterator_type>() += 1))
+		constexpr stride_iterator operator--(int)
+		noexcept(noexcept(move_base(std::declval<difference_type>())))
+			requires std::bidirectional_iterator<iterator_type>
 		{
-			this->operator+=(1);
+			auto copy{*this};
+			move_base(-1);
+			return copy;
+		}
+
+		[[nodiscard]] constexpr stride_iterator operator+(difference_type n) const
+		noexcept(noexcept(std::declval<iterator_type>() + std::declval<difference_type>()))
+			requires std::random_access_iterator<iterator_type>
+		{
+			return stride_iterator{base_ + n, static_cast<difference_type>(count_ - n)};
+		}
+
+		[[nodiscard]] constexpr friend stride_iterator operator+(difference_type n, const stride_iterator& it)
+		noexcept(noexcept(std::declval<iterator_type>() + std::declval<difference_type>()))
+			requires std::random_access_iterator<iterator_type>
+		{
+			return stride_iterator{it.base_ + n, static_cast<difference_type>(it.count_ - n)};
+		}
+
+		constexpr stride_iterator& operator+=(difference_type n)
+		noexcept(noexcept(move_base(std::declval<difference_type>())))
+			requires std::random_access_iterator<iterator_type>
+		{
+			move_base(n);
 			return *this;
 		}
 
-		constexpr stride_iterator operator++(int) noexcept(noexcept(++std::declval<stride_iterator>()))
+		[[nodiscard]] constexpr stride_iterator operator-(difference_type n) const
+		noexcept(noexcept(std::declval<iterator_type>() - std::declval<difference_type>()))
+			requires std::random_access_iterator<iterator_type>
 		{
-			auto copy{*this};
-			++*this;
-			return copy;
+			return stride_iterator{base_ - n, static_cast<difference_type>(count_ + n)};
 		}
 
-		constexpr stride_iterator& operator--() noexcept(noexcept(std::declval<iterator_type>() += 1))
+		template <std::common_with<iterator_type> I>
+		[[nodiscard]] constexpr friend difference_type operator-(
+			const stride_iterator&            lhs,
+			const stride_iterator<stride, I>& rhs
+			) noexcept
 		{
-			this->operator-=(1);
+			return rhs.count() - lhs.count_;
+		}
+
+		[[nodiscard]] constexpr friend difference_type operator-(
+			const stride_iterator& lhs,
+			std::default_sentinel_t) noexcept
+		{
+			return -lhs.count_;
+		}
+
+		[[nodiscard]] constexpr friend difference_type operator-(
+			std::default_sentinel_t,
+			const stride_iterator& rhs
+			) noexcept
+		{
+			return rhs.count_;
+		}
+
+		constexpr stride_iterator& operator-=(difference_type n)
+		noexcept(noexcept(std::declval<iterator_type>() -= 1))
+			requires std::random_access_iterator<iterator_type>
+		{
+			move_base(-n);
 			return *this;
 		}
 
-		constexpr stride_iterator operator--(int) noexcept(noexcept(--std::declval<stride_iterator>()))
+		template <std::common_with<iterator_type> I>
+		[[nodiscard]] constexpr friend bool operator==(
+			const stride_iterator&            lhs,
+			const stride_iterator<stride, I>& rhs
+			) noexcept
 		{
-			auto copy{*this};
-			--*this;
-			return copy;
+			return lhs.count_ == rhs.count();
 		}
 
-		constexpr stride_iterator operator+(
-			difference_type n) const noexcept(noexcept(std::declval<iterator_type>() += 1))
+		[[nodiscard]] constexpr friend bool operator==(
+			const stride_iterator& lhs,
+			std::default_sentinel_t) noexcept
 		{
-			auto copy{*this};
-			copy += n;
-			return copy;
+			return lhs.count_ == 0;
 		}
 
-		constexpr stride_iterator operator-(
-			difference_type n) const noexcept(noexcept(std::declval<iterator_type>() -= 1))
+		template <std::common_with<iterator_type> I>
+		[[nodiscard]] constexpr friend std::strong_ordering operator<=>(
+			const stride_iterator&            lhs,
+			const stride_iterator<stride, I>& rhs
+			) noexcept
 		{
-			auto copy{*this};
-			copy -= n;
-			return copy;
+			return rhs.count() <=> lhs.count_;
+		}
+	
+	private:
+		iterator_type   base_;
+		difference_type count_{};
+
+	public:
+		[[nodiscard]] constexpr friend rreference iter_move(const stride_iterator& other)
+			noexcept(noexcept(std::ranges::iter_move(other.base_)))
+			requires std::input_iterator<iterator_type>
+		{
+			return std::ranges::iter_move(other.base_);
 		}
 
-		constexpr difference_type operator-(
-			const stride_iterator& other) const noexcept(noexcept(std::declval<iterator_type>() - std::declval<
-			iterator_type>()))
+		template <std::indirectly_swappable<iterator_type> I>
+		constexpr friend void iter_swap(const stride_iterator& lhs, const stride_iterator<stride, I>& rhs)
+			noexcept(noexcept(std::ranges::iter_swap(lhs.base_, rhs.base())))
 		{
-			return base_ - other.base_;
-		}
-
-		iterator_type base_;
-
-		constexpr friend stride_iterator operator+(difference_type         n,
-													const stride_iterator& it) noexcept(noexcept(std::declval<
-			iterator_type>() + 1))
-		{
-			return {it + n};
-		}
-
-		constexpr friend bool operator==(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return lhs.base_ == rhs.base_;
-		}
-
-		constexpr friend bool operator!=(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return !(lhs == rhs);
-		}
-
-		constexpr friend bool operator>(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return lhs.base_ > rhs.base_;
-		}
-
-		constexpr friend bool operator<(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return lhs.base_ < rhs.base_;
-		}
-
-		constexpr friend bool operator>=(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return lhs > rhs || lhs == rhs;
-		}
-
-		constexpr friend bool operator<=(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return lhs < rhs || lhs == rhs;
-		}
-
-		constexpr friend auto operator<=>(const stride_iterator& lhs, const stride_iterator& rhs) noexcept
-		{
-			return lhs.base_ <=> rhs.base_;
+			return std::ranges::iter_swap(lhs.base_, rhs.base());
 		}
 	};
 
 	template <std::size_t Stride, std::random_access_iterator Iterator>
-	constexpr stride_iterator<Stride, Iterator> make_stride_iterator(Iterator iterator) noexcept
+	constexpr stride_iterator<Stride, Iterator> make_stride_iterator(
+		Iterator                                                    iterator,
+		typename stride_iterator<Stride, Iterator>::difference_type count
+		)
+	noexcept(std::is_nothrow_constructible_v<
+		stride_iterator<Stride, Iterator>,
+		Iterator,
+		typename stride_iterator<Stride, Iterator>::difference_type>)
 	{
-		return {iterator};
+		return stride_iterator<Stride, Iterator>{iterator, count};
 	}
 }

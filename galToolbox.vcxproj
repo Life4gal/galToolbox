@@ -33,6 +33,7 @@
     <ClCompile Include="test\test_matrix.cpp" />
     <ClCompile Include="test\test_random.cpp" />
     <ClCompile Include="test\test_ring_buffer.cpp" />
+    <ClCompile Include="test\test_stride_iterator.cpp" />
     <ClCompile Include="test\test_vector.cpp" />
   </ItemGroup>
   <ItemGroup>

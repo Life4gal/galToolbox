@@ -3,7 +3,6 @@
 #include "../src/math/matrix.hpp"
 #include "../src/iterator/stride_iterator.hpp"
 
-
 TEST(TestMatrix, TestBasic)
 {
 	using namespace gal::test::math;

@@ -161,12 +161,12 @@ namespace gal::test::math
 
 		[[nodiscard]] constexpr row_stride_iterator get_row_view(size_type which_row) noexcept
 		{
-			return { data_.begin() + which_row * row_size };
+			return row_stride_iterator{ data_.begin() + which_row * row_size, row_size };
 		}
 
 		[[nodiscard]] constexpr const_row_stride_iterator get_row_view(size_type which_row) const noexcept
 		{
-			return { data_.cbegin() + which_row * row_size };
+			return const_row_stride_iterator{ data_.cbegin() + which_row * row_size, row_size };
 		}
 
 		[[nodiscard]] constexpr column_type get_column(size_type which_column) const noexcept
@@ -178,12 +178,12 @@ namespace gal::test::math
 
 		[[nodiscard]] constexpr column_stride_iterator get_column_view(size_type which_column) noexcept
 		{
-			return { data_.begin() + which_column };
+			return column_stride_iterator{ data_.begin() + which_column, column_size };
 		}
 
 		[[nodiscard]] constexpr const_column_stride_iterator get_column_view(size_type which_column) const noexcept
 		{
-			return { data_.cbegin() + which_column };
+			return const_column_stride_iterator{ data_.cbegin() + which_column, column_size };
 		}
 
 	private:
