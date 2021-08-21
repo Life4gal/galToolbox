@@ -7,6 +7,14 @@
 
 namespace gal::test::math
 {
+	template<arithmetic T, std::size_t Row, std::size_t Column>
+	struct math_trait<matrix<T, Row, Column>>
+	{
+		using value_type = T;
+		constexpr static bool value = true;
+		constexpr static std::size_t size = Row * Column;
+	};
+	
 	template <arithmetic T, std::size_t Row, std::size_t Column>
 	class matrix
 	{

@@ -3,13 +3,103 @@
 #include <array>
 
 #include "utils.hpp"
+#include "../iterator/stride_iterator.hpp"
 
 namespace gal::test::math
 {
 	//===============================
-	template <arithmetic T, std::size_t N>
+	template <typename T, std::size_t N>
 	class vector;
+
+	template <std::size_t Stride, std::size_t Size, typename Iterator>
+	class vector_view;
+
+	/**
+	 * @brief specialize vector_invoker_trait for operator support
+	 * @note if the operation corresponding to the target type is false, the corresponding operation is not allowed
+	 * @tparam T specialized type
+	*/
+	template <typename T>
+	struct vector_invoker_trait
+	{
+		constexpr static bool is_arithmetic = std::is_arithmetic_v<T>;
+
+		constexpr static bool add          = false;
+		constexpr static bool subtract     = false;
+		constexpr static bool multiply     = false;
+		constexpr static bool divide       = false;
+		constexpr static bool model        = false;
+		constexpr static bool bit_and      = false;
+		constexpr static bool bit_or       = false;
+		constexpr static bool bit_xor      = false;
+		constexpr static bool left_shift   = false;
+		constexpr static bool right_shift  = false;
+		constexpr static bool unary_minus  = false;
+		constexpr static bool unary_tilde  = false;
+		constexpr static bool equal_to     = false;
+		constexpr static bool not_equal_to = false;
+	};
 	//===============================
+
+	template <typename T, std::size_t N>
+	struct math_trait<vector<T, N>>
+	{
+		using value_type = T;
+		constexpr static bool        value = true;
+		constexpr static std::size_t size  = N;
+	};
+
+	template <std::size_t Stride, std::size_t Size, typename Iterator>
+	struct math_trait<vector_view<Stride, Size, Iterator>>
+	{
+		using value_type = std::iter_value_t<Iterator>;
+		constexpr static bool        value = true;
+		constexpr static std::size_t size  = Size;
+	};
+
+	template <std::integral T>
+	struct vector_invoker_trait<T>
+	{
+		static_assert(std::is_arithmetic_v<T>);
+		constexpr static bool is_arithmetic = true;
+
+		constexpr static bool add          = true;
+		constexpr static bool subtract     = true;
+		constexpr static bool multiply     = true;
+		constexpr static bool divide       = true;
+		constexpr static bool model        = true;
+		constexpr static bool bit_and      = true;
+		constexpr static bool bit_or       = true;
+		constexpr static bool bit_xor      = true;
+		constexpr static bool left_shift   = true;
+		constexpr static bool right_shift  = true;
+		constexpr static bool unary_minus  = std::is_signed_v<T>;
+		constexpr static bool unary_tilde  = true;
+		constexpr static bool equal_to     = true;
+		constexpr static bool not_equal_to = true;
+	};
+
+	template <std::floating_point T>
+	struct vector_invoker_trait<T>
+	{
+		static_assert(std::is_arithmetic_v<T>);
+		constexpr static bool is_arithmetic = true;
+
+		constexpr static bool add          = true;
+		constexpr static bool subtract     = true;
+		constexpr static bool multiply     = true;
+		constexpr static bool divide       = true;
+		constexpr static bool model        = true;
+		constexpr static bool bit_and      = false;
+		constexpr static bool bit_or       = false;
+		constexpr static bool bit_xor      = false;
+		constexpr static bool left_shift   = true;
+		constexpr static bool right_shift  = true;
+		constexpr static bool unary_minus  = true;
+		constexpr static bool unary_tilde  = false;
+		constexpr static bool equal_to     = true;
+		constexpr static bool not_equal_to = true;
+	};
 
 	struct vector_invoker
 	{
@@ -73,27 +163,12 @@ namespace gal::test::math
 		template <bool Left, typename ValueType, typename T>
 		constexpr static void shift_impl(ValueType& value, T scalar) noexcept
 		{
-			if constexpr (std::is_integral_v<ValueType>)
+			if constexpr (std::is_floating_point_v<ValueType>)
 			{
-				if constexpr (Left)
+				bool s_lt_0 = scalar < 0;
+				if (s_lt_0)
 				{
-					value <<= static_cast<ValueType>(scalar);
-				}
-				else
-				{
-					value >>= static_cast<ValueType>(scalar);
-				}
-			}
-			else
-			{
-				bool s_lt_0 = false;
-				if constexpr (std::is_signed_v<T>)
-				{
-					if (scalar < 0)
-					{
-						s_lt_0 = true;
-						scalar = -scalar;
-					}
+					scalar = -scalar;
 				}
 
 				if constexpr (
@@ -136,6 +211,31 @@ namespace gal::test::math
 				else
 				{
 					shift(value, s_lt_0, scalar);
+				}
+			}
+			else
+			{
+				if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+				{
+					if constexpr (Left)
+					{
+						value <<= static_cast<ValueType>(scalar);
+					}
+					else
+					{
+						value >>= static_cast<ValueType>(scalar);
+					}
+				}
+				else
+				{
+					if constexpr (Left)
+					{
+						value <<= scalar;
+					}
+					else
+					{
+						value >>= scalar;
+					}
 				}
 			}
 		}
@@ -252,65 +352,86 @@ namespace gal::test::math
 			return vector_invoker::binary_invoke_impl_r(vec, func, Indices{}, dup_value);
 		}
 
+		// unchecked
 		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
 		constexpr static void operator_add(
 			ValueType& value,
 			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
+			) noexcept
 		{
-			value += static_cast<ValueType>(scalar);
-		}
-
-		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
-		constexpr static void operator_subtract(
-			ValueType& value,
-			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
-		{
-			value -= static_cast<ValueType>(scalar);
-		}
-
-		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
-		constexpr static void operator_multi(
-			ValueType& value,
-			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
-		{
-			value *= static_cast<ValueType>(scalar);
-		}
-
-		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
-		constexpr static void operator_div(
-			ValueType& value,
-			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
-		{
-			value /= static_cast<ValueType>(scalar);
-		}
-
-		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
-		constexpr static void operator_model(
-			ValueType& value,
-			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
-		{
-			if constexpr (std::is_integral_v<ValueType>)
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
 			{
-				value %= static_cast<ValueType>(scalar);
+				value += static_cast<ValueType>(scalar);
 			}
 			else
 			{
-				if constexpr (std::is_signed_v<T>)
+				value += scalar;
+			}
+		}
+
+		// unchecked
+		template <typename ValueType, typename T>
+		constexpr static void operator_subtract(
+			ValueType& value,
+			T          scalar
+			) noexcept
+		{
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			{
+				value -= static_cast<ValueType>(scalar);
+			}
+			else
+			{
+				value -= scalar;
+			}
+		}
+
+		// unchecked
+		template <typename ValueType, typename T>
+		constexpr static void operator_multi(
+			ValueType& value,
+			T          scalar
+			) noexcept
+		{
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			{
+				value *= static_cast<ValueType>(scalar);
+			}
+			else
+			{
+				value *= scalar;
+			}
+		}
+
+		// unchecked
+		template <typename ValueType, typename T>
+		constexpr static void operator_div(
+			ValueType& value,
+			T          scalar
+			) noexcept
+		{
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			{
+				value /= static_cast<ValueType>(scalar);
+			}
+			else
+			{
+				value /= scalar;
+			}
+		}
+
+		// unchecked
+		template <typename ValueType, typename T>
+		constexpr static void operator_model(
+			ValueType& value,
+			T          scalar
+			) noexcept
+		{
+			if constexpr (std::is_floating_point_v<ValueType>)
+			{
+				if (scalar < 0)
 				{
-					if (scalar < 0)
-					{
-						scalar = -scalar;
-					}
+					scalar = -scalar;
 				}
 
 				if (value < 0)
@@ -328,106 +449,116 @@ namespace gal::test::math
 					value -= static_cast<ValueType>(n) * static_cast<decltype(n)>(scalar);
 				}
 			}
+			else
+			{
+				if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+				{
+					value %= static_cast<ValueType>(scalar);
+				}
+				else
+				{
+					value %= scalar;
+				}
+			}
 		}
 
+		// unchecked
 		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
 		constexpr static void operator_and(
 			ValueType& value,
 			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
+			) noexcept
 		{
-			if constexpr (std::is_integral_v<ValueType>)
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
 			{
 				value &= static_cast<ValueType>(scalar);
 			}
 			else
 			{
-				// do nothing here
+				value &= scalar;
 			}
 		}
 
+		// unchecked
 		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
 		constexpr static void operator_or(
 			ValueType& value,
 			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
+			) noexcept
 		{
-			if constexpr (std::is_integral_v<ValueType>)
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
 			{
 				value |= static_cast<ValueType>(scalar);
 			}
 			else
 			{
-				// do nothing here
+				value |= scalar;
 			}
 		}
 
+		// unchecked
 		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
 		constexpr static void operator_xor(
 			ValueType& value,
 			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
+			) noexcept
 		{
-			if constexpr (std::is_integral_v<ValueType>)
+			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
 			{
 				value ^= static_cast<ValueType>(scalar);
 			}
 			else
 			{
-				// do nothing here
+				value ^= scalar;
 			}
 		}
 
+		// unchecked
 		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
 		constexpr static void operator_left_shift(
 			ValueType& value,
 			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
+			) noexcept
 		{
 			vector_invoker::shift_impl<true>(value, scalar);
 		}
 
+		// unchecked
 		template <typename ValueType, typename T>
-			requires std::is_convertible_v<T, ValueType>
 		constexpr static void operator_right_shift(
 			ValueType& value,
 			T          scalar
-			) noexcept(std::is_nothrow_convertible_v<T, ValueType>)
+			) noexcept
 		{
 			vector_invoker::shift_impl<false>(value, scalar);
 		}
 
+		// unchecked
 		template <typename ValueType>
-		constexpr static void operator_unary_minus(ValueType& value) noexcept
+		constexpr static void operator_unary_minus(ValueType& value)
+		noexcept
 		{
 			value = -value;
 		}
 
+		// unchecked
 		template <typename ValueType>
-		constexpr static void operator_unary_tilde(ValueType& value) noexcept
+		constexpr static void operator_unary_tilde(ValueType& value)
+		noexcept
 		{
-			if constexpr (std::is_integral_v<ValueType>)
-			{
-				value = ~value;
-			}
-			else
-			{
-				// do nothing here
-			}
+			value = ~value;
 		}
 
 		template <typename ValueType, typename T>
-		constexpr static bool operator_equal_to(const ValueType& v1, const T& v2) noexcept
+		constexpr static bool operator_equal_to(const ValueType& v1, const T& v2)
+		noexcept
 		{
 			// todo: floating_point
 			if constexpr (std::is_floating_point_v<ValueType>)
 			{
-				if (static_cast<double>(v1) - static_cast<double>(v2) <= 0.000001 && static_cast<double>(v1) -
-					static_cast<double>(v2) >= -0.000001)
+				if (static_cast<double>(v1) - static_cast<double>(v2) <= 0.000001 &&
+					static_cast<double>(v1) - static_cast<double>(v2) >= -0.000001
+				)
 				{
 					return true;
 				}
@@ -435,18 +566,12 @@ namespace gal::test::math
 			}
 			else
 			{
-				return v1 == static_cast<ValueType>(v2);
+				return v1 == v2;
 			}
-		}
-
-		template <typename ValueType>
-		constexpr static bool operator_to_bool(const ValueType& value) noexcept
-		{
-			return static_cast<bool>(value);
 		}
 	};
 
-	template <arithmetic T, std::size_t N>
+	template <typename T, std::size_t N>
 	class vector
 	{
 	public:
@@ -467,6 +592,9 @@ namespace gal::test::math
 		using self_reference = vector<value_type, data_size>&;
 		using self_const_reference = const vector<value_type, data_size>&;
 		using self_rreference = vector<value_type, data_size>&&;
+
+		using view_type = vector_view<1, data_size, iterator>;
+		using const_view_type = vector_view<1, data_size, const_iterator>;
 
 		/**
 		 * @brief default construction
@@ -494,16 +622,29 @@ namespace gal::test::math
 		 * @param args args
 		*/
 		template <typename... Args>
-		// requires((vector_trait<std::remove_cvref_t<Args>>::size + ...) >= data_size)
+		// requires((math_trait<std::remove_cvref_t<Args>>::size + ...) >= data_size)
 		constexpr explicit vector(Args&&...args)
 		noexcept(noexcept(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...)))
 			:
 			// vector(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...), std::make_index_sequence<data_size>{}) {}
-			vector(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...),
-					std::make_index_sequence<std::min(data_size,
+			vector(
+					std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...),
+					std::make_index_sequence<std::min(
+													data_size,
 													std::tuple_size_v<decltype(
-														std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...))>)>
-					{}) {}
+														std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...))>
+													)>{}
+				) {}
+
+		constexpr view_type to_view() noexcept
+		{
+			return view_type{data_.begin()};
+		}
+
+		[[nodiscard]] constexpr const_view_type to_view() const noexcept
+		{
+			return const_view_type{data_.cbegin()};
+		}
 
 		[[nodiscard]] constexpr static size_type size() noexcept
 		{
@@ -570,6 +711,113 @@ namespace gal::test::math
 			return data_.cend();
 		}
 
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::equal_to
+		[[nodiscard]] constexpr friend bool operator==(const self_type& lhs, const vector<U, data_size>& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return [&]<std::size_t...I>(std::index_sequence<I...>)
+			{
+				return ((lhs.data_[I] == static_cast<value_type>(rhs[I])) && ...);
+			}(std::make_index_sequence<data_size>{});
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::equal_to
+		[[nodiscard]] constexpr friend bool operator==(const self_type& lhs, const U& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return [&]<std::size_t...I>(std::index_sequence<I...>)
+			{
+				return ((lhs.data_[I] == static_cast<value_type>(rhs)) && ...);
+			}(std::make_index_sequence<data_size>{});
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::equal_to
+		[[nodiscard]] constexpr friend bool operator==(const U& lhs, const self_type& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return rhs == lhs;
+		}
+
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::not_equal_to
+		[[nodiscard]] constexpr friend bool operator!=(const self_type& lhs, const vector<U, data_size>& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return !(lhs == rhs);
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::not_equal_to
+		[[nodiscard]] constexpr friend bool operator!=(const self_type& lhs, const U& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return !(lhs == rhs);
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::not_equal_to
+		[[nodiscard]] constexpr friend bool operator!=(const U& lhs, const self_type& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return !(lhs == rhs);
+		}
+
+	private:
+		container_type data_;
+	};
+
+	template <typename T>
+	struct is_vector_view : std::false_type {};
+
+	template <std::size_t Stride, std::size_t Size, typename Iterator>
+	struct is_vector_view<vector_view<Stride, Size, Iterator>> : std::true_type {};
+
+	template <typename T>
+	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
+
+	template <std::size_t Stride, std::size_t Size, typename Iterator>
+	class vector_view
+	{
+	public:
+		constexpr static auto stride      = Stride;
+		constexpr static auto vector_size = Size;
+
+		using view_iterator = iterator::stride_iterator<Stride, Iterator>;
+		using iterator_type = typename view_iterator::iterator_type;
+		using value_type = typename view_iterator::value_type;
+		using difference_type = typename view_iterator::difference_type;
+		using reference = typename view_iterator::reference;
+		using rreference = typename view_iterator::rreference;
+
+		using self_type = vector_view<stride, vector_size, iterator_type>;
+		using self_reference = vector_view<stride, vector_size, iterator_type>&;
+		using const_self_reference = const vector_view<stride, vector_size, iterator_type>&;
+		using self_rreference = vector_view<stride, vector_size, iterator_type>&&;
+
+		using vector_type = vector<value_type, vector_size>;
+		using size_type = typename vector_type::size_type;
+
+		constexpr explicit vector_view(iterator_type iterator) : iterator_(std::move(iterator), vector_size) {}
+
+		[[nodiscard]] constexpr vector_type copy_vector() const noexcept
+		{
+			return {to_tuple<vector_size>(iterator_), std::make_index_sequence<vector_size>{}};
+		}
+
+		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) noexcept
+		{
+			return iterator_[index];
+		}
+
+		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) const noexcept
+		{
+			return iterator_[index];
+		}
+
 		/**
 		 * @brief Add a value to the current vector
 		 * If the value is also a vector:
@@ -579,54 +827,52 @@ namespace gal::test::math
 		 *		each value of the current vector will `add` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator+=(const U& scalar)
+		constexpr void operator+=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_add<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_add<value_type, math_trait<U>::value_type>(
 																					std::declval<value_type&>(),
-																					std::declval<typename vector_trait<
+																					std::declval<typename math_trait<
 																						U>::value_type>()
 																					)
 			)
 		)
+			requires vector_invoker_trait<value_type>::add
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_add<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_add<value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_add<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_add<value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_add<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_add<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -638,57 +884,56 @@ namespace gal::test::math
 		 *		each value of the current vector will `subtract` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator-=(const U& scalar)
+		constexpr void operator-=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_subtract<value_type, vector_trait<U>::value_type>(
-																							std::declval<value_type&>(),
-																							std::declval<typename
-																								vector_trait<
-																									U>::value_type>()
+				vector_invoker::operator_subtract<value_type, math_trait<U>::value_type>(
+																						std::declval<value_type&>(),
+																						std::declval<typename math_trait
+																							<
+																								U>::value_type>()
 																						)
 			)
 		)
+			requires vector_invoker_trait<value_type>::subtract
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_subtract<
-															value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_subtract<
+																value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_subtract<
-															value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_subtract<
+																value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_subtract<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_subtract<
+															value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -700,55 +945,54 @@ namespace gal::test::math
 		 *		each value of the current vector will `multiply` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator*=(const U& scalar)
+		constexpr void operator*=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_multi<value_type, vector_trait<U>::value_type>(
-																						std::declval<value_type&>(),
-																						std::declval<typename
-																							vector_trait<
-																								U>::value_type>()
-																						)
+				vector_invoker::operator_multi<value_type, math_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename math_trait<
+																						U>::value_type>()
+																					)
 			)
 		)
+			requires vector_invoker_trait<value_type>::multiply
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_multi<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_multi<
+																value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_multi<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_multi<
+																value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_multi<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_multi<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -760,54 +1004,52 @@ namespace gal::test::math
 		 *		each value of the current vector will `divide` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator/=(const U& scalar)
+		constexpr void operator/=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_div<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_div<value_type, math_trait<U>::value_type>(
 																					std::declval<value_type&>(),
-																					std::declval<typename vector_trait<
+																					std::declval<typename math_trait<
 																						U>::value_type>()
 																					)
 			)
 		)
+			requires vector_invoker_trait<value_type>::divide
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_div<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_div<value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_div<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_div<value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_div<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_div<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -819,55 +1061,54 @@ namespace gal::test::math
 		 *		each value of the current vector will `model` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator%=(const U& scalar)
+		constexpr void operator%=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_model<value_type, vector_trait<U>::value_type>(
-																						std::declval<value_type&>(),
-																						std::declval<typename
-																							vector_trait<
-																								U>::value_type>()
-																						)
+				vector_invoker::operator_model<value_type, math_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename math_trait<
+																						U>::value_type>()
+																					)
 			)
 		)
+			requires vector_invoker_trait<value_type>::model
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_model<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_model<
+																value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_model<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_model<
+																value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_model<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_model<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -879,54 +1120,52 @@ namespace gal::test::math
 		 *		each value of the current vector will `bit and` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator&=(const U& scalar)
+		constexpr void operator&=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_and<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_and<value_type, math_trait<U>::value_type>(
 																					std::declval<value_type&>(),
-																					std::declval<typename vector_trait<
+																					std::declval<typename math_trait<
 																						U>::value_type>()
 																					)
 			)
 		)
+			requires vector_invoker_trait<value_type>::bit_and
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_and<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_and<value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_and<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_and<value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_and<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_and<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -938,54 +1177,52 @@ namespace gal::test::math
 		 *		each value of the current vector will `bit or` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator|=(const U& scalar)
+		constexpr void operator|=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_or<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_or<value_type, math_trait<U>::value_type>(
 																					std::declval<value_type&>(),
-																					std::declval<typename vector_trait<
+																					std::declval<typename math_trait<
 																						U>::value_type>()
-																					)
+																				)
 			)
 		)
+			requires vector_invoker_trait<value_type>::bit_or
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_or<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_or<value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_or<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_or<value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_or<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_or<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -997,54 +1234,52 @@ namespace gal::test::math
 		 *		each value of the current vector will `bit xor` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator^=(const U& scalar)
+		constexpr void operator^=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_xor<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_xor<value_type, math_trait<U>::value_type>(
 																					std::declval<value_type&>(),
-																					std::declval<typename vector_trait<
+																					std::declval<typename math_trait<
 																						U>::value_type>()
 																					)
 			)
 		)
+			requires vector_invoker_trait<value_type>::bit_xor
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_xor<value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_xor<value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_xor<value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_xor<value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_xor<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_xor<value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -1056,57 +1291,56 @@ namespace gal::test::math
 		 *		each value of the current vector will `left shift` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator<<=(const U& scalar)
+		constexpr void operator<<=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_left_shift<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_left_shift<value_type, math_trait<U>::value_type>(
 																							std::declval<value_type&>(),
 																							std::declval<typename
-																								vector_trait<
+																								math_trait<
 																									U>::value_type>()
-																							)
+																						)
 			)
 		)
+			requires vector_invoker_trait<value_type>::left_shift
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_left_shift<
-															value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_left_shift<
+																value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_left_shift<
-															value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_left_shift<
+																value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_left_shift<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_left_shift<
+															value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		/**
@@ -1118,148 +1352,127 @@ namespace gal::test::math
 		 *		each value of the current vector will `right shift` the value
 		 * @tparam U value type
 		 * @param scalar value
-		 * @return this
 		*/
 		template <typename U>
-		constexpr self_reference operator>>=(const U& scalar)
+		constexpr void operator>>=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_right_shift<value_type, vector_trait<U>::value_type>(
+				vector_invoker::operator_right_shift<value_type, math_trait<U>::value_type>(
 																							std::declval<value_type&>(),
 																							std::declval<typename
-																								vector_trait<
+																								math_trait<
 																									U>::value_type>()
 																							)
 			)
 		)
+			requires vector_invoker_trait<value_type>::right_shift
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
 				// scalar is a vector
-				if constexpr (trait::size == data_size)
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<data_size>(
-														data_,
-														vector_invoker::operator_right_shift<
-															value_type, trait::value_type>,
-														scalar
-														);
+					vector_invoker::invoke_vec<vector_size>(
+															iterator_,
+															vector_invoker::operator_right_shift<
+																value_type, trait::value_type>,
+															scalar
+															);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<data_size>(
-														data_,
-														vector_invoker::operator_right_shift<
-															value_type, trait::value_type>,
-														scalar[0]
-														);
+					vector_invoker::invoke_dup<vector_size>(
+															iterator_,
+															vector_invoker::operator_right_shift<
+																value_type, trait::value_type>,
+															scalar[0]
+															);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<data_size>(
-													data_,
-													vector_invoker::operator_right_shift<value_type, trait::value_type>,
-													scalar
-													);
+				vector_invoker::invoke_dup<vector_size>(
+														iterator_,
+														vector_invoker::operator_right_shift<
+															value_type, trait::value_type>,
+														scalar
+														);
 			}
-
-			return *this;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr bool operator==(const U& value) const
+		constexpr bool operator==(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_equal_to<value_type, vector_trait<U>::value_type>(
-																							std::declval<const
-																								value_type&>(),
-																							std::declval<const typename
-																								vector_trait<
-																									U>::value_type&>()
+				vector_invoker::operator_equal_to<value_type, math_trait<U>::value_type>(
+																						std::declval<value_type&>(),
+																						std::declval<typename math_trait
+																							<
+																								U>::value_type>()
 																						)
 			)
 		)
+			requires vector_invoker_trait<value_type>::equal_to
 		{
-			using trait = vector_trait<U>;
+			using trait = math_trait<U>;
 			if constexpr (trait::value)
 			{
-				// value is a vector
-				if constexpr (trait::size == data_size)
+				// scalar is a vector
+				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					return vector_invoker::invoke_vec_r<data_size>(
-																	data_,
+					return vector_invoker::invoke_vec_r<vector_size>(
+																	iterator_,
 																	vector_invoker::operator_equal_to<
 																		value_type, trait::value_type>,
-																	value
-																);
+																	scalar
+																	);
 				}
 				else
 				{
-					// duplicate value 's first element it
-					return vector_invoker::invoke_dup_r<data_size>(
-																	data_,
+					// duplicate scalar 's first element it
+					return vector_invoker::invoke_dup_r<vector_size>(
+																	iterator_,
 																	vector_invoker::operator_equal_to<
 																		value_type, trait::value_type>,
-																	value[0]
-																);
+																	scalar[0]
+																	);
 				}
 			}
 			else
 			{
-				// duplicate value
-				return vector_invoker::invoke_dup_r<data_size>(
-																data_,
+				// duplicate scalar
+				return vector_invoker::invoke_dup_r<vector_size>(
+																iterator_,
 																vector_invoker::operator_equal_to<
 																	value_type, trait::value_type>,
-																value
-															);
+																scalar
+																);
 			}
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr bool operator!=(const U& value) const
-		noexcept(noexcept(std::declval<self_type>().operator==(std::declval<const U&>())))
+		constexpr void operator!=(const U& scalar)
+		noexcept(
+			noexcept(
+				vector_invoker::operator_equal_to<value_type, math_trait<U>::value_type>(
+																						std::declval<value_type&>(),
+																						std::declval<typename math_trait
+																							<
+																								U>::value_type>()
+																						)
+			)
+		)
+			requires vector_invoker_trait<value_type>::not_equal_to
 		{
-			return !this->operator==(value);
+			return !(*this == scalar);
 		}
 
-		constexpr self_reference operator--()
-		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<value_type>())))
-		{
-			this->operator-=(1);
-			return *this;
-		}
-
-		[[nodiscard]] constexpr self_type operator--(int)
-		noexcept(noexcept(std::declval<self_type>().operator--()))
-		{
-			auto copy{*this};
-			this->operator--();
-			return copy;
-		}
-
-		constexpr self_reference operator++()
-		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<value_type>())))
-		{
-			this->operator+=(1);
-			return *this;
-		}
-
-		[[nodiscard]] constexpr self_type operator++(int)
-		noexcept(noexcept(std::declval<self_type>().operator++()))
-		{
-			auto copy{*this};
-			this->operator++();
-			return copy;
-		}
-
-		[[nodiscard]] constexpr auto operator-() const
+		constexpr void operator-() const
 		noexcept(
 			noexcept(
 				vector_invoker::operator_unary_minus<value_type>(
@@ -1267,29 +1480,15 @@ namespace gal::test::math
 																)
 			)
 		)
+			requires vector_invoker_trait<value_type>::unary_minus
 		{
-			if constexpr (std::is_unsigned_v<value_type>)
-			{
-				using signed_type = std::make_signed_t<value_type>;
-				vector<signed_type, data_size> copy{*this};
-				vector_invoker::invoke<data_size>(
-												copy,
+			vector_invoker::invoke<vector_size>(
+												iterator_,
 												vector_invoker::operator_unary_minus<value_type>
 												);
-				return copy;
-			}
-			else
-			{
-				self_type copy{*this};
-				vector_invoker::invoke<data_size>(
-												copy,
-												vector_invoker::operator_unary_minus<value_type>
-												);
-				return copy;
-			}
 		}
 
-		[[nodiscard]] constexpr self_type operator~() const
+		constexpr void operator~() const
 		noexcept(
 			noexcept(
 				vector_invoker::operator_unary_tilde<value_type>(
@@ -1297,196 +1496,365 @@ namespace gal::test::math
 																)
 			)
 		)
+			requires vector_invoker_trait<value_type>::unary_tilde
 		{
-			self_type copy{*this};
-			vector_invoker::invoke<data_size>(
-											copy,
-											vector_invoker::operator_unary_tilde<value_type>
-											);
+			vector_invoker::invoke<vector_size>(
+												iterator_,
+												vector_invoker::operator_unary_tilde<value_type>
+												);
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator+(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator+=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() += scalar;
 			return copy;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr self_type operator+(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator+=(std::declval<const U&>())))
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator+(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator+=(std::declval<const_self_reference>())
+			)
+		)
 		{
-			auto copy{*this};
-			copy += scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator+(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator+=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy += self;
-			return copy;
-		}
-
-		template <typename U>
-		[[nodiscard]] constexpr self_type operator-(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator-=(std::declval<const U&>())))
-		{
-			auto copy{*this};
-			copy -= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator-(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator-=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy -= self;
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() += self;
 			return copy;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr self_type operator*(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator*=(std::declval<const U&>())))
+		[[nodiscard]] constexpr vector_type operator-(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator-=(std::declval<const U&>())
+			)
+		)
 		{
-			auto copy{*this};
-			copy *= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator*(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator*=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy *= self;
-			return copy;
-		}
-
-		template <typename U>
-		[[nodiscard]] constexpr self_type operator/(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator/=(std::declval<const U&>())))
-		{
-			auto copy{*this};
-			copy /= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator/(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator/=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy /= self;
+			auto copy = copy_vector();
+			copy.to_view() -= scalar;
 			return copy;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr self_type operator%(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator%=(std::declval<const U&>())))
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator-(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator-=(std::declval<const_self_reference>())
+			)
+		)
 		{
-			auto copy{*this};
-			copy %= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator%(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator%=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy %= self;
-			return copy;
-		}
-
-		template <typename U>
-		[[nodiscard]] constexpr self_type operator&(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator&=(std::declval<const U&>())))
-		{
-			auto copy{*this};
-			copy &= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator&(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator&=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy &= self;
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() -= self;
 			return copy;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr self_type operator|(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator|=(std::declval<const U&>())))
+		[[nodiscard]] constexpr vector_type operator*(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator*=(std::declval<const U&>())
+			)
+		)
 		{
-			auto copy{*this};
-			copy |= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator|(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator|=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy |= self;
-			return copy;
-		}
-
-		template <typename U>
-		[[nodiscard]] constexpr self_type operator^(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator^=(std::declval<const U&>())))
-		{
-			auto copy{*this};
-			copy ^= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator^(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator^=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy ^= self;
+			auto copy = copy_vector();
+			copy.to_view() *= scalar;
 			return copy;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr self_type operator<<(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator<<=(std::declval<const U&>())))
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator*(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator*=(std::declval<const_self_reference>())
+			)
+		)
 		{
-			auto copy{*this};
-			copy <<= scalar;
-			return copy;
-		}
-
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator<<(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator<<=(std::declval<self_const_reference>())))
-		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy <<= self;
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() *= self;
 			return copy;
 		}
 
 		template <typename U>
-		[[nodiscard]] constexpr self_type operator>>(const U& scalar) const
-		noexcept(noexcept(std::declval<self_type>().operator>>=(std::declval<const U&>())))
+		[[nodiscard]] constexpr vector_type operator/(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator/=(std::declval<const U&>())
+			)
+		)
 		{
-			auto copy{*this};
-			copy >>= scalar;
+			auto copy = copy_vector();
+			copy.to_view() /= scalar;
 			return copy;
 		}
 
-		template <arithmetic U>
-		[[nodiscard]] friend constexpr vector<U, data_size> operator>>(const U& scalar, self_const_reference self)
-		noexcept(noexcept(std::declval<vector<U, data_size>>().operator>>=(std::declval<self_const_reference>())))
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator/(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator/=(std::declval<const_self_reference>())
+			)
+		)
 		{
-			vector<U, data_size> copy{duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}};
-			copy >>= self;
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() /= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator%(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator%=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() %= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator%(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator%=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() %= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator&(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator&=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() &= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator&(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator&=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() &= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator|(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator|=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() |= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator|(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator|=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() |= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator^(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator^=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() ^= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator^(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator^=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() ^= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator<<(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator<<=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() <<= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator<<(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator<<=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() <<= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr vector_type operator>>(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator>>=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_vector();
+			copy.to_view() >>= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_vector_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator>>(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_vector()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator>>=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			vector<typename math_trait<U>::value_type, vector_size> copy{
+				duplicate<vector_size>(scalar), std::make_index_sequence<vector_size>{}
+			};
+			copy.to_view() >>= self;
 			return copy;
 		}
 
 	private:
-		container_type data_;
+		view_iterator iterator_;
 	};
 }

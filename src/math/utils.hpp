@@ -5,35 +5,6 @@
 
 namespace gal::test::math
 {
-	template<typename T>
-	struct common_trait : std::false_type
-	{
-		using value_type = T;
-		constexpr static std::size_t size = 1;
-	};
-
-	template <typename T>
-	struct vector_trait : common_trait<T>{};
-
-	template <arithmetic T, std::size_t N>
-	struct vector_trait<vector<T, N>>
-	{
-		using value_type = T;
-		constexpr static bool        value = true;
-		constexpr static std::size_t size = N;
-	};
-
-	template<typename T>
-	struct matrix_trait : common_trait<T>{};
-
-	template<arithmetic T, std::size_t Row, std::size_t Column>
-	struct matrix_trait<matrix<T, Row, Column>>
-	{
-		using value_type = T;
-		constexpr static bool value = true;
-		constexpr static std::size_t size = Row * Column;
-	};
-
 	/**
 	 * @brief construction assistance: take out the vector/matrix data and put it into a tuple
 	 * @tparam T arg type
@@ -43,10 +14,9 @@ namespace gal::test::math
 	template <typename T>
 	constexpr auto to_rref_tuple(T&& arg) noexcept
 	{
-		using type = std::remove_cvref_t<T>;
-		if constexpr (vector_trait<type>::value || matrix_trait<type>::value)
+		using trait = math_trait<std::remove_cvref_t<T>>;
+		if constexpr (trait::value)
 		{
-			using trait = std::conditional_t<vector_trait<type>::value, vector_trait<type>, matrix_trait<type>>;
 			return[&]<std::size_t...I>(std::index_sequence<I...>)
 			{
 				return std::forward_as_tuple(std::forward<T>(arg)[I]...);
@@ -67,10 +37,9 @@ namespace gal::test::math
 	template <typename T>
 	constexpr auto to_tuple(const T& arg) noexcept
 	{
-		using type = std::remove_cvref_t<T>;
-		if constexpr (vector_trait<type>::value || matrix_trait<type>::value)
+		using trait = math_trait<std::remove_cvref_t<T>>;
+		if constexpr (trait::value)
 		{
-			using trait = std::conditional_t<vector_trait<type>::value, vector_trait<type>, matrix_trait<type>>;
 			return[&]<std::size_t...I>(std::index_sequence<I...>)
 			{
 				return std::make_tuple(arg[I]...);
@@ -114,10 +83,9 @@ namespace gal::test::math
 		}
 		else
 		{
-			using type = std::remove_cvref_t<T>;
-			if constexpr (vector_trait<type>::value || matrix_trait<type>::value)
+			using trait = math_trait<std::remove_cvref_t<T>>;
+			if constexpr (trait::value)
 			{
-				using trait = std::conditional_t<vector_trait<type>::value, vector_trait<type>, matrix_trait<type>>;
 				if constexpr (trait::size >= N)
 				{
 					return to_tuple(arg);

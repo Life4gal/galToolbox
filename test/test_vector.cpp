@@ -16,7 +16,7 @@ TEST(TestVector, TestBasic)
 	}
 	{
 		constexpr auto         tuple1 = std::make_tuple(1, 2, 3, 4, 5, 6, 7, 8, 9);
-		constexpr vector3<int> vec1{tuple1, std::index_sequence<0, 2, 4>{}};
+		constexpr vector3<int> vec1{ tuple1, std::index_sequence<0, 2, 4>{} };
 		static_assert(vec1[0] == 1);
 		static_assert(vec1[1] == 3);
 		static_assert(vec1[2] == 5);
@@ -28,7 +28,7 @@ TEST(TestVector, TestBasic)
 		static_assert(std::get<3>(tuple2) == 3);
 		static_assert(std::get<4>(tuple2) == 3);
 
-		constexpr vector3<int> vec2{tuple2, std::index_sequence<0, 2, 4>{}};
+		constexpr vector3<int> vec2{ tuple2, std::index_sequence<0, 2, 4>{} };
 		static_assert(vec2[0] == 3);
 		static_assert(vec2[1] == 3);
 		static_assert(vec2[2] == 3);
@@ -77,9 +77,9 @@ TEST(TestVector, TestBasic)
 		static_assert(std::get<5>(tuple8) == 100);
 	}
 	{
-		constexpr vector1<int>      vec1{123};
-		constexpr vector2<long>     vec2{123, 456};
-		constexpr vector3<unsigned> vec3{123, 456, 789};
+		constexpr vector1<int>      vec1{ 123 };
+		constexpr vector2<long>     vec2{ 123, 456 };
+		constexpr vector3<unsigned> vec3{ 123, 456, 789 };
 
 		static_assert(vec1[0] == 123);
 
@@ -90,17 +90,17 @@ TEST(TestVector, TestBasic)
 		static_assert(vec3[1] == 456);
 		static_assert(vec3[2] == 789);
 
-		constexpr vector3<int> vec4{vec1, vec2, vec3, vec1, vec2, vec3};
+		constexpr vector3<int> vec4{ vec1, vec2, vec3, vec1, vec2, vec3 };
 		static_assert(decltype(vec4)::size() == 3);
 		static_assert(vec4[0] == 123);
 		static_assert(vec4[1] == 123);
 		static_assert(vec4[2] == 456);
 
-		constexpr vector2<unsigned> vec5{vec1};
+		constexpr vector2<unsigned> vec5{ vec1 };
 		static_assert(vec5[0] == 123);
 		static_assert(vec5[1] == 0);
 
-		constexpr vector3<long> vec6{vec4};
+		constexpr vector3<long> vec6{ vec4 };
 		static_assert(vec6[0] == 123);
 		static_assert(vec6[1] == 123);
 		static_assert(vec6[2] == 456);
@@ -116,43 +116,44 @@ TEST(TestVector, TestSelfOperator)
 		constexpr vector2<int>    vec1{42, 1};
 		constexpr vector3<long>   vec2{100, 200, 300};
 		vector3<unsigned long>    vec3{123, 456, 789};
+		auto vec3_view = vec3.to_view();
 
-		vec3 += vec0;
-		ASSERT_EQ(vec3[0], 123 + vec0);
-		ASSERT_EQ(vec3[1], 456 + vec0);
-		ASSERT_EQ(vec3[2], 789 + vec0);
+		vec3_view += vec0;
+		ASSERT_EQ(vec3[0], 123 + vec0.to_view());
+		ASSERT_EQ(vec3[1], 456 + vec0.to_view());
+		ASSERT_EQ(vec3[2], 789 + vec0.to_view());
 
-		vec3 -= vec2;
+		vec3_view -= vec2;
 		ASSERT_EQ(vec3[0], 126 - vec2[0]);
 		ASSERT_EQ(vec3[1], 459 - vec2[1]);
 		ASSERT_EQ(vec3[2], 792 - vec2[2]);
 
-		vec3 *= vec0 + vec2;
+		vec3_view *= vec0.to_view() + vec2;
 		ASSERT_EQ(vec3[0], 26 * static_cast<decltype(vec3)::value_type>(103.14));
 		ASSERT_EQ(vec3[1], 259 * static_cast<decltype(vec3)::value_type>(103.14));
 		ASSERT_EQ(vec3[2], 492 * static_cast<decltype(vec3)::value_type>(103.14));
 
-		vec3 /= vec1[0] + vec2;
+		vec3_view /= vec1[0] + vec2.to_view();
 		ASSERT_EQ(vec3[0], 2678 / 142);
 		ASSERT_EQ(vec3[1], 26677 / 242);
 		ASSERT_EQ(vec3[2], 50676 / 342);
 
-		vec3 %= vec2;
+		vec3_view %= vec2;
 		ASSERT_EQ(vec3[0], 18 % 100);
 		ASSERT_EQ(vec3[1], 110 % 200);
 		ASSERT_EQ(vec3[2], 148 % 300);
 
-		vec3 &= vec0 + vec1;
+		vec3_view &= vec0.to_view() + vec1;
 		ASSERT_EQ(vec3[0], 18 & 45);
 		ASSERT_EQ(vec3[1], 110 & 45);
 		ASSERT_EQ(vec3[2], 148 & 45);
 
-		vec3 |= vec0 + vec2;
+		vec3_view |= vec0.to_view() + vec2;
 		ASSERT_EQ(vec3[0], 0 | 103);
 		ASSERT_EQ(vec3[1], 44 | 103);
 		ASSERT_EQ(vec3[2], 4 | 103);
 
-		vec3 ^= 01010101; // 266305
+		vec3_view ^= 01010101; // 266305
 		ASSERT_EQ(vec3[0], 103 ^ 01010101);
 		ASSERT_EQ(vec3[0], 266278);
 		ASSERT_EQ(vec3[1], 111 ^ 01010101);
@@ -160,12 +161,12 @@ TEST(TestVector, TestSelfOperator)
 		ASSERT_EQ(vec3[2], 103 ^ 01010101);
 		ASSERT_EQ(vec3[2], 266278);
 
-		vec3 >>= 4;
+		vec3_view >>= 4;
 		ASSERT_EQ(vec3[0], 266278 >> 4);
 		ASSERT_EQ(vec3[1], 266286 >> 4);
 		ASSERT_EQ(vec3[2], 266278 >> 4);
 
-		vec3 <<= vec0;
+		vec3_view <<= vec0;
 		ASSERT_EQ(vec3[0], (266278 >> 4) << 3);
 		ASSERT_EQ(vec3[1], (266286 >> 4) << 3);
 		ASSERT_EQ(vec3[2], (266278 >> 4) << 3);
@@ -188,65 +189,65 @@ TEST(TestVector, TestOperator)
 		constexpr vector3<float>  vec_f{vec_f_value1, vec_f_value2, vec_f_value3};
 
 		{
-			constexpr auto vec1 = vec_d + vec_f;
+			constexpr auto vec1 = vec_d.to_view() + vec_f;
 			static_assert(vec1[0] == vec_d_value1 + vec_f_value1);
 			static_assert(vec1[1] == vec_d_value2 + vec_f_value2);
 			static_assert(vec1[2] == vec_d_value3 + vec_f_value3);
 
-			constexpr auto vec2 = vec_d + vec_f_value1;
+			constexpr auto vec2 = vec_d.to_view() + vec_f_value1;
 			static_assert(vec2[0] == vec_d_value1 + vec_f_value1);
 			static_assert(vec2[1] == vec_d_value2 + vec_f_value1);
 			static_assert(vec2[2] == vec_d_value3 + vec_f_value1);
 
-			constexpr auto vec3 = vec_d_value1 + vec_f;
+			constexpr auto vec3 = vec_d_value1 + vec_f.to_view();
 			static_assert(vec3[0] == vec_d_value1 + vec_f_value1);
 			static_assert(vec3[1] == vec_d_value1 + vec_f_value2);
 			static_assert(vec3[2] == vec_d_value1 + vec_f_value3);
 		}
 		{
-			constexpr auto vec1 = vec_d - vec_f;
+			constexpr auto vec1 = vec_d.to_view() - vec_f;
 			static_assert(vec1[0] == vec_d_value1 - vec_f_value1);
 			static_assert(vec1[1] == vec_d_value2 - vec_f_value2);
 			static_assert(vec1[2] == vec_d_value3 - vec_f_value3);
 
-			constexpr auto vec2 = vec_d - vec_f_value1;
+			constexpr auto vec2 = vec_d.to_view() - vec_f_value1;
 			static_assert(vec2[0] == vec_d_value1 - vec_f_value1);
 			static_assert(vec2[1] == vec_d_value2 - vec_f_value1);
 			static_assert(vec2[2] == vec_d_value3 - vec_f_value1);
 
-			constexpr auto vec3 = vec_d_value1 - vec_f;
+			constexpr auto vec3 = vec_d_value1 - vec_f.to_view();
 			static_assert(vec3[0] == vec_d_value1 - vec_f_value1);
 			static_assert(vec3[1] == vec_d_value1 - vec_f_value2);
 			static_assert(vec3[2] == vec_d_value1 - vec_f_value3);
 		}
 		{
-			constexpr auto vec1 = vec_d * vec_f;
+			constexpr auto vec1 = vec_d * vec_f.to_view();
 			static_assert(vec1[0] == vec_d_value1 * vec_f_value1);
 			static_assert(vec1[1] == vec_d_value2 * vec_f_value2);
 			static_assert(vec1[2] == vec_d_value3 * vec_f_value3);
 
-			constexpr auto vec2 = vec_d * vec_f_value1;
+			constexpr auto vec2 = vec_d.to_view() * vec_f_value1;
 			static_assert(vec2[0] == vec_d_value1 * vec_f_value1);
 			static_assert(vec2[1] == vec_d_value2 * vec_f_value1);
 			static_assert(vec2[2] == vec_d_value3 * vec_f_value1);
 
-			constexpr auto vec3 = vec_d_value1 * vec_f;
+			constexpr auto vec3 = vec_d_value1 * vec_f.to_view();
 			static_assert(vec3[0] == vec_d_value1 * vec_f_value1);
 			static_assert(vec3[1] == vec_d_value1 * vec_f_value2);
 			static_assert(vec3[2] == vec_d_value1 * vec_f_value3);
 		}
 		{
-			constexpr auto vec1 = vec_d / vec_f;
+			constexpr auto vec1 = vec_d.to_view() / vec_f;
 			static_assert(vec1[0] == vec_d_value1 / vec_f_value1);
 			static_assert(vec1[1] == vec_d_value2 / vec_f_value2);
 			static_assert(vec1[2] == vec_d_value3 / vec_f_value3);
 
-			constexpr auto vec2 = vec_d / vec_f_value1;
+			constexpr auto vec2 = vec_d.to_view() / vec_f_value1;
 			static_assert(vec2[0] == vec_d_value1 / vec_f_value1);
 			static_assert(vec2[1] == vec_d_value2 / vec_f_value1);
 			static_assert(vec2[2] == vec_d_value3 / vec_f_value1);
 
-			constexpr auto vec3 = vec_d_value1 / vec_f;
+			constexpr auto vec3 = vec_d_value1 / vec_f.to_view();
 			static_assert(vec3[0] == vec_d_value1 / vec_f_value1);
 			static_assert(vec3[1] == vec_d_value1 / vec_f_value2);
 			static_assert(vec3[2] == vec_d_value1 / vec_f_value3);
@@ -260,7 +261,7 @@ TEST(TestVector, TestOperator)
 					std::uint32_t>>(v / static_cast<T>(s));
 			};
 
-			constexpr auto vec1 = vec_d % vec_f;
+			constexpr auto vec1 = vec_d.to_view() % vec_f;
 			static_assert(f(vec_d_value1, vec_f_value1) == 10);
 			static_assert(f(vec_d_value2, vec_f_value2) == 1003);
 			static_assert(f(vec_d_value3, vec_f_value3) == 100370);
@@ -269,7 +270,7 @@ TEST(TestVector, TestOperator)
 			// EXPECT_DOUBLE_EQ(vec1[1], vec_d_value2 - vec_f_value2 * 1003);
 			// EXPECT_DOUBLE_EQ(vec1[2], vec_d_value3 - vec_f_value3 * 100370);
 
-			constexpr auto vec2 = vec_d % vec_f_value1;
+			constexpr auto vec2 = vec_d.to_view() % vec_f_value1;
 			static_assert(f(vec_d_value1, vec_f_value1) == 10);
 			static_assert(f(vec_d_value2, vec_f_value1) == 100);
 			static_assert(f(vec_d_value3, vec_f_value1) == 1003);
@@ -277,7 +278,7 @@ TEST(TestVector, TestOperator)
 			// EXPECT_DOUBLE_EQ(vec2[1], vec_d_value2 - vec_f_value1 * 100);
 			// EXPECT_DOUBLE_EQ(vec2[2], vec_d_value3 - vec_f_value1 * 1003);
 
-			constexpr auto vec3 = vec_d_value1 % vec_f;
+			constexpr auto vec3 = vec_d_value1 % vec_f.to_view();
 			static_assert(f(vec_d_value1, vec_f_value1) == 10);
 			static_assert(f(vec_d_value1, vec_f_value2) == 100);
 			static_assert(f(vec_d_value1, vec_f_value3) == 1003);
@@ -286,52 +287,55 @@ TEST(TestVector, TestOperator)
 			// EXPECT_DOUBLE_EQ(vec3[2], vec_d_value1 - vec_f_value3 * 1003);
 		}
 		{
-			constexpr auto vec1 = vec_d & vec_f;
-			static_assert(vec1[0] == vec_d_value1);
-			static_assert(vec1[1] == vec_d_value2);
-			static_assert(vec1[2] == vec_d_value3);
-
-			constexpr auto vec2 = vec_d & vec_f_value1;
-			static_assert(vec2[0] == vec_d_value1);
-			static_assert(vec2[1] == vec_d_value2);
-			static_assert(vec2[2] == vec_d_value3);
-
-			constexpr auto vec3 = vec_d_value1 & vec_f;
-			static_assert(vec3[0] == vec_d_value1);
-			static_assert(vec3[1] == vec_d_value1);
-			static_assert(vec3[2] == vec_d_value1);
+			// no longer allow bit operations on floating point numbers
+			// constexpr auto vec1 = vec_d & vec_f.to_view();
+			// static_assert(vec1[0] == vec_d_value1);
+			// static_assert(vec1[1] == vec_d_value2);
+			// static_assert(vec1[2] == vec_d_value3);
+			//
+			// constexpr auto vec2 = vec_d.to_view() & vec_f_value1;
+			// static_assert(vec2[0] == vec_d_value1);
+			// static_assert(vec2[1] == vec_d_value2);
+			// static_assert(vec2[2] == vec_d_value3);
+			//
+			// constexpr auto vec3 = vec_d_value1 & vec_f.to_view();
+			// static_assert(vec3[0] == vec_d_value1);
+			// static_assert(vec3[1] == vec_d_value1);
+			// static_assert(vec3[2] == vec_d_value1);
 		}
 		{
-			constexpr auto vec1 = vec_d | vec_f;
-			static_assert(vec1[0] == vec_d_value1);
-			static_assert(vec1[1] == vec_d_value2);
-			static_assert(vec1[2] == vec_d_value3);
-
-			constexpr auto vec2 = vec_d | vec_f_value1;
-			static_assert(vec2[0] == vec_d_value1);
-			static_assert(vec2[1] == vec_d_value2);
-			static_assert(vec2[2] == vec_d_value3);
-
-			constexpr auto vec3 = vec_d_value1 | vec_f;
-			static_assert(vec3[0] == vec_d_value1);
-			static_assert(vec3[1] == vec_d_value1);
-			static_assert(vec3[2] == vec_d_value1);
+			// no longer allow bit operations on floating point numbers
+			// constexpr auto vec1 = vec_d.to_view() | vec_f;
+			// static_assert(vec1[0] == vec_d_value1);
+			// static_assert(vec1[1] == vec_d_value2);
+			// static_assert(vec1[2] == vec_d_value3);
+			//
+			// constexpr auto vec2 = vec_d.to_view() | vec_f_value1;
+			// static_assert(vec2[0] == vec_d_value1);
+			// static_assert(vec2[1] == vec_d_value2);
+			// static_assert(vec2[2] == vec_d_value3);
+			//
+			// constexpr auto vec3 = vec_d_value1 | vec_f.to_view();
+			// static_assert(vec3[0] == vec_d_value1);
+			// static_assert(vec3[1] == vec_d_value1);
+			// static_assert(vec3[2] == vec_d_value1);
 		}
 		{
-			constexpr auto vec1 = vec_d ^ vec_f;
-			static_assert(vec1[0] == vec_d_value1);
-			static_assert(vec1[1] == vec_d_value2);
-			static_assert(vec1[2] == vec_d_value3);
-
-			constexpr auto vec2 = vec_d ^ vec_f_value1;
-			static_assert(vec2[0] == vec_d_value1);
-			static_assert(vec2[1] == vec_d_value2);
-			static_assert(vec2[2] == vec_d_value3);
-
-			constexpr auto vec3 = vec_d_value1 ^ vec_f;
-			static_assert(vec3[0] == vec_d_value1);
-			static_assert(vec3[1] == vec_d_value1);
-			static_assert(vec3[2] == vec_d_value1);
+			// no longer allow bit operations on floating point numbers
+			// constexpr auto vec1 = vec_d.to_view() ^ vec_f;
+			// static_assert(vec1[0] == vec_d_value1);
+			// static_assert(vec1[1] == vec_d_value2);
+			// static_assert(vec1[2] == vec_d_value3);
+			//
+			// constexpr auto vec2 = vec_d.to_view() ^ vec_f_value1;
+			// static_assert(vec2[0] == vec_d_value1);
+			// static_assert(vec2[1] == vec_d_value2);
+			// static_assert(vec2[2] == vec_d_value3);
+			//
+			// constexpr auto vec3 = vec_d_value1 ^ vec_f.to_view();
+			// static_assert(vec3[0] == vec_d_value1);
+			// static_assert(vec3[1] == vec_d_value1);
+			// static_assert(vec3[2] == vec_d_value1);
 		}
 		{
 			constexpr auto f = []<typename T>(T value, auto scalar) constexpr -> T
@@ -350,17 +354,17 @@ TEST(TestVector, TestOperator)
 
 			constexpr vector3<double> vec{4, 5, 6};
 
-			constexpr auto vec1 = vec_d << vec;
+			constexpr auto vec1 = vec_d.to_view() << vec;
 			static_assert(vec1[0] == f(vec_d_value1, vec[0]));
 			static_assert(vec1[1] == f(vec_d_value2, vec[1]));
 			static_assert(vec1[2] == f(vec_d_value3, vec[2]));
 
-			constexpr auto vec2 = vec_d << vec;
+			constexpr auto vec2 = vec_d.to_view() << vec;
 			static_assert(vec2[0] == f(vec_d_value1, vec[0]));
 			static_assert(vec2[1] == f(vec_d_value2, vec[1]));
 			static_assert(vec2[2] == f(vec_d_value3, vec[2]));
 
-			constexpr auto vec3 = vec_d_value1 << vec;
+			constexpr auto vec3 = vec_d_value1 << vec.to_view();
 			static_assert(vec3[0] == f(vec_d_value1, vec[0]));
 			static_assert(vec3[1] == f(vec_d_value1, vec[1]));
 			static_assert(vec3[2] == f(vec_d_value1, vec[2]));
@@ -382,17 +386,17 @@ TEST(TestVector, TestOperator)
 
 			constexpr vector3<double> vec{4, 5, 6};
 
-			constexpr auto vec1 = vec_d >> vec;
+			constexpr auto vec1 = vec_d.to_view() >> vec;
 			static_assert(vec1[0] == f(vec_d_value1, vec[0]));
 			static_assert(vec1[1] == f(vec_d_value2, vec[1]));
 			static_assert(vec1[2] == f(vec_d_value3, vec[2]));
 
-			constexpr auto vec2 = vec_d >> vec;
+			constexpr auto vec2 = vec_d.to_view() >> vec;
 			static_assert(vec2[0] == f(vec_d_value1, vec[0]));
 			static_assert(vec2[1] == f(vec_d_value2, vec[1]));
 			static_assert(vec2[2] == f(vec_d_value3, vec[2]));
 
-			constexpr auto vec3 = vec_d_value1 >> vec;
+			constexpr auto vec3 = vec_d_value1 >> vec.to_view();
 			static_assert(vec3[0] == f(vec_d_value1, vec[0]));
 			static_assert(vec3[1] == f(vec_d_value1, vec[1]));
 			static_assert(vec3[2] == f(vec_d_value1, vec[2]));

@@ -7,18 +7,18 @@ namespace gal::test::math
 	template <typename T>
 	concept arithmetic = std::is_integral_v<T> || std::is_floating_point_v<T>;
 
-	template <arithmetic T, std::size_t N>
+	template <typename T, std::size_t N>
 	class vector;
 	template<arithmetic T, std::size_t Row, std::size_t Column>
 	class matrix;
 
-	template <arithmetic T>
+	template <typename T>
 	using vector1 = vector<T, 1>;
-	template <arithmetic T>
+	template <typename T>
 	using vector2 = vector<T, 2>;
-	template <arithmetic T>
+	template <typename T>
 	using vector3 = vector<T, 3>;
-	template <arithmetic T>
+	template <typename T>
 	using vector4 = vector<T, 4>;
 
 	template<arithmetic T>
@@ -39,4 +39,16 @@ namespace gal::test::math
 	using matrix4x3 = matrix<T, 4, 3>;
 	template<arithmetic T>	 
 	using matrix4x4 = matrix<T, 4, 4>;
+
+	/**
+	 * @brief specialize math_trait for to_tuple support
+	 * @note to_tuple will "expand" the target and get the element of the former "size" according to "size" through operator[]
+	 * @tparam T specialized type
+	*/
+	template<typename T>
+	struct math_trait : std::false_type
+	{
+		using value_type = T;
+		constexpr static std::size_t size = 1;
+	};
 }
