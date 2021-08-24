@@ -11,36 +11,47 @@ namespace gal::test::math
 	template <typename T, std::size_t N>
 	class vector;
 
+	template <typename T>
+	struct is_vector : std::false_type {};
+
+	template <typename T, std::size_t N>
+	struct is_vector<vector<T, N>> : std::true_type {};
+
+	template <typename T>
+	constexpr static bool is_vector_v = is_vector<T>::value;
+
 	template <std::size_t Stride, std::size_t Size, typename Iterator>
 	class vector_view;
 
+	template <typename T>
+	struct is_vector_view : std::false_type {};
+
+	template <std::size_t Stride, std::size_t Size, typename Iterator>
+	struct is_vector_view<vector_view<Stride, Size, Iterator>> : std::true_type {};
+
+	template <typename T>
+	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
+
 	/**
-	 * @brief specialize vector_invoker_trait for operator support
-	 * @note if the operation corresponding to the target type is false, the corresponding operation is not allowed
-	 * @tparam T specialized type
+	 * @brief specialize integral and floating_point to support corresponding operations
+	 * @tparam T vector/vector_view
+	 * @note if you want to include non-arithmetic vectors to support corresponding operations, you need to specialize math_invoker_trait<vector<my_type>> and give all corresponding values(see below)
 	*/
 	template <typename T>
-	struct vector_invoker_trait
-	{
-		constexpr static bool is_arithmetic = std::is_arithmetic_v<T>;
-
-		constexpr static bool add          = false;
-		constexpr static bool subtract     = false;
-		constexpr static bool multiply     = false;
-		constexpr static bool divide       = false;
-		constexpr static bool model        = false;
-		constexpr static bool bit_and      = false;
-		constexpr static bool bit_or       = false;
-		constexpr static bool bit_xor      = false;
-		constexpr static bool left_shift   = false;
-		constexpr static bool right_shift  = false;
-		constexpr static bool unary_minus  = false;
-		constexpr static bool unary_tilde  = false;
-		constexpr static bool equal_to     = false;
-		constexpr static bool not_equal_to = false;
-	};
+	requires
+		(is_vector_v<T> || is_vector_view_v<T>) &&
+		(
+			std::is_integral_v<typename math_trait<T>::value_type> ||
+			std::is_floating_point_v<typename math_trait<T>::value_type>
+			)
+		struct math_invoker_trait<T>;
 	//===============================
 
+	/**
+	 * @brief specialize the vector to support the construction of other vectors
+	 * @tparam T vector's value_type
+	 * @tparam N vector's size
+	*/
 	template <typename T, std::size_t N>
 	struct math_trait<vector<T, N>>
 	{
@@ -49,6 +60,12 @@ namespace gal::test::math
 		constexpr static std::size_t size  = N;
 	};
 
+	/**
+	 * @brief specialize the vector to support the construction of other vectors
+	 * @tparam Stride vector_view's stride
+	 * @tparam Size vector_view's size
+	 * @tparam Iterator type of vector_view's holding iterator
+	*/
 	template <std::size_t Stride, std::size_t Size, typename Iterator>
 	struct math_trait<vector_view<Stride, Size, Iterator>>
 	{
@@ -57,52 +74,44 @@ namespace gal::test::math
 		constexpr static std::size_t size  = Size;
 	};
 
-	template <std::integral T>
-	struct vector_invoker_trait<T>
+	template <typename T>
+		requires
+		(is_vector_v<T> || is_vector_view_v<T>) &&
+		(
+			std::is_integral_v<typename math_trait<T>::value_type> ||
+			std::is_floating_point_v<typename math_trait<T>::value_type>
+		)
+	struct math_invoker_trait<T> : std::true_type
 	{
-		static_assert(std::is_arithmetic_v<T>);
-		constexpr static bool is_arithmetic = true;
+		using value_type = typename math_trait<T>::value_type;
+
+		static_assert(std::is_arithmetic_v<value_type>);
 
 		constexpr static bool add          = true;
 		constexpr static bool subtract     = true;
 		constexpr static bool multiply     = true;
 		constexpr static bool divide       = true;
 		constexpr static bool model        = true;
-		constexpr static bool bit_and      = true;
-		constexpr static bool bit_or       = true;
-		constexpr static bool bit_xor      = true;
+		constexpr static bool bit_and      = std::is_integral_v<value_type>;
+		constexpr static bool bit_or       = std::is_integral_v<value_type>;
+		constexpr static bool bit_xor      = std::is_integral_v<value_type>;
 		constexpr static bool left_shift   = true;
 		constexpr static bool right_shift  = true;
-		constexpr static bool unary_minus  = std::is_signed_v<T>;
+		constexpr static bool unary_minus  = std::is_integral_v<value_type> && std::is_signed_v<T>;
 		constexpr static bool unary_tilde  = true;
 		constexpr static bool equal_to     = true;
 		constexpr static bool not_equal_to = true;
 	};
 
-	template <std::floating_point T>
-	struct vector_invoker_trait<T>
-	{
-		static_assert(std::is_arithmetic_v<T>);
-		constexpr static bool is_arithmetic = true;
-
-		constexpr static bool add          = true;
-		constexpr static bool subtract     = true;
-		constexpr static bool multiply     = true;
-		constexpr static bool divide       = true;
-		constexpr static bool model        = true;
-		constexpr static bool bit_and      = false;
-		constexpr static bool bit_or       = false;
-		constexpr static bool bit_xor      = false;
-		constexpr static bool left_shift   = true;
-		constexpr static bool right_shift  = true;
-		constexpr static bool unary_minus  = true;
-		constexpr static bool unary_tilde  = false;
-		constexpr static bool equal_to     = true;
-		constexpr static bool not_equal_to = true;
-	};
-
+	/**
+	 * @brief the actual implementer of the vector operation
+	*/
+	template <typename VectorType>
+		requires (is_vector_v<VectorType> || is_vector_view_v<VectorType>)
 	struct vector_invoker
 	{
+		using vector_type = VectorType;
+		using value_type = typename vector_type::value_type;
 	private:
 		template <typename Vec, typename Func, std::size_t...I, typename... Args>
 		constexpr static void binary_invoke_impl(Vec& vec, Func&& func, std::index_sequence<I...>, Args&&...args)
@@ -160,10 +169,10 @@ namespace gal::test::math
 			return (func(vec[I]) && ...);
 		}
 
-		template <bool Left, typename ValueType, typename T>
-		constexpr static void shift_impl(ValueType& value, T scalar) noexcept
+		template <bool Left, typename T>
+		constexpr static void shift_impl(value_type& value, T scalar) noexcept
 		{
-			if constexpr (std::is_floating_point_v<ValueType>)
+			if constexpr (std::is_floating_point_v<value_type>)
 			{
 				bool s_lt_0 = scalar < 0;
 				if (s_lt_0)
@@ -172,7 +181,7 @@ namespace gal::test::math
 				}
 
 				if constexpr (
-					constexpr auto shift = [](ValueType& v, const bool left, auto s) constexpr noexcept -> void
+					constexpr auto shift = [](value_type& v, const bool left, auto s) constexpr noexcept -> void
 					{
 						if (
 							constexpr auto pow = [](auto base, auto p) constexpr noexcept -> auto
@@ -215,15 +224,15 @@ namespace gal::test::math
 			}
 			else
 			{
-				if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+				if constexpr (std::is_arithmetic_v<value_type>)
 				{
 					if constexpr (Left)
 					{
-						value <<= static_cast<ValueType>(scalar);
+						value <<= static_cast<value_type>(scalar);
 					}
 					else
 					{
-						value >>= static_cast<ValueType>(scalar);
+						value >>= static_cast<value_type>(scalar);
 					}
 				}
 				else
@@ -353,15 +362,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_add(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value += static_cast<ValueType>(scalar);
+				value += static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -370,15 +379,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_subtract(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value -= static_cast<ValueType>(scalar);
+				value -= static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -387,15 +396,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_multi(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value *= static_cast<ValueType>(scalar);
+				value *= static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -404,15 +413,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_div(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value /= static_cast<ValueType>(scalar);
+				value /= static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -421,13 +430,13 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_model(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (std::is_floating_point_v<ValueType>)
+			if constexpr (std::is_floating_point_v<value_type>)
 			{
 				if (scalar < 0)
 				{
@@ -437,23 +446,23 @@ namespace gal::test::math
 				if (value < 0)
 				{
 					auto n = static_cast<std::conditional_t<
-						(sizeof(ValueType) > sizeof(std::int32_t)), std::int64_t, std::int32_t>>(-value / static_cast<
-						ValueType>(scalar));
-					value += static_cast<ValueType>(n) * static_cast<decltype(n)>(scalar);
+						(sizeof(value_type) > sizeof(std::int32_t)), std::int64_t, std::int32_t>>(-value / static_cast<
+						value_type>(scalar));
+					value += static_cast<value_type>(n) * static_cast<decltype(n)>(scalar);
 				}
 				else
 				{
 					auto n = static_cast<std::conditional_t<
-						(sizeof(ValueType) > sizeof(std::uint32_t)), std::uint64_t, std::uint32_t>>(value / static_cast
-						<ValueType>(scalar));
-					value -= static_cast<ValueType>(n) * static_cast<decltype(n)>(scalar);
+						(sizeof(value_type) > sizeof(std::uint32_t)), std::uint64_t, std::uint32_t>>(value / static_cast
+						<value_type>(scalar));
+					value -= static_cast<value_type>(n) * static_cast<decltype(n)>(scalar);
 				}
 			}
 			else
 			{
-				if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+				if constexpr (std::is_arithmetic_v<value_type>)
 				{
-					value %= static_cast<ValueType>(scalar);
+					value %= static_cast<value_type>(scalar);
 				}
 				else
 				{
@@ -463,15 +472,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_and(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value &= static_cast<ValueType>(scalar);
+				value &= static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -480,15 +489,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_or(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value |= static_cast<ValueType>(scalar);
+				value |= static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -497,15 +506,15 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_xor(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			if constexpr (vector_invoker_trait<ValueType>::is_arithmetic)
+			if constexpr (std::is_arithmetic_v<value_type>)
 			{
-				value ^= static_cast<ValueType>(scalar);
+				value ^= static_cast<value_type>(scalar);
 			}
 			else
 			{
@@ -514,47 +523,45 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_left_shift(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			vector_invoker::shift_impl<true>(value, scalar);
+			vector_invoker::template shift_impl<true>(value, scalar);
 		}
 
 		// unchecked
-		template <typename ValueType, typename T>
+		template <typename T>
 		constexpr static void operator_right_shift(
-			ValueType& value,
-			T          scalar
+			value_type& value,
+			T           scalar
 			) noexcept
 		{
-			vector_invoker::shift_impl<false>(value, scalar);
+			vector_invoker::template shift_impl<false>(value, scalar);
 		}
 
 		// unchecked
-		template <typename ValueType>
-		constexpr static void operator_unary_minus(ValueType& value)
+		constexpr static void operator_unary_minus(value_type& value)
 		noexcept
 		{
 			value = -value;
 		}
 
 		// unchecked
-		template <typename ValueType>
-		constexpr static void operator_unary_tilde(ValueType& value)
+		constexpr static void operator_unary_tilde(value_type& value)
 		noexcept
 		{
 			value = ~value;
 		}
 
-		template <typename ValueType, typename T>
-		constexpr static bool operator_equal_to(const ValueType& v1, const T& v2)
+		template <typename T>
+		constexpr static bool operator_equal_to(const value_type& v1, const T& v2)
 		noexcept
 		{
 			// todo: floating_point
-			if constexpr (std::is_floating_point_v<ValueType>)
+			if constexpr (std::is_floating_point_v<value_type>)
 			{
 				if (static_cast<double>(v1) - static_cast<double>(v2) <= 0.000001 &&
 					static_cast<double>(v1) - static_cast<double>(v2) >= -0.000001
@@ -593,9 +600,16 @@ namespace gal::test::math
 		using self_const_reference = const vector<value_type, data_size>&;
 		using self_rreference = vector<value_type, data_size>&&;
 
-		using view_type = vector_view<1, data_size, iterator>;
-		using const_view_type = vector_view<1, data_size, const_iterator>;
+		// Stride may not be 1, and even Iterator is not std::array<value_type, data_size>::iterator but std::array<value_type, N>::iterator (N != data_size)
+		template<std::size_t Stride, typename Iterator = iterator>
+		using view_type = vector_view<Stride, data_size, Iterator>;
+		// Stride may not be 1, and even Iterator is not std::array<value_type, data_size>::const_iterator but std::array<value_type, N>::const_iterator (N != data_size)
+		template<std::size_t Stride, typename Iterator = const_iterator>
+		using const_view_type = vector_view<Stride, data_size, Iterator>;
 
+		using invoker_trait_type = math_invoker_trait<self_type>;
+		static_assert(invoker_trait_type::value, "there is no specialization of vector<value_type> to math_invoker_trait, all operations will be unavailable");
+		
 		/**
 		 * @brief default construction
 		*/
@@ -636,14 +650,16 @@ namespace gal::test::math
 													)>{}
 				) {}
 
-		constexpr view_type to_view() noexcept
+		template<std::size_t Stride = 1>
+		[[nodiscard]] constexpr view_type<Stride> to_view() noexcept
 		{
-			return view_type{data_.begin()};
+			return view_type<Stride>{data_.begin()};
 		}
-
-		[[nodiscard]] constexpr const_view_type to_view() const noexcept
+		
+		template<std::size_t Stride = 1>
+		[[nodiscard]] constexpr const_view_type<Stride> to_view() const noexcept
 		{
-			return const_view_type{data_.cbegin()};
+			return const_view_type<Stride>{data_.cbegin()};
 		}
 
 		[[nodiscard]] constexpr static size_type size() noexcept
@@ -712,7 +728,7 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::equal_to
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::equal_to
 		[[nodiscard]] constexpr friend bool operator==(const self_type& lhs, const vector<U, data_size>& rhs)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -723,7 +739,7 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::equal_to
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::equal_to
 		[[nodiscard]] constexpr friend bool operator==(const self_type& lhs, const U& rhs)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -734,7 +750,7 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::equal_to
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::equal_to
 		[[nodiscard]] constexpr friend bool operator==(const U& lhs, const self_type& rhs)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -743,7 +759,7 @@ namespace gal::test::math
 
 
 		template <typename U>
-			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::not_equal_to
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::not_equal_to
 		[[nodiscard]] constexpr friend bool operator!=(const self_type& lhs, const vector<U, data_size>& rhs)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -751,7 +767,7 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::not_equal_to
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::not_equal_to
 		[[nodiscard]] constexpr friend bool operator!=(const self_type& lhs, const U& rhs)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -759,7 +775,7 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-			requires std::is_convertible_v<U, value_type> && vector_invoker_trait<value_type>::not_equal_to
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::not_equal_to
 		[[nodiscard]] constexpr friend bool operator!=(const U& lhs, const self_type& rhs)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -769,15 +785,6 @@ namespace gal::test::math
 	private:
 		container_type data_;
 	};
-
-	template <typename T>
-	struct is_vector_view : std::false_type {};
-
-	template <std::size_t Stride, std::size_t Size, typename Iterator>
-	struct is_vector_view<vector_view<Stride, Size, Iterator>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
 
 	template <std::size_t Stride, std::size_t Size, typename Iterator>
 	class vector_view
@@ -801,6 +808,10 @@ namespace gal::test::math
 		using vector_type = vector<value_type, vector_size>;
 		using size_type = typename vector_type::size_type;
 
+		using invoker_type = vector_invoker<self_type>;
+		using invoker_trait_type = math_invoker_trait<self_type>;
+		static_assert(invoker_trait_type::value, "there is no specialization of vector<value_type> to math_invoker_trait, all operations will be unavailable");
+
 		constexpr explicit vector_view(iterator_type iterator) : iterator_(std::move(iterator), vector_size) {}
 
 		[[nodiscard]] constexpr vector_type copy_vector() const noexcept
@@ -818,6 +829,51 @@ namespace gal::test::math
 			return iterator_[index];
 		}
 
+		// stl compatible, can also be used for for-loop
+		[[nodiscard]] constexpr view_iterator begin() const noexcept
+		{
+			return iterator_;
+		}
+
+		// ReSharper disable once CppMemberFunctionMayBeStatic
+		// stl compatible, can also be used for for-loop
+		[[nodiscard]] constexpr std::default_sentinel_t end() const noexcept
+		{
+			return std::default_sentinel;
+		}
+
+		// /**
+		//  * @brief get the underlying iterator
+		//  */
+		// [[nodiscard]] constexpr const iterator_type& base() const& noexcept
+		// {
+		// 	return iterator_;
+		// }
+		//
+		// /**
+		//  * @brief get the underlying iterator
+		//  */
+		// [[nodiscard]] constexpr iterator_type base() && noexcept(std::is_nothrow_move_constructible_v<iterator_type>)
+		// {
+		// 	return std::move(iterator_);
+		// }
+		//
+		// template <std::common_with<iterator_type> I>
+		// [[nodiscard]] constexpr friend bool operator==(
+		// 	const vector_view& lhs,
+		// 	const vector_view<stride, vector_size, I>& rhs
+		// 	) noexcept
+		// {
+		// 	return lhs == rhs;
+		// }
+		//
+		// [[nodiscard]] constexpr friend bool operator==(
+		// 	const vector_view& lhs,
+		// 	std::default_sentinel_t) noexcept
+		// {
+		// 	return lhs == std::default_sentinel;
+		// }
+
 		/**
 		 * @brief Add a value to the current vector
 		 * If the value is also a vector:
@@ -832,14 +888,14 @@ namespace gal::test::math
 		constexpr void operator+=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_add<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																					)
+				invoker_type::template operator_add<math_trait<U>::value_type>(
+																				std::declval<value_type&>(),
+																				std::declval<typename math_trait<
+																					U>::value_type>()
+																			)
 			)
 		)
-			requires vector_invoker_trait<value_type>::add
+			requires invoker_trait_type::add
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -848,30 +904,32 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_add<value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_add<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_add<value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_add<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_add<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_add<trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -889,15 +947,15 @@ namespace gal::test::math
 		constexpr void operator-=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_subtract<value_type, math_trait<U>::value_type>(
-																						std::declval<value_type&>(),
-																						std::declval<typename math_trait
-																							<
-																								U>::value_type>()
-																						)
+				invoker_type::template operator_subtract<math_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename math_trait
+																						<
+																							U>::value_type>()
+																					)
 			)
 		)
-			requires vector_invoker_trait<value_type>::subtract
+			requires invoker_trait_type::subtract
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -906,33 +964,33 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_subtract<
-																value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_subtract<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_subtract<
-																value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_subtract<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_subtract<
-															value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_subtract<
+																	trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -950,14 +1008,14 @@ namespace gal::test::math
 		constexpr void operator*=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_multi<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																					)
+				invoker_type::template operator_multi<math_trait<U>::value_type>(
+																				std::declval<value_type&>(),
+																				std::declval<typename math_trait<
+																					U>::value_type>()
+																				)
 			)
 		)
-			requires vector_invoker_trait<value_type>::multiply
+			requires invoker_trait_type::multiply
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -966,32 +1024,33 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_multi<
-																value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_multi<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_multi<
-																value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_multi<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_multi<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_multi<
+																	trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1009,14 +1068,14 @@ namespace gal::test::math
 		constexpr void operator/=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_div<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																					)
+				invoker_type::template operator_div<math_trait<U>::value_type>(
+																				std::declval<value_type&>(),
+																				std::declval<typename math_trait<
+																					U>::value_type>()
+																			)
 			)
 		)
-			requires vector_invoker_trait<value_type>::divide
+			requires invoker_trait_type::divide
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1025,30 +1084,32 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_div<value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_div<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_div<value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_div<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_div<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_div<trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1066,14 +1127,14 @@ namespace gal::test::math
 		constexpr void operator%=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_model<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																					)
+				invoker_type::template operator_model<math_trait<U>::value_type>(
+																				std::declval<value_type&>(),
+																				std::declval<typename math_trait<
+																					U>::value_type>()
+																				)
 			)
 		)
-			requires vector_invoker_trait<value_type>::model
+			requires invoker_trait_type::model
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1082,32 +1143,33 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_model<
-																value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_model<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_model<
-																value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_model<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_model<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_model<
+																	trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1125,14 +1187,14 @@ namespace gal::test::math
 		constexpr void operator&=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_and<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																					)
+				invoker_type::template operator_and<math_trait<U>::value_type>(
+																				std::declval<value_type&>(),
+																				std::declval<typename math_trait<
+																					U>::value_type>()
+																			)
 			)
 		)
-			requires vector_invoker_trait<value_type>::bit_and
+			requires invoker_trait_type::bit_and
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1141,30 +1203,32 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_and<value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_and<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_and<value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_and<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_and<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_and<trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1182,14 +1246,14 @@ namespace gal::test::math
 		constexpr void operator|=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_or<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																				)
+				invoker_type::template operator_or<math_trait<U>::value_type>(
+																			std::declval<value_type&>(),
+																			std::declval<typename math_trait<
+																				U>::value_type>()
+																			)
 			)
 		)
-			requires vector_invoker_trait<value_type>::bit_or
+			requires invoker_trait_type::bit_or
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1198,30 +1262,32 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_or<value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_or<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_or<value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_or<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_or<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_or<trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1239,14 +1305,14 @@ namespace gal::test::math
 		constexpr void operator^=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_xor<value_type, math_trait<U>::value_type>(
-																					std::declval<value_type&>(),
-																					std::declval<typename math_trait<
-																						U>::value_type>()
-																					)
+				invoker_type::template operator_xor<math_trait<U>::value_type>(
+																				std::declval<value_type&>(),
+																				std::declval<typename math_trait<
+																					U>::value_type>()
+																			)
 			)
 		)
-			requires vector_invoker_trait<value_type>::bit_xor
+			requires invoker_trait_type::bit_xor
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1255,30 +1321,32 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_xor<value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_xor<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_xor<value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_xor<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_xor<value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_xor<trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1296,15 +1364,15 @@ namespace gal::test::math
 		constexpr void operator<<=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_left_shift<value_type, math_trait<U>::value_type>(
-																							std::declval<value_type&>(),
-																							std::declval<typename
-																								math_trait<
-																									U>::value_type>()
-																						)
+				invoker_type::template operator_left_shift<math_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename
+																						math_trait<
+																							U>::value_type>()
+																					)
 			)
 		)
-			requires vector_invoker_trait<value_type>::left_shift
+			requires invoker_trait_type::left_shift
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1313,33 +1381,33 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_left_shift<
-																value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_left_shift<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_left_shift<
-																value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_left_shift<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_left_shift<
-															value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_left_shift<
+																	trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1357,15 +1425,15 @@ namespace gal::test::math
 		constexpr void operator>>=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_right_shift<value_type, math_trait<U>::value_type>(
-																							std::declval<value_type&>(),
-																							std::declval<typename
-																								math_trait<
-																									U>::value_type>()
-																							)
+				invoker_type::template operator_right_shift<math_trait<U>::value_type>(
+																						std::declval<value_type&>(),
+																						std::declval<typename
+																							math_trait<
+																								U>::value_type>()
+																					)
 			)
 		)
-			requires vector_invoker_trait<value_type>::right_shift
+			requires invoker_trait_type::right_shift
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1374,33 +1442,33 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					vector_invoker::invoke_vec<vector_size>(
-															iterator_,
-															vector_invoker::operator_right_shift<
-																value_type, trait::value_type>,
-															scalar
-															);
+					invoker_type::template invoke_vec<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_right_shift<
+																		trait::value_type>,
+																	scalar
+																);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					vector_invoker::invoke_dup<vector_size>(
-															iterator_,
-															vector_invoker::operator_right_shift<
-																value_type, trait::value_type>,
-															scalar[0]
-															);
+					invoker_type::template invoke_dup<vector_size>(
+																	iterator_,
+																	invoker_type::template operator_right_shift<
+																		trait::value_type>,
+																	scalar[0]
+																);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				vector_invoker::invoke_dup<vector_size>(
-														iterator_,
-														vector_invoker::operator_right_shift<
-															value_type, trait::value_type>,
-														scalar
-														);
+				invoker_type::template invoke_dup<vector_size>(
+																iterator_,
+																invoker_type::template operator_right_shift<
+																	trait::value_type>,
+																scalar
+															);
 			}
 		}
 
@@ -1408,15 +1476,15 @@ namespace gal::test::math
 		constexpr bool operator==(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_equal_to<value_type, math_trait<U>::value_type>(
-																						std::declval<value_type&>(),
-																						std::declval<typename math_trait
-																							<
-																								U>::value_type>()
-																						)
+				invoker_type::template operator_equal_to<math_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename math_trait
+																						<
+																							U>::value_type>()
+																					)
 			)
 		)
-			requires vector_invoker_trait<value_type>::equal_to
+			requires invoker_trait_type::equal_to
 		{
 			using trait = math_trait<U>;
 			if constexpr (trait::value)
@@ -1425,33 +1493,33 @@ namespace gal::test::math
 				if constexpr (trait::size == vector_size)
 				{
 					// have the same size
-					return vector_invoker::invoke_vec_r<vector_size>(
-																	iterator_,
-																	vector_invoker::operator_equal_to<
-																		value_type, trait::value_type>,
-																	scalar
-																	);
+					return invoker_type::template invoke_vec_r<vector_size>(
+																			iterator_,
+																			invoker_type::template operator_equal_to<
+																				trait::value_type>,
+																			scalar
+																			);
 				}
 				else
 				{
 					// duplicate scalar 's first element it
-					return vector_invoker::invoke_dup_r<vector_size>(
-																	iterator_,
-																	vector_invoker::operator_equal_to<
-																		value_type, trait::value_type>,
-																	scalar[0]
-																	);
+					return invoker_type::template invoke_dup_r<vector_size>(
+																			iterator_,
+																			invoker_type::template operator_equal_to<
+																				trait::value_type>,
+																			scalar[0]
+																			);
 				}
 			}
 			else
 			{
 				// duplicate scalar
-				return vector_invoker::invoke_dup_r<vector_size>(
-																iterator_,
-																vector_invoker::operator_equal_to<
-																	value_type, trait::value_type>,
-																scalar
-																);
+				return invoker_type::template invoke_dup_r<vector_size>(
+																		iterator_,
+																		invoker_type::template operator_equal_to<
+																			trait::value_type>,
+																		scalar
+																		);
 			}
 		}
 
@@ -1459,15 +1527,15 @@ namespace gal::test::math
 		constexpr void operator!=(const U& scalar)
 		noexcept(
 			noexcept(
-				vector_invoker::operator_equal_to<value_type, math_trait<U>::value_type>(
-																						std::declval<value_type&>(),
-																						std::declval<typename math_trait
-																							<
-																								U>::value_type>()
-																						)
+				invoker_type::template operator_equal_to<math_trait<U>::value_type>(
+																					std::declval<value_type&>(),
+																					std::declval<typename math_trait
+																						<
+																							U>::value_type>()
+																					)
 			)
 		)
-			requires vector_invoker_trait<value_type>::not_equal_to
+			requires invoker_trait_type::equal_to && invoker_trait_type::not_equal_to
 		{
 			return !(*this == scalar);
 		}
@@ -1475,33 +1543,33 @@ namespace gal::test::math
 		constexpr void operator-() const
 		noexcept(
 			noexcept(
-				vector_invoker::operator_unary_minus<value_type>(
-																std::declval<value_type&>()
-																)
+				invoker_type::template operator_unary_minus(
+															std::declval<value_type&>()
+															)
 			)
 		)
-			requires vector_invoker_trait<value_type>::unary_minus
+			requires invoker_trait_type::unary_minus
 		{
-			vector_invoker::invoke<vector_size>(
-												iterator_,
-												vector_invoker::operator_unary_minus<value_type>
-												);
+			invoker_type::template invoke<vector_size>(
+														iterator_,
+														invoker_type::template operator_unary_minus
+													);
 		}
 
 		constexpr void operator~() const
 		noexcept(
 			noexcept(
-				vector_invoker::operator_unary_tilde<value_type>(
-																std::declval<value_type&>()
-																)
+				invoker_type::template operator_unary_tilde(
+															std::declval<value_type&>()
+															)
 			)
 		)
-			requires vector_invoker_trait<value_type>::unary_tilde
+			requires invoker_trait_type::unary_tilde
 		{
-			vector_invoker::invoke<vector_size>(
-												iterator_,
-												vector_invoker::operator_unary_tilde<value_type>
-												);
+			invoker_type::template invoke<vector_size>(
+														iterator_,
+														invoker_type::template operator_unary_tilde
+													);
 		}
 
 		template <typename U>

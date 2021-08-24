@@ -128,6 +128,19 @@ namespace gal::test::iterator
 			return base_[n * stride];
 		}
 
+		// stl compatible, can also be used for for-loop
+		[[nodiscard]] constexpr stride_iterator begin() const noexcept
+		{
+			return { *this };
+		}
+
+		// ReSharper disable once CppMemberFunctionMayBeStatic
+		// stl compatible, can also be used for for-loop
+		[[nodiscard]] constexpr std::default_sentinel_t end() const noexcept
+		{
+			return std::default_sentinel;
+		}
+
 		constexpr stride_iterator& operator++()
 		noexcept(noexcept(move_base(std::declval<difference_type>())))
 		{
@@ -254,7 +267,7 @@ namespace gal::test::iterator
 		{
 			return rhs.count() <=> lhs.count_;
 		}
-	
+
 	private:
 		iterator_type   base_;
 		difference_type count_{};

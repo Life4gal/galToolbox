@@ -4,12 +4,9 @@
 
 namespace gal::test::math
 {
-	template <typename T>
-	concept arithmetic = std::is_integral_v<T> || std::is_floating_point_v<T>;
-
 	template <typename T, std::size_t N>
 	class vector;
-	template<arithmetic T, std::size_t Row, std::size_t Column>
+	template<typename T, std::size_t Row, std::size_t Column>
 	class matrix;
 
 	template <typename T>
@@ -21,23 +18,23 @@ namespace gal::test::math
 	template <typename T>
 	using vector4 = vector<T, 4>;
 
-	template<arithmetic T>
+	template<typename T>
 	using matrix2x2 = matrix<T, 2, 2>;
-	template<arithmetic T>	
+	template<typename T>	
 	using matrix2x3 = matrix<T, 2, 3>;
-	template<arithmetic T>	 
+	template<typename T>	 
 	using matrix2x4 = matrix<T, 2, 4>;
-	template<arithmetic T>	
+	template<typename T>	
 	using matrix3x2 = matrix<T, 3, 2>;
-	template<arithmetic T>	 
+	template<typename T>	 
 	using matrix3x3 = matrix<T, 3, 3>;
-	template<arithmetic T>	  
+	template<typename T>	  
 	using matrix3x4 = matrix<T, 3, 4>;
-	template<arithmetic T>	 
+	template<typename T>	 
 	using matrix4x2 = matrix<T, 4, 2>;
-	template<arithmetic T>	 
+	template<typename T>	 
 	using matrix4x3 = matrix<T, 4, 3>;
-	template<arithmetic T>	 
+	template<typename T>	 
 	using matrix4x4 = matrix<T, 4, 4>;
 
 	/**
@@ -51,4 +48,12 @@ namespace gal::test::math
 		using value_type = T;
 		constexpr static std::size_t size = 1;
 	};
+
+	/**
+	 * @brief specialize math_invoker_trait for operator support
+	 * @note if the operation corresponding to the target type is false, the corresponding operation is not allowed
+	 * @tparam T specialized type
+	*/
+	template<typename T>
+	struct math_invoker_trait : std::false_type {};
 }

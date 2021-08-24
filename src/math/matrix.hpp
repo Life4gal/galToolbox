@@ -7,20 +7,95 @@
 
 namespace gal::test::math
 {
-	template<arithmetic T, std::size_t Row, std::size_t Column>
+	//===============================
+	template <typename T, std::size_t Row, std::size_t Column>
+	class matrix;
+
+	template <typename T>
+	struct is_matrix : std::false_type {};
+
+	template <typename T, std::size_t Row, std::size_t Column>
+	struct is_matrix<matrix<T, Row, Column>> : std::true_type {};
+
+	template <typename T>
+	constexpr static bool is_matrix_v = is_matrix<T>::value;
+
+	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
+	class matrix_view;
+
+	template <typename T>
+	struct is_matrix_view : std::false_type {};
+
+	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
+	struct is_matrix_view<matrix_view<Stride, Row, Column, Iterator>> : std::true_type {};
+
+	template <typename T>
+	constexpr static bool is_matrix_view_v = is_matrix_view<T>::value;
+
+	/**
+	 * @brief specialize integral and floating_point to support corresponding operations
+	 * @tparam T matrix/matrix_view
+	*/
+	template <typename T>
+	requires
+		(is_matrix_v<T> || is_matrix_view_v<T>) &&
+		(
+			std::is_integral_v<typename math_trait<T>::value_type> ||
+			std::is_floating_point_v<typename math_trait<T>::value_type>
+			)
+		struct math_invoker_trait<T>;
+	//===============================
+
+	/**
+	 * @brief specialize the matrix to support the construction of other matrix
+	 * @tparam T matrix's value_type
+	 * @tparam Row matrix's row size
+	 * @tparam Column matrix's column size
+	*/
+	template <typename T, std::size_t Row, std::size_t Column>
 	struct math_trait<matrix<T, Row, Column>>
 	{
 		using value_type = T;
-		constexpr static bool value = true;
-		constexpr static std::size_t size = Row * Column;
+		constexpr static bool        value = true;
+		constexpr static std::size_t size  = Row * Column;
 	};
-	
-	template <arithmetic T, std::size_t Row, std::size_t Column>
+
+	/**
+	 * @brief specialize the matrix_view to support the construction of other matrix
+	 * @tparam Stride matrix_view's stride
+	 * @tparam Row matrix's row size
+	 * @tparam Column matrix's column size
+	 * @tparam Iterator type of matrix_view's holding iterator
+	*/
+	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
+	struct math_trait<matrix_view<Stride, Row, Column, Iterator>>
+	{
+		using value_type = std::iter_value_t<Iterator>;
+		constexpr static bool        value = true;
+		constexpr static std::size_t size  = Row * Column;
+	};
+
+	template <typename T>
+		requires
+		(is_matrix_v<T> || is_matrix_view_v<T>) &&
+		(
+			std::is_integral_v<typename math_trait<T>::value_type> ||
+			std::is_floating_point_v<typename math_trait<T>::value_type>
+		)
+	struct math_invoker_trait<T>
+	{
+		using value_type = typename math_trait<T>::value_type;
+		
+		static_assert(std::is_arithmetic_v<value_type>);
+
+		// todo: operations
+	};
+
+	template <typename T, std::size_t Row, std::size_t Column>
 	class matrix
 	{
 	public:
 		using container_type = std::array<T, Row * Column>;
-
 		using value_type = typename container_type::value_type;
 		using size_type = typename container_type::size_type;
 
@@ -35,18 +110,18 @@ namespace gal::test::math
 		constexpr static size_type column_size = Row;
 		constexpr static size_type data_size   = row_size * column_size;
 
-		using row_stride_iterator = test::iterator::stride_iterator<1, iterator>;
-		using column_stride_iterator = test::iterator::stride_iterator<row_size, iterator>;
-		using const_row_stride_iterator = test::iterator::stride_iterator<1, const_iterator>;
-		using const_column_stride_iterator = test::iterator::stride_iterator<row_size, const_iterator>;
-
-		using row_type = vector<value_type, row_size>;
-		using column_type = vector<value_type, column_size>;
-
 		using self_type = matrix<value_type, column_size, row_size>;
 		using self_reference = matrix<value_type, column_size, row_size>&;
 		using self_const_reference = const matrix<value_type, column_size, row_size>&;
 		using self_rreference = matrix<value_type, column_size, row_size>&&;
+
+		using row_type = vector<value_type, row_size>;
+		using column_type = vector<value_type, column_size>;
+
+		using row_view_type = typename row_type::template view_type<1, iterator>;
+		using const_row_view_type = typename row_type::template const_view_type<1, const_iterator>;
+		using column_view_type = typename column_type::template view_type<row_size, iterator>;
+		using const_column_view_type = typename column_type::template const_view_type<row_size, const_iterator>;
 
 		/**
 		 * @brief default construction
@@ -150,6 +225,7 @@ namespace gal::test::math
 			return data_.cend();
 		}
 
+
 		[[nodiscard]] constexpr reference get(size_type row, size_type column) noexcept
 		{
 			return data_[row * row_size + column];
@@ -167,14 +243,14 @@ namespace gal::test::math
 			};
 		}
 
-		[[nodiscard]] constexpr row_stride_iterator get_row_view(size_type which_row) noexcept
+		[[nodiscard]] constexpr row_view_type get_row_view(size_type which_row) noexcept
 		{
-			return row_stride_iterator{ data_.begin() + which_row * row_size, row_size };
+			return row_view_type{data_.begin() + which_row * row_size};
 		}
 
-		[[nodiscard]] constexpr const_row_stride_iterator get_row_view(size_type which_row) const noexcept
+		[[nodiscard]] constexpr const_row_view_type get_row_view(size_type which_row) const noexcept
 		{
-			return const_row_stride_iterator{ data_.cbegin() + which_row * row_size, row_size };
+			return const_row_view_type{data_.cbegin() + which_row * row_size};
 		}
 
 		[[nodiscard]] constexpr column_type get_column(size_type which_column) const noexcept
@@ -184,14 +260,14 @@ namespace gal::test::math
 			};
 		}
 
-		[[nodiscard]] constexpr column_stride_iterator get_column_view(size_type which_column) noexcept
+		[[nodiscard]] constexpr column_view_type get_column_view(size_type which_column) noexcept
 		{
-			return column_stride_iterator{ data_.begin() + which_column, column_size };
+			return column_view_type{data_.begin() + which_column};
 		}
 
-		[[nodiscard]] constexpr const_column_stride_iterator get_column_view(size_type which_column) const noexcept
+		[[nodiscard]] constexpr const_column_view_type get_column_view(size_type which_column) const noexcept
 		{
-			return const_column_stride_iterator{ data_.cbegin() + which_column, column_size };
+			return const_column_view_type{data_.cbegin() + which_column};
 		}
 
 	private:

@@ -19,16 +19,46 @@ TEST(TestMatrix, TestBasic)
 		static_assert(row1_view[0] == 5);
 		static_assert(row1_view[1] == 7);
 
+		std::cout << "output row1(should be 5, 7): ";
+		for (auto i : row1_view)
+		{
+			// ensure that only 2 values are output (5, 7)
+			std::cout << i << '\t';
+		}
+
 		constexpr auto row0 = mat1.get_row(0);
 		static_assert(row0[0] == 1);
 		static_assert(row0[1] == 3);
 
-		constexpr auto col0_view_cannot_use = mat1.get_column_view(0);
-		static_assert(col0_view_cannot_use[0] == 1);
-		static_assert(col0_view_cannot_use[1] == 5);
-		
+		std::cout << "\noutput row0(should be 1, 3): ";
+		for (auto i : row0)
+		{
+			// ensure that only 2 values are output (1, 3)
+			std::cout << i << '\t';
+		}
+
+
+		constexpr auto col0_view = mat1.get_column_view(0);
+		static_assert(col0_view[0] == 1);
+		static_assert(col0_view[1] == 5);
+
+		std::cout << "\noutput col0(should be 1, 5): ";
+		for (auto i : col0_view)
+		{
+			// ensure that only 2 values are output (1, 5)
+			std::cout << i << '\t';
+		}
+
 		constexpr auto col1 = mat1.get_column(1);
 		static_assert(col1[0] == 3);
 		static_assert(col1[1] == 7);
+
+		std::cout << "\noutput col1(should be 3, 7): ";
+		for (auto i : col1)
+		{
+			// ensure that only 2 values are output (3, 7)
+			std::cout << i << '\t';
+		}
+		std::cout << '\n';
 	}
 }

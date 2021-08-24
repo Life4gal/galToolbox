@@ -17,16 +17,26 @@ TEST(TestStrideIterator, TestAll)
 		static_assert(it[2] == 6);
 		static_assert(it[3] == 8);
 
+		std::cout << "output (2, 4, 6, 8): ";
+		for (auto i : it)
+		{
+			// ensure that only 4 values are output (2, 4, 6, 8)
+			std::cout << i << '\t';
+		}
+		std::cout << '\n';
+
 		constexpr auto view = std::views::counted(it, 4);
 		static_assert(view[0] == 2);
 		static_assert(view[1] == 4);
 		static_assert(view[2] == 6);
 		static_assert(view[3] == 8);
 
+		std::cout << "output (2, 4, 6, 8): ";
 		for(auto i : view)
 		{
 			// ensure that only 4 values are output (2, 4, 6, 8)
 			std::cout << i << '\t';
 		}
+		std::cout << '\n';
 	}
 }
