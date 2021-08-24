@@ -256,7 +256,7 @@ namespace gal::test::math
 		[[nodiscard]] constexpr column_type get_column(size_type which_column) const noexcept
 		{
 			return {
-				to_tuple<column_size>(data_.cbegin() + which_column, row_size), std::make_index_sequence<row_size>{}
+				to_tuple<column_size>(data_.cbegin() + which_column, row_size), std::make_index_sequence<column_size>{}
 			};
 		}
 
