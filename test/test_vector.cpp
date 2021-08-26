@@ -5,6 +5,7 @@
 TEST(TestVector, TestBasic)
 {
 	using namespace gal::test::math;
+	using namespace gal::test::utils;
 
 	static_assert(vector1<int>::data_size == 1);
 	static_assert(vector2<int>::data_size == 2);
@@ -21,7 +22,7 @@ TEST(TestVector, TestBasic)
 		static_assert(vec1[1] == 3);
 		static_assert(vec1[2] == 5);
 
-		constexpr auto tuple2 = duplicate<5>(3);
+		constexpr auto tuple2 = tuple_maker::duplicate<5>(3);
 		static_assert(std::get<0>(tuple2) == 3);
 		static_assert(std::get<1>(tuple2) == 3);
 		static_assert(std::get<2>(tuple2) == 3);
@@ -33,42 +34,42 @@ TEST(TestVector, TestBasic)
 		static_assert(vec2[1] == 3);
 		static_assert(vec2[2] == 3);
 
-		constexpr auto tuple3 = duplicate<5>(vector1<int>{456});
+		constexpr auto tuple3 = tuple_maker::duplicate<5>(vector1<int>{456});
 		static_assert(std::get<0>(tuple3) == 456);
 		static_assert(std::get<1>(tuple3) == 456);
 		static_assert(std::get<2>(tuple3) == 456);
 		static_assert(std::get<3>(tuple3) == 456);
 		static_assert(std::get<4>(tuple3) == 456);
 
-		constexpr auto tuple4 = duplicate<5>(vector2<int>{123, 456});
+		constexpr auto tuple4 = tuple_maker::duplicate<5>(vector2<int>{123, 456});
 		static_assert(std::get<0>(tuple4) == 123);
 		static_assert(std::get<1>(tuple4) == 456);
 		static_assert(std::get<2>(tuple4) == 123);
 		static_assert(std::get<3>(tuple4) == 456);
 		static_assert(std::get<4>(tuple4) == 123);
 
-		constexpr auto tuple5 = duplicate<5>(vec1);
+		constexpr auto tuple5 = tuple_maker::duplicate<5>(vec1);
 		static_assert(std::get<0>(tuple5) == 1);
 		static_assert(std::get<1>(tuple5) == 3);
 		static_assert(std::get<2>(tuple5) == 5);
 		static_assert(std::get<3>(tuple5) == 1);
 		static_assert(std::get<4>(tuple5) == 3);
 
-		constexpr auto tuple6 = duplicate<5>(vector4<int>{12, 34, 56, 78});
+		constexpr auto tuple6 = tuple_maker::duplicate<5>(vector4<int>{12, 34, 56, 78});
 		static_assert(std::get<0>(tuple6) == 12);
 		static_assert(std::get<1>(tuple6) == 34);
 		static_assert(std::get<2>(tuple6) == 56);
 		static_assert(std::get<3>(tuple6) == 78);
 		static_assert(std::get<4>(tuple6) == 12);
 
-		constexpr auto tuple7 = duplicate<5>(vector<int, 5>{12, 34, 56, 78, 90});
+		constexpr auto tuple7 = tuple_maker::duplicate<5>(vector<int, 5>{12, 34, 56, 78, 90});
 		static_assert(std::get<0>(tuple7) == 12);
 		static_assert(std::get<1>(tuple7) == 34);
 		static_assert(std::get<2>(tuple7) == 56);
 		static_assert(std::get<3>(tuple7) == 78);
 		static_assert(std::get<4>(tuple7) == 90);
 
-		constexpr auto tuple8 = duplicate<5>(vector<int, 6>{12, 34, 56, 78, 90, 100});
+		constexpr auto tuple8 = tuple_maker::duplicate<5>(vector<int, 6>{12, 34, 56, 78, 90, 100});
 		static_assert(std::get<0>(tuple8) == 12);
 		static_assert(std::get<1>(tuple8) == 34);
 		static_assert(std::get<2>(tuple8) == 56);

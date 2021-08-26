@@ -7,7 +7,6 @@
 
 namespace gal::test::math
 {
-	//===============================
 	template <typename T, std::size_t Row, std::size_t Column>
 	class matrix;
 
@@ -32,6 +31,22 @@ namespace gal::test::math
 	template <typename T>
 	constexpr static bool is_matrix_view_v = is_matrix_view<T>::value;
 
+	template <typename T>
+	struct matrix_value_type_helper
+	{
+		using value_type = T;
+	};
+
+	template<typename T>
+	requires (is_matrix_v<T> || is_matrix_view_v<T>)
+	struct matrix_value_type_helper<T>
+	{
+		using value_type = typename T::value_type;
+	};
+
+	template<typename T>
+	using matrix_value_type = typename matrix_value_type_helper<T>::value_type;
+
 	/**
 	 * @brief specialize integral and floating_point to support corresponding operations
 	 * @tparam T matrix/matrix_view
@@ -40,57 +55,54 @@ namespace gal::test::math
 	requires
 		(is_matrix_v<T> || is_matrix_view_v<T>) &&
 		(
-			std::is_integral_v<typename math_trait<T>::value_type> ||
-			std::is_floating_point_v<typename math_trait<T>::value_type>
+			std::is_integral_v<matrix_value_type<T>> ||
+			std::is_floating_point_v<matrix_value_type<T>>
 			)
-		struct math_invoker_trait<T>;
-	//===============================
-
-	/**
-	 * @brief specialize the matrix to support the construction of other matrix
-	 * @tparam T matrix's value_type
-	 * @tparam Row matrix's row size
-	 * @tparam Column matrix's column size
-	*/
-	template <typename T, std::size_t Row, std::size_t Column>
-	struct math_trait<matrix<T, Row, Column>>
+		struct math_invoker_trait<T> : std::true_type
 	{
-		using value_type = T;
-		constexpr static bool        value = true;
-		constexpr static std::size_t size  = Row * Column;
-	};
+		using value_type = matrix_value_type<T>;
 
-	/**
-	 * @brief specialize the matrix_view to support the construction of other matrix
-	 * @tparam Stride matrix_view's stride
-	 * @tparam Row matrix's row size
-	 * @tparam Column matrix's column size
-	 * @tparam Iterator type of matrix_view's holding iterator
-	*/
-	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
-	struct math_trait<matrix_view<Stride, Row, Column, Iterator>>
-	{
-		using value_type = std::iter_value_t<Iterator>;
-		constexpr static bool        value = true;
-		constexpr static std::size_t size  = Row * Column;
-	};
-
-	template <typename T>
-		requires
-		(is_matrix_v<T> || is_matrix_view_v<T>) &&
-		(
-			std::is_integral_v<typename math_trait<T>::value_type> ||
-			std::is_floating_point_v<typename math_trait<T>::value_type>
-		)
-	struct math_invoker_trait<T>
-	{
-		using value_type = typename math_trait<T>::value_type;
-		
 		static_assert(std::is_arithmetic_v<value_type>);
 
-		// todo: operations
-	};
+		constexpr static bool add = true;
+		constexpr static bool subtract = true;
+		constexpr static bool multiply = true;
+		constexpr static bool divide = true;
+		constexpr static bool model = true;
+		constexpr static bool bit_and = std::is_integral_v<value_type>;
+		constexpr static bool bit_or = std::is_integral_v<value_type>;
+		constexpr static bool bit_xor = std::is_integral_v<value_type>;
+		constexpr static bool left_shift = true;
+		constexpr static bool right_shift = true;
+		constexpr static bool unary_minus = std::is_integral_v<value_type> && std::is_signed_v<T>;
+		constexpr static bool unary_tilde = true;
+		constexpr static bool equal_to = true;
+		constexpr static bool not_equal_to = true;
 
+		constexpr static bool left_product = true;
+		constexpr static bool right_product = true;
+		constexpr static bool inner_product = true;
+		constexpr static bool outer_product = true;
+	};
+}
+
+namespace gal::test::utils
+{
+	/**
+	 * @brief specialize the matrix/matrix_view to support the construction of other matrix
+	 * @tparam T matrix/matrix_view
+	*/
+	template<typename T>
+	requires (math::is_matrix_v<T> || math::is_matrix_view_v<T>)
+	struct tuple_maker_trait<T> : std::true_type
+	{
+		using value_type = typename T::value_type;
+		constexpr static std::size_t size = T::data_size;
+	};
+}
+
+namespace gal::test::math
+{
 	template <typename T, std::size_t Row, std::size_t Column>
 	class matrix
 	{
@@ -123,6 +135,11 @@ namespace gal::test::math
 		using column_view_type = typename column_type::template view_type<row_size, iterator>;
 		using const_column_view_type = typename column_type::template const_view_type<row_size, const_iterator>;
 
+		using invoker_trait_type = math_invoker_trait<self_type>;
+		static_assert(invoker_trait_type::value,
+			"there is no specialization of matrix<value_type> to math_invoker_trait, all operations will be unavailable"
+		);
+
 		/**
 		 * @brief default construction
 		*/
@@ -151,13 +168,13 @@ namespace gal::test::math
 		template <typename... Args>
 		// requires((matrix_trait<std::remove_cvref_t<Args>>::size + ...) >= data_size)
 		constexpr explicit matrix(Args&&...args)
-		noexcept(noexcept(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...)))
+		noexcept(noexcept(std::tuple_cat(utils::tuple_maker::to_rref_tuple(std::forward<Args>(args))...)))
 			:
 			// matrix(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...), std::make_index_sequence<data_size>{}) {}
-			matrix(std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...),
+			matrix(std::tuple_cat(utils::tuple_maker::to_rref_tuple(std::forward<Args>(args))...),
 					std::make_index_sequence<std::min(data_size,
 													std::tuple_size_v<decltype(
-														std::tuple_cat(to_rref_tuple(std::forward<Args>(args))...))>)>
+														std::tuple_cat(utils::tuple_maker::to_rref_tuple(std::forward<Args>(args))...))>)>
 					{}) {}
 
 		[[nodiscard]] constexpr static size_type size() noexcept
@@ -225,6 +242,59 @@ namespace gal::test::math
 			return data_.cend();
 		}
 
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::equal_to
+		[[nodiscard]] constexpr friend bool operator==(const self_type& lhs, const matrix<U, Row, Column>& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return [&]<std::size_t...I>(std::index_sequence<I...>)
+			{
+				return ((lhs.data_[I] == static_cast<value_type>(rhs[I])) && ...);
+			}(std::make_index_sequence<data_size>{});
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::equal_to
+		[[nodiscard]] constexpr friend bool operator==(const self_type& lhs, const U& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return [&]<std::size_t...I>(std::index_sequence<I...>)
+			{
+				return ((lhs.data_[I] == static_cast<value_type>(rhs)) && ...);
+			}(std::make_index_sequence<data_size>{});
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::equal_to
+		[[nodiscard]] constexpr friend bool operator==(const U& lhs, const self_type& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return rhs == lhs;
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::not_equal_to
+		[[nodiscard]] constexpr friend bool operator!=(const self_type& lhs, const matrix<U, Row, Column>& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return !(lhs == rhs);
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::not_equal_to
+		[[nodiscard]] constexpr friend bool operator!=(const self_type& lhs, const U& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return !(lhs == rhs);
+		}
+
+		template <typename U>
+			requires std::is_convertible_v<U, value_type> && invoker_trait_type::not_equal_to
+		[[nodiscard]] constexpr friend bool operator!=(const U& lhs, const self_type& rhs)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return !(lhs == rhs);
+		}
 
 		[[nodiscard]] constexpr reference get(size_type row, size_type column) noexcept
 		{
@@ -239,7 +309,7 @@ namespace gal::test::math
 		[[nodiscard]] constexpr row_type get_row(size_type which_row) const noexcept
 		{
 			return {
-				to_tuple<row_size>(data_.cbegin() + which_row * row_size), std::make_index_sequence<row_size>{}
+				utils::tuple_maker::to_tuple<row_size>(data_.cbegin() + which_row * row_size), std::make_index_sequence<row_size>{}
 			};
 		}
 
@@ -256,7 +326,7 @@ namespace gal::test::math
 		[[nodiscard]] constexpr column_type get_column(size_type which_column) const noexcept
 		{
 			return {
-				to_tuple<column_size>(data_.cbegin() + which_column, row_size), std::make_index_sequence<column_size>{}
+				utils::tuple_maker::to_tuple<column_size>(data_.cbegin() + which_column, row_size), std::make_index_sequence<column_size>{}
 			};
 		}
 
@@ -272,5 +342,76 @@ namespace gal::test::math
 
 	private:
 		container_type data_;
+	};
+
+	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
+	class matrix_view
+	{
+	public:
+		constexpr static auto stride = Stride;
+		constexpr static auto row_size = Column;
+		constexpr static auto column_size = Row;
+		constexpr static auto data_size = Row * Column;
+
+		using view_iterator = iterator::stride_iterator<Stride, Iterator>;
+		using iterator_type = typename view_iterator::iterator_type;
+		using value_type = typename view_iterator::value_type;
+		using difference_type = typename view_iterator::difference_type;
+		using reference = typename view_iterator::reference;
+		using rreference = typename view_iterator::rreference;
+
+		using self_type = matrix_view<stride, column_size, row_size, iterator_type>;
+		using self_reference = matrix_view<stride, column_size, row_size, iterator_type>&;
+		using const_self_reference = const matrix_view<stride, column_size, row_size, iterator_type>&;
+		using self_rreference = matrix_view<stride, column_size, row_size, iterator_type>&&;
+
+		using matrix_type = matrix<value_type, column_size, row_size>;
+		using size_type = typename matrix_type::size_type;
+
+		using row_type = typename matrix_type::row_type;
+		using column_type = typename matrix_type::column_type;
+
+		using row_view_type = typename matrix_type::row_view_type;
+		using const_row_view_type = typename matrix_type::const_row_view_type;
+		using column_view_type = typename matrix_type::column_view_type;
+		using const_column_view_type = typename matrix_type::const_column_view_type;
+
+		using math_invoker_type = math_invoker<value_type>;
+		using invoker_trait_type = math_invoker_trait<self_type>;
+		static_assert(invoker_trait_type::value,
+			"there is no specialization of matrix<value_type> to math_invoker_trait, all operations will be unavailable"
+			);
+
+		constexpr explicit matrix_view(iterator_type iterator) : iterator_(std::move(iterator), data_size) {}
+
+		[[nodiscard]] constexpr matrix_type copy_matrix() const noexcept
+		{
+			return { utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{} };
+		}
+
+		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) noexcept
+		{
+			return iterator_[index];
+		}
+
+		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) const noexcept
+		{
+			return iterator_[index];
+		}
+
+		// stl compatible, can also be used for for-loop
+		[[nodiscard]] constexpr auto begin() const noexcept
+		{
+			return iterator_.begin();
+		}
+
+		// stl compatible, can also be used for for-loop
+		[[nodiscard]] constexpr auto end() const noexcept
+		{
+			return iterator_.end();
+		}
+	
+	private:
+		view_iterator iterator_;
 	};
 }
