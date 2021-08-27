@@ -45,7 +45,12 @@ namespace gal::test::math
 	{
 		using value_type = typename T::value_type;
 	};
-	
+
+	/**
+	 * @brief if the target is a vector, get the value_type of the vector, otherwise the value_type is T,
+	 * which can (and generally used) prevent the compilation of operations that do not satisfy std::is_convertible_v<T, value_type>
+	 * @tparam T vector_type/class_type
+	*/
 	template <typename T>
 	using vector_value_type = typename vector_value_type_helper<T>::value_type;
 
@@ -1014,7 +1019,7 @@ namespace gal::test::math
 		constexpr friend bool operator==(const U& scalar, const_self_reference self)
 		noexcept(
 			noexcept(
-				std::declval<self_type>().operator&=(std::declval<const_self_reference>())
+				std::declval<self_type>().operator==(std::declval<const_self_reference>())
 			)
 		)
 		{
@@ -1022,7 +1027,7 @@ namespace gal::test::math
 		}
 
 		template <typename U>
-		constexpr void operator!=(const U& scalar)
+		constexpr bool operator!=(const U& scalar)
 		noexcept(
 			noexcept(
 				math_invoker_type::template operator_equal_to<vector_value_type<U>>(
@@ -1040,7 +1045,7 @@ namespace gal::test::math
 		constexpr friend bool operator!=(const U& scalar, const_self_reference self)
 		noexcept(
 			noexcept(
-				std::declval<self_type>().operator&=(std::declval<const_self_reference>())
+				std::declval<self_type>().operator==(std::declval<const_self_reference>())
 			)
 		)
 		{

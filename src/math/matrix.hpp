@@ -3,6 +3,9 @@
 #include <array>
 
 #include "vector.hpp"
+#include "math_fwd.hpp"
+#include "../utils/tuple_maker.hpp"
+#include "../utils/sequence_invoker.hpp"
 #include "../iterator/stride_iterator.hpp"
 
 namespace gal::test::math
@@ -37,14 +40,19 @@ namespace gal::test::math
 		using value_type = T;
 	};
 
-	template<typename T>
-	requires (is_matrix_v<T> || is_matrix_view_v<T>)
+	template <typename T>
+		requires (is_matrix_v<T> || is_matrix_view_v<T>)
 	struct matrix_value_type_helper<T>
 	{
 		using value_type = typename T::value_type;
 	};
 
-	template<typename T>
+	/**
+	 * @brief if the target is a matrix, get the value_type of the matrix, otherwise the value_type is T,
+	 * which can (and generally used) prevent the compilation of operations that do not satisfy std::is_convertible_v<T, value_type>
+	 * @tparam T matrix_type/class_type
+	*/
+	template <typename T>
 	using matrix_value_type = typename matrix_value_type_helper<T>::value_type;
 
 	/**
@@ -52,34 +60,34 @@ namespace gal::test::math
 	 * @tparam T matrix/matrix_view
 	*/
 	template <typename T>
-	requires
+		requires
 		(is_matrix_v<T> || is_matrix_view_v<T>) &&
 		(
 			std::is_integral_v<matrix_value_type<T>> ||
 			std::is_floating_point_v<matrix_value_type<T>>
-			)
-		struct math_invoker_trait<T> : std::true_type
+		)
+	struct math_invoker_trait<T> : std::true_type
 	{
 		using value_type = matrix_value_type<T>;
 
 		static_assert(std::is_arithmetic_v<value_type>);
 
-		constexpr static bool add = true;
-		constexpr static bool subtract = true;
-		constexpr static bool multiply = true;
-		constexpr static bool divide = true;
-		constexpr static bool model = true;
-		constexpr static bool bit_and = std::is_integral_v<value_type>;
-		constexpr static bool bit_or = std::is_integral_v<value_type>;
-		constexpr static bool bit_xor = std::is_integral_v<value_type>;
-		constexpr static bool left_shift = true;
-		constexpr static bool right_shift = true;
-		constexpr static bool unary_minus = std::is_integral_v<value_type> && std::is_signed_v<T>;
-		constexpr static bool unary_tilde = true;
-		constexpr static bool equal_to = true;
+		constexpr static bool add          = true;
+		constexpr static bool subtract     = true;
+		constexpr static bool multiply     = true;
+		constexpr static bool divide       = true;
+		constexpr static bool model        = true;
+		constexpr static bool bit_and      = std::is_integral_v<value_type>;
+		constexpr static bool bit_or       = std::is_integral_v<value_type>;
+		constexpr static bool bit_xor      = std::is_integral_v<value_type>;
+		constexpr static bool left_shift   = true;
+		constexpr static bool right_shift  = true;
+		constexpr static bool unary_minus  = std::is_integral_v<value_type> && std::is_signed_v<T>;
+		constexpr static bool unary_tilde  = true;
+		constexpr static bool equal_to     = true;
 		constexpr static bool not_equal_to = true;
 
-		constexpr static bool left_product = true;
+		constexpr static bool left_product  = true;
 		constexpr static bool right_product = true;
 		constexpr static bool inner_product = true;
 		constexpr static bool outer_product = true;
@@ -92,8 +100,8 @@ namespace gal::test::utils
 	 * @brief specialize the matrix/matrix_view to support the construction of other matrix
 	 * @tparam T matrix/matrix_view
 	*/
-	template<typename T>
-	requires (math::is_matrix_v<T> || math::is_matrix_view_v<T>)
+	template <typename T>
+		requires (math::is_matrix_v<T> || math::is_matrix_view_v<T>)
 	struct tuple_maker_trait<T> : std::true_type
 	{
 		using value_type = typename T::value_type;
@@ -174,7 +182,9 @@ namespace gal::test::math
 			matrix(std::tuple_cat(utils::tuple_maker::to_rref_tuple(std::forward<Args>(args))...),
 					std::make_index_sequence<std::min(data_size,
 													std::tuple_size_v<decltype(
-														std::tuple_cat(utils::tuple_maker::to_rref_tuple(std::forward<Args>(args))...))>)>
+														std::tuple_cat(utils::tuple_maker::to_rref_tuple(std::forward<
+																											Args>(args))
+																		...))>)>
 					{}) {}
 
 		[[nodiscard]] constexpr static size_type size() noexcept
@@ -309,7 +319,8 @@ namespace gal::test::math
 		[[nodiscard]] constexpr row_type get_row(size_type which_row) const noexcept
 		{
 			return {
-				utils::tuple_maker::to_tuple<row_size>(data_.cbegin() + which_row * row_size), std::make_index_sequence<row_size>{}
+				utils::tuple_maker::to_tuple<row_size>(data_.cbegin() + which_row * row_size),
+				std::make_index_sequence<row_size>{}
 			};
 		}
 
@@ -326,7 +337,8 @@ namespace gal::test::math
 		[[nodiscard]] constexpr column_type get_column(size_type which_column) const noexcept
 		{
 			return {
-				utils::tuple_maker::to_tuple<column_size>(data_.cbegin() + which_column, row_size), std::make_index_sequence<column_size>{}
+				utils::tuple_maker::to_tuple<column_size>(data_.cbegin() + which_column, row_size),
+				std::make_index_sequence<column_size>{}
 			};
 		}
 
@@ -348,10 +360,10 @@ namespace gal::test::math
 	class matrix_view
 	{
 	public:
-		constexpr static auto stride = Stride;
-		constexpr static auto row_size = Column;
+		constexpr static auto stride      = Stride;
+		constexpr static auto row_size    = Column;
 		constexpr static auto column_size = Row;
-		constexpr static auto data_size = Row * Column;
+		constexpr static auto data_size   = Row * Column;
 
 		using view_iterator = iterator::stride_iterator<Stride, Iterator>;
 		using iterator_type = typename view_iterator::iterator_type;
@@ -380,13 +392,13 @@ namespace gal::test::math
 		using invoker_trait_type = math_invoker_trait<self_type>;
 		static_assert(invoker_trait_type::value,
 			"there is no specialization of matrix<value_type> to math_invoker_trait, all operations will be unavailable"
-			);
+		);
 
 		constexpr explicit matrix_view(iterator_type iterator) : iterator_(std::move(iterator), data_size) {}
 
 		[[nodiscard]] constexpr matrix_type copy_matrix() const noexcept
 		{
-			return { utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{} };
+			return {utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{}};
 		}
 
 		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) noexcept
@@ -410,7 +422,1088 @@ namespace gal::test::math
 		{
 			return iterator_.end();
 		}
-	
+
+		/**
+		 * @brief Add a value to the current matrix
+		 * If the value is also a matrix:
+		 *		two matrix have the same size(the same row_size and column_size): `add` the current matrix to the corresponding value of another matrix
+		 *		otherwise: each value of the current matrix will `add` the first element of another matrix
+		 * else if the value is a vector:
+		 *		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		 *		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		 * else:
+		 *		each value of the current matrix will `add` the value
+		 * @tparam U value type
+		 * @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator+=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_add<matrix_value_type<U>>(
+																				std::declval<value_type&>(),
+																				std::declval<matrix_value_type<U>>()
+																			)
+			)
+		)
+			requires invoker_trait_type::add
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_add<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_add<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_add<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Subtract a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `subtract` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `subtract` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `subtract` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator-=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_subtract<matrix_value_type<U>>(
+																					std::declval<value_type&>(),
+																					std::declval<matrix_value_type<U>>()
+																					)
+			)
+		)
+			requires invoker_trait_type::subtract
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_subtract<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_subtract<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_subtract<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Multiply a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `multiply` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `multiply` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `multiply` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator*=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_multiply<matrix_value_type<U>>(
+																					std::declval<value_type&>(),
+																					std::declval<matrix_value_type<U>>()
+																					)
+			)
+		)
+			requires invoker_trait_type::multiply
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_multiply<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_multiply<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_multiply<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Divide a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `divide` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `divide` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `divide` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator/=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_divide<matrix_value_type<U>>(
+																				std::declval<value_type&>(),
+																				std::declval<matrix_value_type<U>>()
+																				)
+			)
+		)
+			requires invoker_trait_type::divide
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_divide<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_divide<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_divide<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Model a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `model` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `model` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `model` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator%=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_model<matrix_value_type<U>>(
+																				std::declval<value_type&>(),
+																				std::declval<matrix_value_type<U>>()
+																				)
+			)
+		)
+			requires invoker_trait_type::model
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_model<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_model<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_model<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Bit and a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `bit and` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `bit and` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `bit and` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator&=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_and<matrix_value_type<U>>(
+																				std::declval<value_type&>(),
+																				std::declval<matrix_value_type<U>>()
+																			)
+			)
+		)
+			requires invoker_trait_type::bit_and
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_and<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_and<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_and<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Bit or a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `bit or` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `bit or` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `bit or` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator|=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_or<matrix_value_type<U>>(
+																			std::declval<value_type&>(),
+																			std::declval<matrix_value_type<U>>()
+																			)
+			)
+		)
+			requires invoker_trait_type::bit_or
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_or<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_or<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_or<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Bit xor a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `bit xor` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `bit xor` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `bit or` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator^=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_xor<matrix_value_type<U>>(
+																				std::declval<value_type&>(),
+																				std::declval<matrix_value_type<U>>()
+																			)
+			)
+		)
+			requires invoker_trait_type::bit_xor
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_xor<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_xor<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_xor<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Left shift a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `left shift` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `left shift` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `left shift` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator<<=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_left_shift<matrix_value_type<U>>(
+																					std::declval<value_type&>(),
+																					std::declval<matrix_value_type<U>>()
+																					)
+			)
+		)
+			requires invoker_trait_type::left_shift
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_left_shift<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_left_shift<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_left_shift<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		/**
+		* @brief Right shift a value to the current matrix
+		* If the value is also a matrix:
+		*		two matrix have the same size(the same row_size and column_size): `right shift` the current matrix to the corresponding value of another matrix
+		*		otherwise: each value of the current matrix will `right shift` the first element of another matrix
+		* else if the value is a vector:
+		*		corresponding operations are prohibited, because there is no way to determine whether the target vector is a row vector or a column vector,
+		*		the user should use matrix.get_row/get_column and then perform the corresponding operation
+		* else:
+		*		each value of the current matrix will `right shift` the value
+		* @tparam U value type
+		* @param scalar value
+		*/
+		template <typename U>
+		constexpr void operator>>=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_right_shift<matrix_value_type<U>>(
+																						std::declval<value_type&>(),
+																						std::declval<matrix_value_type<
+																							U>>()
+																					)
+			)
+		)
+			requires invoker_trait_type::right_shift
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					utils::sequence_invoker::invoke_seq<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_right_shift<
+																		matrix_value_type<U>>,
+																	scalar
+																);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					utils::sequence_invoker::invoke_dup<data_size>(
+																	iterator_,
+																	math_invoker_type::template operator_right_shift<
+																		matrix_value_type<U>>,
+																	scalar[0]
+																);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				utils::sequence_invoker::invoke_dup<data_size>(
+																iterator_,
+																math_invoker_type::template operator_right_shift<
+																	matrix_value_type<U>>,
+																scalar
+															);
+			}
+		}
+
+		template <typename U>
+		constexpr bool operator==(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_equal_to<matrix_value_type<U>>(
+																					std::declval<value_type&>(),
+																					std::declval<matrix_value_type<
+																						U>>()
+																					)
+			)
+		)
+			requires invoker_trait_type::equal_to
+		{
+			if constexpr (is_matrix_v<U> || is_matrix_view_v<U>)
+			{
+				// scalar is a matrix
+				if constexpr (U::data_size == data_size && U::row_size == row_size && U::column_size == column_size)
+				{
+					// have the same size
+					return utils::sequence_invoker::invoke_seq_r<data_size>(
+																			iterator_,
+																			math_invoker_type::template
+																			operator_equal_to<
+																				matrix_value_type<U>>,
+																			scalar
+																			);
+				}
+				else
+				{
+					// duplicate scalar 's first element it
+					return utils::sequence_invoker::invoke_dup_r<data_size>(
+																			iterator_,
+																			math_invoker_type::template
+																			operator_equal_to<
+																				matrix_value_type<U>>,
+																			scalar[0]
+																			);
+				}
+			}
+			else
+			{
+				// duplicate scalar
+				return utils::sequence_invoker::invoke_dup_r<data_size>(
+																		iterator_,
+																		math_invoker_type::template operator_equal_to<
+																			matrix_value_type<U>>,
+																		scalar
+																		);
+			}
+		}
+
+		template <typename U>
+		constexpr friend bool operator==(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().operator==(std::declval<const_self_reference>())
+			)
+		)
+		{
+			return self == scalar;
+		}
+
+		template <typename U>
+		constexpr bool operator!=(const U& scalar)
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_equal_to<matrix_value_type<U>>(
+																					std::declval<value_type&>(),
+																					std::declval<matrix_value_type<U>>()
+																					)
+			)
+		)
+			requires invoker_trait_type::equal_to && invoker_trait_type::not_equal_to
+		{
+			return !(*this == scalar);
+		}
+
+		template <typename U>
+		constexpr friend bool operator!=(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().operator==(std::declval<const_self_reference>())
+			)
+		)
+		{
+			return self != scalar;
+		}
+
+		constexpr void operator-() const
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_unary_minus(
+																std::declval<value_type&>()
+																)
+			)
+		)
+			requires invoker_trait_type::unary_minus
+		{
+			utils::sequence_invoker::invoke<data_size>(
+														iterator_,
+														math_invoker_type::template operator_unary_minus
+													);
+		}
+
+		constexpr void operator~() const
+		noexcept(
+			noexcept(
+				math_invoker_type::template operator_unary_tilde(
+																std::declval<value_type&>()
+																)
+			)
+		)
+			requires invoker_trait_type::unary_tilde
+		{
+			utils::sequence_invoker::invoke<data_size>(
+														iterator_,
+														math_invoker_type::template operator_unary_tilde
+													);
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator+(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator+=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() += scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator+(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator+=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() += self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator-(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator-=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() -= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator-(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator-=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() -= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator*(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator*=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() *= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator*(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator*=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() *= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator/(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator/=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() /= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator/(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator/=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() /= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator%(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator%=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() %= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator%(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator%=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() %= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator&(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator&=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() &= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator&(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator&=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() &= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator|(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator|=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() |= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator|(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator|=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() |= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator^(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator^=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() ^= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator^(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator^=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() ^= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator<<(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator<<=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() <<= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator<<(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator<<=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() <<= self;
+			return copy;
+		}
+
+		template <typename U>
+		[[nodiscard]] constexpr matrix_type operator>>(const U& scalar) const
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator>>=(std::declval<const U&>())
+			)
+		)
+		{
+			auto copy = copy_matrix();
+			copy.to_view() >>= scalar;
+			return copy;
+		}
+
+		template <typename U>
+			requires (!is_matrix_view_v<U>)
+		[[nodiscard]] constexpr friend auto operator>>(const U& scalar, const_self_reference self)
+		noexcept(
+			noexcept(
+				std::declval<self_type>().copy_matrix()
+			) &&
+			noexcept(
+				std::declval<self_type>().operator>>=(std::declval<const_self_reference>())
+			)
+		)
+		{
+			matrix<matrix_value_type<U>, column_size, row_size> copy{
+				utils::tuple_maker::duplicate<data_size>(scalar), std::make_index_sequence<data_size>{}
+			};
+			copy.to_view() >>= self;
+			return copy;
+		}
+
 	private:
 		view_iterator iterator_;
 	};
