@@ -29,6 +29,7 @@
     <ClCompile Include="test\test_vector.cpp" />
     <ClCompile Include="test\test_matrix.cpp" />
     <ClCompile Include="test\test_stride_iterator.cpp" />
+    <ClCompile Include="test\test_sequence_invoker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
