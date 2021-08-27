@@ -281,6 +281,7 @@ namespace gal::test::math
 			value = ~value;
 		}
 
+		// unchecked
 		template <typename U>
 			requires std::is_convertible_v<U, value_type>
 		constexpr static bool operator_equal_to(value_type v1, U v2)
@@ -296,6 +297,38 @@ namespace gal::test::math
 			{
 				return v1 == v2;
 			}
+		}
+
+		// unchecked
+		template <typename U1, typename U2>
+			requires std::is_same_v<value_type, bool>
+		constexpr static void operator_less_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		{
+			v = scalar1 < scalar2;
+		}
+
+		// unchecked
+		template <typename U1, typename U2>
+			requires std::is_same_v<value_type, bool>
+		constexpr static void operator_less_equal_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		{
+			v = scalar1 < scalar2 || scalar1 == scalar2;
+		}
+
+		// unchecked
+		template <typename U1, typename U2>
+			requires std::is_same_v<value_type, bool>
+		constexpr static void operator_greater_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		{
+			v = scalar1 > scalar2;
+		}
+
+		// unchecked
+		template <typename U1, typename U2>
+			requires std::is_same_v<value_type, bool>
+		constexpr static void operator_greater_equal_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		{
+			v = scalar1 > scalar2 || scalar1 == scalar2;
 		}
 	};
 }
