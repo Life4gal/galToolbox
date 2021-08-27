@@ -46,6 +46,11 @@ namespace gal::test::math
 		using value_type = typename T::value_type;
 	};
 
+	/**
+	 * @brief if the target is a vector, get the value_type of the vector, otherwise the value_type is T,
+	 * which can (and generally used) prevent the compilation of operations that do not satisfy std::is_convertible_v<T, value_type>
+	 * @tparam T vector_type/class_type
+	*/
 	template <typename T>
 	using vector_value_type = typename vector_value_type_helper<T>::value_type;
 
