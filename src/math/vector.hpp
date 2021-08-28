@@ -394,7 +394,7 @@ namespace gal::test::math
 		}
 
 		/**
-		 * @brief get a vector of type bool
+		 * @brief get a bool vector
 		 * @tparam Pred type of predicate
 		 * @tparam U1 type of target1 data
 		 * @tparam U2 type of target2 data

@@ -50,6 +50,34 @@ TEST(TestSequenceInvoker, TestAll)
 			ASSERT_EQ(array3[7], array1[7] + array2[7]);
 			ASSERT_EQ(array3[8], array1[8] + array2[8]);
 			ASSERT_EQ(array3[9], array1[9] + array2[9]);
+
+			std::array<int, 10> array4{};
+			constexpr auto func = [](int& a, const int b, const int c)
+			{
+				a = b + c;
+			};
+			sequence_invoker::ternary_invoke_seq<10>(
+				array4,
+				array1,
+				array2,
+				[&func](const int a, const int b) -> int
+				{
+					int ret{};
+					func(ret, a, b);
+					return ret;
+				}
+			);
+
+			ASSERT_EQ(array3[0], array1[0] + array2[0]);
+			ASSERT_EQ(array3[1], array1[1] + array2[1]);
+			ASSERT_EQ(array3[2], array1[2] + array2[2]);
+			ASSERT_EQ(array3[3], array1[3] + array2[3]);
+			ASSERT_EQ(array3[4], array1[4] + array2[4]);
+			ASSERT_EQ(array3[5], array1[5] + array2[5]);
+			ASSERT_EQ(array3[6], array1[6] + array2[6]);
+			ASSERT_EQ(array3[7], array1[7] + array2[7]);
+			ASSERT_EQ(array3[8], array1[8] + array2[8]);
+			ASSERT_EQ(array3[9], array1[9] + array2[9]);
 		}
 		{
 			std::array<int, 10> array3{};

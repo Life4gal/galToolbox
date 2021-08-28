@@ -7,8 +7,12 @@ namespace gal::test::math
 {
 	template <typename T, std::size_t N>
 	class vector;
+	template <std::size_t Stride, std::size_t Size, typename Iterator>
+	class vector_view;
 	template <typename T, std::size_t Row, std::size_t Column>
 	class matrix;
+	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
+	class matrix_view;
 
 	template <typename T>
 	using vector1 = vector<T, 1>;
@@ -287,48 +291,49 @@ namespace gal::test::math
 		constexpr static bool operator_equal_to(value_type v1, U v2)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
-			// todo: floating_point
-			if constexpr (std::is_floating_point_v<value_type>)
-			{
-				return static_cast<double>(v1) - static_cast<double>(v2) <= 0.000001 &&
-					static_cast<double>(v1) - static_cast<double>(v2) >= -0.000001;
-			}
-			else
-			{
-				return v1 == v2;
-			}
+			return v1 == v2;
+		}
+
+		// unchecked
+		template <typename U>
+			requires (std::is_convertible_v<U, value_type> && std::is_floating_point_v<value_type>)
+		constexpr static bool operator_equal_to(value_type v1, U v2, value_type epsilon = 0.000001)
+		noexcept(std::is_nothrow_convertible_v<U, value_type>)
+		{
+			return static_cast<double>(v1) - static_cast<double>(v2) <= epsilon &&
+				static_cast<double>(v1) - static_cast<double>(v2) >= -epsilon;
 		}
 
 		// unchecked
 		template <typename U1, typename U2>
 			requires std::is_same_v<value_type, bool>
-		constexpr static void operator_less_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		constexpr static bool operator_less_than(U1 scalar1, U2 scalar2) noexcept
 		{
-			v = scalar1 < scalar2;
+			return scalar1 < scalar2;
 		}
 
 		// unchecked
 		template <typename U1, typename U2>
 			requires std::is_same_v<value_type, bool>
-		constexpr static void operator_less_equal_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		constexpr static bool operator_less_equal_than(U1 scalar1, U2 scalar2) noexcept
 		{
-			v = scalar1 < scalar2 || scalar1 == scalar2;
+			return scalar1 < scalar2 || scalar1 == scalar2;
 		}
 
 		// unchecked
 		template <typename U1, typename U2>
 			requires std::is_same_v<value_type, bool>
-		constexpr static void operator_greater_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		constexpr static bool operator_greater_than(U1 scalar1, U2 scalar2) noexcept
 		{
-			v = scalar1 > scalar2;
+			return scalar1 > scalar2;
 		}
 
 		// unchecked
 		template <typename U1, typename U2>
 			requires std::is_same_v<value_type, bool>
-		constexpr static void operator_greater_equal_than(value_type& v, U1 scalar1, U2 scalar2) noexcept
+		constexpr static bool operator_greater_equal_than(U1 scalar1, U2 scalar2) noexcept
 		{
-			v = scalar1 > scalar2 || scalar1 == scalar2;
+			return scalar1 > scalar2 || scalar1 == scalar2;
 		}
 	};
 }
