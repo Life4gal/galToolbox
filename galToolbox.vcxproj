@@ -36,7 +36,7 @@
     <ClCompile Include="test\test_sequence_invoker.cpp" />
     <ClCompile Include="test\test_stride_iterator.cpp" />
     <ClCompile Include="test\test_vector.cpp" />
-    <ClCompile Include="test\test_view_operations.cpp" />
+    <ClCompile Include="test\test_math_apply.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -49,7 +49,7 @@
     <ClInclude Include="src\math\matrix.hpp" />
     <ClInclude Include="src\math\new_matrix.hpp" />
     <ClInclude Include="src\math\new_vector.hpp" />
-    <ClInclude Include="src\math\view_operations.hpp" />
+    <ClInclude Include="src\math\math_apply.hpp" />
     <ClInclude Include="src\utils\sequence_invoker.hpp" />
     <ClInclude Include="src\utils\tuple_maker.hpp" />
     <ClInclude Include="src\math\vector.hpp" />

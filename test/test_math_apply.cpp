@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/math/view_operations.hpp"
+#include "../src/math/math_apply.hpp"
 
 TEST(TestViewOperations, TestApply)
 {
@@ -346,6 +346,42 @@ TEST(TestViewOperations, TestApply)
 			ASSERT_EQ(matrix3[14], matrix1[14] + 10);
 			ASSERT_EQ(matrix3[15], matrix1[15] + 10);
 		}
+	}
+	{
+		auto vector3 = vector1;
+		unary_apply<false>(
+			vector3,
+			[](int& i) {i *= 2; }
+		);
+
+		ASSERT_EQ(vector3[0], vector1[0] * 2);
+		ASSERT_EQ(vector3[1], vector1[1] * 2);
+		ASSERT_EQ(vector3[2], vector1[2] * 2);
+		ASSERT_EQ(vector3[3], vector1[3] * 2);
+
+		ASSERT_TRUE(
+			(unary_apply<true, true>(
+				vector3,
+				[](int& i) {i -= 1; return i >= 0; }
+				))
+		);
+
+		ASSERT_EQ(vector3[0], vector1[0] * 2 - 1);
+		ASSERT_EQ(vector3[1], vector1[1] * 2 - 1);
+		ASSERT_EQ(vector3[2], vector1[2] * 2 - 1);
+		ASSERT_EQ(vector3[3], vector1[3] * 2 - 1);
+
+		ASSERT_TRUE(
+			(unary_apply<true, false>(
+				vector3,
+				[](int& i) {i -= 1; return i >= 5; }
+				))
+		);
+
+		ASSERT_EQ(vector3[0], vector1[0] * 2 - 2);
+		ASSERT_EQ(vector3[1], vector1[1] * 2 - 2);
+		ASSERT_EQ(vector3[2], vector1[2] * 2 - 2);
+		ASSERT_EQ(vector3[3], vector1[3] * 2 - 2);
 	}
 }
 
