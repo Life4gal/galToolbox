@@ -31,6 +31,7 @@
     <ClCompile Include="test\test_stride_iterator.cpp" />
     <ClCompile Include="test\test_sequence_invoker.cpp" />
     <ClCompile Include="test\test_math_apply.cpp" />
+    <ClCompile Include="test\test_math_operations.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -48,5 +49,6 @@
     <ClInclude Include="src\math\new_vector.hpp" />
     <ClInclude Include="src\math\math_apply.hpp" />
     <ClInclude Include="src\math\new_matrix.hpp" />
+    <ClInclude Include="src\math\math_operations.hpp" />
   </ItemGroup>
 </Project>

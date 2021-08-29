@@ -125,11 +125,11 @@ TEST(TestSequenceInvoker, TestAll)
 				std::array<int, 10> array3{};
 
 				ASSERT_TRUE(
-					sequence_invoker::binary_invoke_all<10>(
+					(sequence_invoker::binary_invoke<10, true>(
 						array3,
 						[](int& a, const int b) { a = b; return a > 0; },
 						1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-						)
+						))
 				);
 
 				ASSERT_EQ(array3[0], array1[0]);
@@ -144,11 +144,11 @@ TEST(TestSequenceInvoker, TestAll)
 				ASSERT_EQ(array3[9], array1[9]);
 
 				ASSERT_TRUE(
-					sequence_invoker::binary_invoke_any<10>(
+					(sequence_invoker::binary_invoke<10, true, false>(
 						array3,
 						[](int& a, const int b) { a = b; return a > 9; },
 						1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-						)
+						))
 				);
 
 				ASSERT_EQ(array3[0], array1[0]);
@@ -188,11 +188,11 @@ TEST(TestSequenceInvoker, TestAll)
 				std::array<int, 10> array3{};
 
 				ASSERT_TRUE(
-					sequence_invoker::binary_invoke_seq_all<10>(
+					(sequence_invoker::binary_invoke_seq<10, true>(
 						array3,
 						array1,
 						[](int& a, const int b) { a = b; return a > 0; }
-						)
+						))
 				);
 
 				ASSERT_EQ(array3[0], array1[0]);
@@ -207,11 +207,11 @@ TEST(TestSequenceInvoker, TestAll)
 				ASSERT_EQ(array3[9], array1[9]);
 
 				ASSERT_TRUE(
-					sequence_invoker::binary_invoke_seq_any<10>(
+					(sequence_invoker::binary_invoke_seq<10, true, false>(
 						array3,
 						array1,
 						[](int& a, const int b) { a = b; return a > 9; }
-						)
+						))
 				);
 
 				ASSERT_EQ(array3[0], array1[0]);
@@ -251,11 +251,11 @@ TEST(TestSequenceInvoker, TestAll)
 				std::array<int, 10> array3{};
 
 				ASSERT_TRUE(
-					sequence_invoker::binary_invoke_dup_all<10>(
+					(sequence_invoker::binary_invoke_dup<10, true>(
 						array3,
 						10,
 						[](int& a, const int b) { a = b; return a > 9; }
-						)
+						))
 				);
 
 				ASSERT_EQ(array3[0], 10);
@@ -270,11 +270,11 @@ TEST(TestSequenceInvoker, TestAll)
 				ASSERT_EQ(array3[9], 10);
 
 				ASSERT_TRUE(
-					sequence_invoker::binary_invoke_dup_any<10>(
+					(sequence_invoker::binary_invoke_dup<10, true, false>(
 						array3,
 						0,
 						[](int& a, const int b) { a = b; return a < 1; }
-						)
+						))
 				);
 
 				ASSERT_EQ(array3[0], 0);
@@ -314,10 +314,10 @@ TEST(TestSequenceInvoker, TestAll)
 			auto array3 = array2;
 
 			ASSERT_TRUE(
-				sequence_invoker::unary_invoke_all<10>(
+				(sequence_invoker::unary_invoke<10, true>(
 					array3,
 					[](int& i) { i *= 2; return i >= 0; }
-					)
+					))
 			);
 
 			ASSERT_EQ(array3[0], array2[0] * 2);
@@ -332,10 +332,10 @@ TEST(TestSequenceInvoker, TestAll)
 			ASSERT_EQ(array3[9], array2[9] * 2);
 
 			ASSERT_TRUE(
-				sequence_invoker::unary_invoke_any<10>(
+				(sequence_invoker::unary_invoke<10, true, false>(
 					array3,
 					[](int& i) { i -= 10; return i > 5; }
-					)
+					))
 			);
 
 			ASSERT_EQ(array3[0], array2[0] * 2 - 10);

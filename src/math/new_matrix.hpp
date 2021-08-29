@@ -3,7 +3,6 @@
 #include <array>
 #include "new_vector.hpp"
 #include "../utils/tuple_maker.hpp"
-#include "../iterator/stride_iterator.hpp"
 
 namespace gal::test::new_math
 {
@@ -19,30 +18,18 @@ namespace gal::test::new_math
 	template <typename T>
 	constexpr static bool is_matrix_v = is_matrix<T>::value;
 
-	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
-	class matrix_view;
-
 	template <typename T>
-	struct is_matrix_view : std::false_type {};
-
-	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
-	struct is_matrix_view<matrix_view<Stride, Row, Column, Iterator>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_matrix_view_v = is_matrix_view<T>::value;
-
-	template<typename T>
-	constexpr static bool is_matrix_type = is_matrix_v<T> || is_matrix_view_v<T>;
+	constexpr static bool is_matrix_type_v = is_matrix_v<T>;
 }
 
 namespace gal::test::utils
 {
 	/**
-	 * @brief specialize the matrix/matrix_view to support the construction of other matrix
-	 * @tparam T matrix/matrix_view
+	 * @brief specialize the matrix to support the construction of other matrix
+	 * @tparam T matrix
 	*/
 	template <typename T>
-		requires (new_math::is_matrix_v<T> || new_math::is_matrix_view_v<T>)
+		requires new_math::is_matrix_v<T>
 	struct tuple_maker_trait<T> : std::true_type
 	{
 		using value_type = typename T::value_type;
@@ -76,7 +63,7 @@ namespace gal::test::new_math
 		using const_self_reference = const matrix<value_type, column_size, row_size>&;
 		using self_rreference = matrix<value_type, column_size, row_size>&&;
 
-		template<typename U>
+		template <typename U>
 		using copy_type = matrix<U, column_size, row_size>;
 
 		using row_type = vector<value_type, row_size>;
@@ -188,56 +175,6 @@ namespace gal::test::new_math
 			return data_.cend();
 		}
 
-		template <std::size_t Stride, typename Iterator>
-			requires std::is_convertible_v<typename matrix_view<Stride, column_size, row_size, Iterator>::value_type,
-											value_type>
-		[[nodiscard]] constexpr friend bool operator==(
-			const_self_reference                                        lhs,
-			const matrix_view<Stride, column_size, row_size, Iterator>& rhs
-			)
-		noexcept(std::is_nothrow_constructible_v<
-			typename matrix_view<Stride, column_size, row_size, Iterator>::value_type, value_type>)
-		{
-			return [&]<std::size_t...I>(std::index_sequence<I...>)
-			{
-				return ((lhs.data_[I] == static_cast<value_type>(rhs[I])) && ...);
-			}(std::make_index_sequence<data_size>{});
-		}
-
-		template <std::convertible_to<value_type> U>
-		[[nodiscard]] constexpr friend bool operator==(
-			const_self_reference                    lhs,
-			const matrix<U, column_size, row_size>& rhs
-			)
-		noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			return [&]<std::size_t...I>(std::index_sequence<I...>)
-			{
-				return ((lhs.data_[I] == static_cast<value_type>(rhs[I])) && ...);
-			}(std::make_index_sequence<data_size>{});
-		}
-
-		template <typename U>
-			requires
-			(is_matrix_v<U> || is_matrix_view_v<U>) &&
-			(U::data_size == data_size) &&
-			std::is_convertible_v<typename U::value_type, value_type>
-		[[nodiscard]] constexpr friend bool operator==(const_self_reference lhs, const U& rhs)
-		noexcept(std::is_nothrow_constructible_v<typename U::value_type, value_type>)
-		{
-			return [&]<std::size_t...I>(std::index_sequence<I...>)
-			{
-				return ((lhs.data_[I] == static_cast<value_type>(rhs[I])) && ...);
-			}(std::make_index_sequence<data_size>{});
-		}
-
-		template <typename U>
-		[[nodiscard]] constexpr friend bool operator!=(const_self_reference lhs, const U& rhs)
-		noexcept(noexcept(std::declval<const_self_reference>().operator==(std::declval<const U&>())))
-		{
-			return !(lhs == rhs);
-		}
-
 		[[nodiscard]] constexpr reference get(size_type row, size_type column) noexcept
 		{
 			return data_[row * row_size + column];
@@ -286,73 +223,5 @@ namespace gal::test::new_math
 
 	private:
 		container_type data_;
-	};
-
-	template <std::size_t Stride, std::size_t Row, std::size_t Column, typename Iterator>
-	class matrix_view
-	{
-	public:
-		constexpr static auto stride      = Stride;
-		constexpr static auto row_size    = Column;
-		constexpr static auto column_size = Row;
-		constexpr static auto data_size   = Row * Column;
-
-		using view_iterator = iterator::stride_iterator<Stride, Iterator>;
-		using iterator_type = typename view_iterator::iterator_type;
-		using value_type = typename view_iterator::value_type;
-		using difference_type = typename view_iterator::difference_type;
-		using reference = typename view_iterator::reference;
-		using rreference = typename view_iterator::rreference;
-
-		using self_type = matrix_view<stride, column_size, row_size, iterator_type>;
-		using self_reference = matrix_view<stride, column_size, row_size, iterator_type>&;
-		using const_self_reference = const matrix_view<stride, column_size, row_size, iterator_type>&;
-		using self_rreference = matrix_view<stride, column_size, row_size, iterator_type>&&;
-
-		using matrix_type = matrix<value_type, column_size, row_size>;
-		using size_type = typename matrix_type::size_type;
-
-		template<typename U>
-		using copy_type = matrix<U, column_size, row_size>;
-
-		using row_type = typename matrix_type::row_type;
-		using column_type = typename matrix_type::column_type;
-
-		using row_view_type = typename matrix_type::row_view_type;
-		using const_row_view_type = typename matrix_type::const_row_view_type;
-		using column_view_type = typename matrix_type::column_view_type;
-		using const_column_view_type = typename matrix_type::const_column_view_type;
-
-		constexpr explicit matrix_view(iterator_type iterator) : iterator_(std::move(iterator), data_size) {}
-
-		[[nodiscard]] constexpr matrix_type copy_matrix() const noexcept
-		{
-			return {utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{}};
-		}
-
-		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) noexcept
-		{
-			return iterator_[index];
-		}
-
-		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) const noexcept
-		{
-			return iterator_[index];
-		}
-
-		// stl compatible, can also be used for for-loop
-		[[nodiscard]] constexpr auto begin() const noexcept
-		{
-			return iterator_.begin();
-		}
-
-		// stl compatible, can also be used for for-loop
-		[[nodiscard]] constexpr auto end() const noexcept
-		{
-			return iterator_.end();
-		}
-
-	private:
-		view_iterator iterator_;
 	};
 }

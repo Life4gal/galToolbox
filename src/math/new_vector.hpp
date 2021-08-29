@@ -31,7 +31,7 @@ namespace gal::test::new_math
 	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
 
 	template <typename T>
-	constexpr static bool is_vector_type = is_vector_v<T> || is_vector_view_v<T>;
+	constexpr static bool is_vector_type_v = is_vector_v<T> || is_vector_view_v<T>;
 }
 
 namespace gal::test::utils
@@ -73,7 +73,7 @@ namespace gal::test::new_math
 		using const_self_reference = const vector<value_type, data_size>&;
 		using self_rreference = vector<value_type, data_size>&&;
 
-		template<typename U>
+		template<typename U = value_type>
 		using copy_type = vector<U, data_size>;
 
 		// Stride may not be 1, and even Iterator is not std::array<value_type, data_size>::iterator but std::array<value_type, N>::iterator (N != data_size)
@@ -205,7 +205,7 @@ namespace gal::test::new_math
 
 		template <typename U>
 			requires
-			is_vector_type<U> &&
+			is_vector_type_v<U> &&
 			(data_size == U::data_size) &&
 			std::is_convertible_v<typename U::value_type, value_type>
 		[[nodiscard]] constexpr friend bool operator==(const_self_reference lhs, const U& rhs)
