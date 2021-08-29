@@ -126,6 +126,11 @@ namespace gal::test::new_math
 													)>{}
 					) {}
 
+		[[nodiscard]] constexpr copy_type<> copy() const noexcept
+		{
+			return { *this };
+		}
+
 		template <std::size_t Stride = 1>
 		[[nodiscard]] constexpr view_type<Stride> to_view() noexcept
 		{
@@ -202,28 +207,7 @@ namespace gal::test::new_math
 		{
 			return data_.cend();
 		}
-
-		template <typename U>
-			requires
-			is_vector_type_v<U> &&
-			(data_size == U::data_size) &&
-			std::is_convertible_v<typename U::value_type, value_type>
-		[[nodiscard]] constexpr friend bool operator==(const_self_reference lhs, const U& rhs)
-		noexcept(std::is_nothrow_constructible_v<typename U::value_type, value_type>)
-		{
-			return [&]<std::size_t...I>(std::index_sequence<I...>)
-			{
-				return ((lhs.data_[I] == static_cast<value_type>(rhs[I])) && ...);
-			}(std::make_index_sequence<data_size>{});
-		}
-
-		template <typename U>
-		[[nodiscard]] constexpr friend bool operator!=(const_self_reference lhs, const U& rhs)
-		noexcept(noexcept(std::declval<const_self_reference>().operator==(std::declval<const U&>())))
-		{
-			return !(lhs == rhs);
-		}
-
+	
 	private:
 		container_type data_;
 	};
@@ -250,16 +234,16 @@ namespace gal::test::new_math
 		using vector_type = vector<value_type, data_size>;
 		using size_type = typename vector_type::size_type;
 
-		template<typename U>
+		template<typename U = value_type>
 		using copy_type = vector<U, data_size>;
 
-		constexpr explicit vector_view(iterator_type iterator) : iterator_(std::move(iterator), data_size) {}
+		constexpr explicit vector_view(iterator_type iterator) noexcept : iterator_(std::move(iterator), data_size) {}
 
-		[[nodiscard]] constexpr vector_type copy_vector() const noexcept
+		[[nodiscard]] constexpr copy_type<> copy() const noexcept
 		{
-			return {utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{}};
+			return { utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{} };
 		}
-
+		
 		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) noexcept
 		{
 			return iterator_[index];

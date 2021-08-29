@@ -17,9 +17,6 @@ namespace gal::test::new_math
 
 	template <typename T>
 	constexpr static bool is_matrix_v = is_matrix<T>::value;
-
-	template <typename T>
-	constexpr static bool is_matrix_type_v = is_matrix_v<T>;
 }
 
 namespace gal::test::utils
@@ -63,7 +60,7 @@ namespace gal::test::new_math
 		using const_self_reference = const matrix<value_type, column_size, row_size>&;
 		using self_rreference = matrix<value_type, column_size, row_size>&&;
 
-		template <typename U>
+		template <typename U = value_type>
 		using copy_type = matrix<U, column_size, row_size>;
 
 		using row_type = vector<value_type, row_size>;
@@ -109,6 +106,11 @@ namespace gal::test::new_math
 																											Args>(args))
 																		...))>)>
 					{}) {}
+
+		[[nodiscard]] constexpr copy_type<> copy() const noexcept
+		{
+			return {*this};
+		}
 
 		[[nodiscard]] constexpr static size_type size() noexcept
 		{

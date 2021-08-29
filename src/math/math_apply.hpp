@@ -9,7 +9,7 @@ namespace gal::test::new_math
 	template <typename T>
 	constexpr static bool is_math_type_v =
 		is_vector_type_v<T> ||
-		is_matrix_type_v<T>;
+		is_matrix_v<T>;
 
 	template <typename T>
 	struct math_value_type_helper
@@ -39,15 +39,15 @@ namespace gal::test::new_math
 
 	template <typename T1, typename T2, bool Dummy>
 		requires
-		is_matrix_type_v<T1> &&
-		is_matrix_type_v<T2> &&
+		is_matrix_v<T1> &&
+		is_matrix_v<T2> &&
 		(T1::column_size == T2::column_size) &&
 		(T1::row_size == T2::row_size)
 	struct is_math_same_size<T1, T2, Dummy> : std::true_type {};
 
 	template <typename T1, typename T2, bool AsRow>
 		requires
-		is_matrix_type_v<T1> &&
+		is_matrix_v<T1> &&
 		is_vector_type_v<T2> &&
 		(AsRow
 			? (T1::row_size == T2::data_size)
@@ -58,7 +58,7 @@ namespace gal::test::new_math
 	template <typename T1, typename T2, bool AsRow>
 		requires
 		is_vector_type_v<T1> &&
-		is_matrix_type_v<T2> &&
+		is_matrix_v<T2> &&
 		(AsRow
 			? (T1::data_size == T2::row_size)
 			: (T1::data_size == T2::column_size)
@@ -748,290 +748,91 @@ namespace gal::test::new_math
 										);
 	}
 
-	/**
-	 * @brief specialize math_invoker for the actual implementer of the operation
-	 * @note if the operation corresponding to the target type is not implemented, the corresponding operation is not allowed
-	 * @tparam T specialized type
-	*/
-	template <typename T>
-	struct math_invoker : std::false_type {};
-
-	/**
-	 * @brief give some basic operations for the arithmetic type
-	 * @tparam T arithmetic
-	*/
-	template <typename T>
-		requires std::is_arithmetic_v<T>
-	struct math_invoker<T> : std::true_type
+	// matrix + matrix / vector + vector
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		(
+			(is_matrix_v<T1> && is_matrix_v<T2>) ||
+			(is_vector_v<T1> && is_vector_type_v<T2>)
+		)
+		&&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator_base(T1& t1, const T2& t2, Pred&& pred)
 	{
-		using value_type = T;
-		static_assert(std::is_arithmetic_v<value_type>);
-	private:
-		template <bool Left, typename U>
-		constexpr static void shift_impl(value_type& value, U scalar) noexcept
-		{
-			if constexpr (std::is_floating_point_v<value_type>)
-			{
-				bool s_lt_0 = scalar < 0;
-				if (s_lt_0)
-				{
-					scalar = -scalar;
-				}
+		return binary_apply_seq<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
 
-				if constexpr (
-					constexpr auto shift = [](value_type& v, const bool left, auto s) constexpr noexcept -> void
-					{
-						if (
-							constexpr auto pow = [](auto base, auto p) constexpr noexcept -> auto
-							{
-								auto ret = base;
-								while (--p)
-								{
-									ret *= base;
-								}
-								return ret;
-							};
-							left)
-						{
-							v *= pow(2,
-									static_cast<std::conditional_t<
-										(sizeof(T) > sizeof(std::conditional_t<
-											std::is_signed_v<T>, std::int32_t, std::uint32_t>)),
-										std::conditional_t<std::is_signed_v<T>, std::int64_t, std::uint64_t>,
-										std::conditional_t<std::is_signed_v<T>, std::int32_t, std::uint32_t>>>(
-										s));
-						}
-						else
-						{
-							v /= pow(2,
-									static_cast<std::conditional_t<
-										(sizeof(T) > sizeof(std::conditional_t<
-											std::is_signed_v<T>, std::int32_t, std::uint32_t>)),
-										std::conditional_t<std::is_signed_v<T>, std::int64_t, std::uint64_t>,
-										std::conditional_t<std::is_signed_v<T>, std::int32_t, std::uint32_t>>>(
-										s));
-						}
-					}; Left)
-				{
-					shift(value, !s_lt_0, scalar);
-				}
-				else
-				{
-					shift(value, s_lt_0, scalar);
-				}
-			}
-			else
-			{
-				if constexpr (Left)
-				{
-					value <<= static_cast<value_type>(scalar);
-				}
-				else
-				{
-					value >>= static_cast<value_type>(scalar);
-				}
-			}
-		}
+	// vector_view + vector/vector_view
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator_base(T1 t1, const T2& t2, Pred&& pred)
+	{
+		return binary_apply_seq<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
 
-	public:
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_add(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value += static_cast<value_type>(scalar);
-		}
+	// one matrix/vector, one arg
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		(is_vector_v<T1> || is_matrix_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr auto operator_base(T1& t1, T2 t2, Pred&& pred)
+	{
+		return binary_apply_dup<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
 
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_subtract(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value -= static_cast<value_type>(scalar);
-		}
+	// one vector_view, one arg
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		is_vector_view_v<T1> &&
+		(!is_math_type_v<T2>)
+	constexpr auto operator_base(T1 t1, T2 t2, Pred&& pred)
+	{
+		return binary_apply_dup<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
 
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_multiply(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value *= static_cast<value_type>(scalar);
-		}
+	// one matrix/vector, one parameters pack
+	template <bool HasRet = false, bool All = true, typename T1, typename Pred, typename ...Args>
+		requires
+		(is_matrix_v<T1> || is_vector_v<T1>) &&
+		(sizeof...(Args) == T1::data_size)
+	constexpr auto operator_base(T1& t1, Pred&& pred, Args&&...args)
+	{
+		return binary_apply<HasRet, All>(
+										t1,
+										std::forward<Pred>(pred),
+										std::forward<Args>(args)...
+										);
+	}
 
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_divide(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value /= static_cast<value_type>(scalar);
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_model(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			if constexpr (std::is_floating_point_v<value_type>)
-			{
-				if (scalar < 0)
-				{
-					scalar = -scalar;
-				}
-
-				if (value < 0)
-				{
-					auto n = static_cast<std::conditional_t<
-						(sizeof(value_type) > sizeof(std::int32_t)), std::int64_t, std::int32_t>>(-value / static_cast<
-						value_type>(scalar));
-					value += static_cast<value_type>(n) * static_cast<decltype(n)>(scalar);
-				}
-				else
-				{
-					auto n = static_cast<std::conditional_t<
-						(sizeof(value_type) > sizeof(std::uint32_t)), std::uint64_t, std::uint32_t>>(value / static_cast
-						<value_type>(scalar));
-					value -= static_cast<value_type>(n) * static_cast<decltype(n)>(scalar);
-				}
-			}
-			else
-			{
-				value %= static_cast<value_type>(scalar);
-			}
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_and(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value &= static_cast<value_type>(scalar);
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_or(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value |= static_cast<value_type>(scalar);
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_xor(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			value ^= static_cast<value_type>(scalar);
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_left_shift(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			math_invoker::template shift_impl<true>(value, scalar);
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_right_shift(
-			value_type& value,
-			U           scalar
-			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			math_invoker::template shift_impl<false>(value, scalar);
-		}
-
-		// unchecked
-		constexpr static void operator_unary_minus(value_type& value)
-		noexcept
-		{
-			value = -value;
-		}
-
-		// unchecked
-		constexpr static void operator_unary_tilde(value_type& value)
-		noexcept
-		{
-			value = ~value;
-		}
-
-		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
-		constexpr static bool operator_equal_to(value_type v1, U v2)
-		noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			return v1 == v2;
-		}
-
-		// unchecked
-		template <typename U>
-			requires (std::is_convertible_v<U, value_type> && std::is_floating_point_v<value_type>)
-		constexpr static bool operator_equal_to(value_type v1, U v2, value_type epsilon = 0.000001)
-		noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			return static_cast<double>(v1) - static_cast<double>(v2) <= epsilon &&
-				static_cast<double>(v1) - static_cast<double>(v2) >= -epsilon;
-		}
-
-		// unchecked
-		template <typename U1, typename U2>
-			requires std::is_same_v<value_type, bool>
-		constexpr static bool operator_less_than(U1 scalar1, U2 scalar2) noexcept
-		{
-			return scalar1 < scalar2;
-		}
-
-		// unchecked
-		template <typename U1, typename U2>
-			requires std::is_same_v<value_type, bool>
-		constexpr static bool operator_less_equal_than(U1 scalar1, U2 scalar2) noexcept
-		{
-			return scalar1 < scalar2 || scalar1 == scalar2;
-		}
-
-		// unchecked
-		template <typename U1, typename U2>
-			requires std::is_same_v<value_type, bool>
-		constexpr static bool operator_greater_than(U1 scalar1, U2 scalar2) noexcept
-		{
-			return scalar1 > scalar2;
-		}
-
-		// unchecked
-		template <typename U1, typename U2>
-			requires std::is_same_v<value_type, bool>
-		constexpr static bool operator_greater_equal_than(U1 scalar1, U2 scalar2) noexcept
-		{
-			return scalar1 > scalar2 || scalar1 == scalar2;
-		}
-	};
+	// one vector_view, one parameters pack
+	template <bool HasRet = false, bool All = true, typename T1, typename Pred, typename ...Args>
+		requires
+		is_vector_view_v<T1> &&
+		(sizeof...(Args) == T1::data_size)
+	constexpr auto operator_base(T1 t1, Pred&& pred, Args&&...args)
+	{
+		return binary_apply<HasRet, All>(
+										t1,
+										std::forward<Pred>(pred),
+										std::forward<Args>(args)...
+										);
+	}
 }
