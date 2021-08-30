@@ -1,15 +1,15 @@
 #pragma once
 
-#include "new_vector.hpp"
-#include "new_matrix.hpp"
+#include "vector.hpp"
+#include "matrix.hpp"
 #include "../utils/sequence_invoker.hpp"
 
-namespace gal::test::new_math
+namespace gal::test::math
 {
 	template <typename T>
 	constexpr static bool is_math_type_v =
-		is_vector_v<T> || is_vector_view_v<T> ||
-		is_matrix_v<T> || is_matrix_view_v<T>;
+		is_vector_type_v<T> ||
+		is_matrix_v<T>;
 
 	template <typename T>
 	struct math_value_type_helper
@@ -27,26 +27,46 @@ namespace gal::test::new_math
 	template <typename T>
 	using math_value_type = typename math_value_type_helper<T>::value_type;
 
-	template <typename T1, typename T2>
+	template <typename T1, typename T2, bool>
 	struct is_math_same_size : std::false_type {};
 
-	template <typename T1, typename T2>
+	template <typename T1, typename T2, bool Dummy>
 		requires
-		is_vector_type<T1> &&
-		is_vector_type<T2> &&
+		is_vector_type_v<T1> &&
+		is_vector_type_v<T2> &&
 		(T1::data_size == T2::data_size)
-	struct is_math_same_size<T1, T2> : std::true_type {};
+	struct is_math_same_size<T1, T2, Dummy> : std::true_type {};
 
-	template <typename T1, typename T2>
+	template <typename T1, typename T2, bool Dummy>
 		requires
-		is_matrix_type<T1> &&
-		is_matrix_type<T2> &&
+		is_matrix_v<T1> &&
+		is_matrix_v<T2> &&
 		(T1::column_size == T2::column_size) &&
 		(T1::row_size == T2::row_size)
-	struct is_math_same_size<T1, T2> : std::true_type {};
+	struct is_math_same_size<T1, T2, Dummy> : std::true_type {};
 
-	template <typename T1, typename T2>
-	constexpr static bool is_math_same_size_v = is_math_same_size<T1, T2>::value;
+	template <typename T1, typename T2, bool AsRow>
+		requires
+		is_matrix_v<T1> &&
+		is_vector_type_v<T2> &&
+		(AsRow
+			? (T1::row_size == T2::data_size)
+			: (T1::column_size == T2::data_size)
+		)
+	struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
+
+	template <typename T1, typename T2, bool AsRow>
+		requires
+		is_vector_type_v<T1> &&
+		is_matrix_v<T2> &&
+		(AsRow
+			? (T1::data_size == T2::row_size)
+			: (T1::data_size == T2::column_size)
+		)
+	struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
+
+	template <typename T1, typename T2, bool AsRow = true>
+	constexpr static bool is_math_same_size_v = is_math_same_size<T1, T2, AsRow>::value;
 
 	/**
 	 * @brief process a vector/matrix with parameters pack
@@ -363,7 +383,7 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U,
 		typename Pred,
@@ -383,45 +403,23 @@ namespace gal::test::new_math
 		)
 	noexcept(
 		noexcept(
-			utils::sequence_invoker::binary_invoke<U::data_size>(
-																std::declval<U&>(),
-																std::declval<decltype(std::forward<Pred>(pred))>(),
-																std::declval<std::index_sequence<I...>>(),
-																std::declval<decltype(std::forward<Args>(args))>()...
-																)
+			utils::sequence_invoker::binary_invoke<U::data_size, HasRet, All>(
+																			std::declval<U&>(),
+																			std::declval<decltype(std::forward<
+																				Pred>(pred))>(),
+																			std::declval<std::index_sequence<I...>>(),
+																			std::declval<decltype(std::forward<
+																				Args>(args))>()...
+																			)
 		)
 	)
 	{
-		if constexpr (HasRet)
-		{
-			if constexpr (All)
-			{
-				return utils::sequence_invoker::binary_invoke_all<U::data_size>(
+		return utils::sequence_invoker::binary_invoke<U::data_size, HasRet, All>(
 																				scalar,
 																				std::forward<Pred>(pred),
 																				std::index_sequence<I...>{},
 																				std::forward<Args>(args)...
 																				);
-			}
-			else
-			{
-				return utils::sequence_invoker::binary_invoke_any<U::data_size>(
-																				scalar,
-																				std::forward<Pred>(pred),
-																				std::index_sequence<I...>{},
-																				std::forward<Args>(args)...
-																				);
-			}
-		}
-		else
-		{
-			utils::sequence_invoker::binary_invoke<U::data_size>(
-																scalar,
-																std::forward<Pred>(pred),
-																std::index_sequence<I...>{},
-																std::forward<Args>(args)...
-																);
-		}
 	}
 
 	/**
@@ -437,7 +435,7 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U,
 		typename Pred,
@@ -487,7 +485,7 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U1,
 		typename U2,
@@ -507,49 +505,26 @@ namespace gal::test::new_math
 		std::index_sequence<I2...>)
 	noexcept(
 		noexcept(
-			utils::sequence_invoker::binary_invoke_seq<U1::data_size>(
-																	std::declval<U1&>(),
-																	std::declval<const U2&>(),
-																	std::declval<decltype(std::forward<Pred>(pred))>(),
-																	std::declval<std::index_sequence<I1...>>(),
-																	std::declval<std::index_sequence<I2...>>()
-																	)
+			utils::sequence_invoker::binary_invoke_seq<U1::data_size, HasRet, All>(
+																					std::declval<U1&>(),
+																					std::declval<const U2&>(),
+																					std::declval<decltype(std::forward<
+																						Pred>(pred))>(),
+																					std::declval<std::index_sequence<I1
+																						...>>(),
+																					std::declval<std::index_sequence<I2
+																						...>>()
+																				)
 		)
 	)
 	{
-		if constexpr (HasRet)
-		{
-			if constexpr (All)
-			{
-				return utils::sequence_invoker::binary_invoke_seq_all<U1::data_size>(
+		return utils::sequence_invoker::binary_invoke_seq<U1::data_size, HasRet, All>(
 																					scalar1,
 																					scalar2,
 																					std::forward<Pred>(pred),
 																					std::index_sequence<I1...>{},
 																					std::index_sequence<I2...>{}
 																					);
-			}
-			else
-			{
-				return utils::sequence_invoker::binary_invoke_seq_any<U1::data_size>(
-																					scalar1,
-																					scalar2,
-																					std::forward<Pred>(pred),
-																					std::index_sequence<I1...>{},
-																					std::index_sequence<I2...>{}
-																					);
-			}
-		}
-		else
-		{
-			utils::sequence_invoker::binary_invoke_seq<U1::data_size>(
-																	scalar1,
-																	scalar2,
-																	std::forward<Pred>(pred),
-																	std::index_sequence<I1...>{},
-																	std::index_sequence<I2...>{}
-																	);
-		}
 	}
 
 	/**
@@ -567,7 +542,7 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U1,
 		typename U2,
@@ -615,7 +590,7 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U,
 		typename T,
@@ -624,7 +599,6 @@ namespace gal::test::new_math
 	>
 		requires is_math_type_v<U> &&
 		(sizeof...(I) == U::data_size)
-	// ReSharper disable once CppNotAllPathsReturnValue (actually all paths have return value)
 	constexpr std::conditional_t<HasRet, bool, void> binary_apply_dup(
 		U&                       scalar,
 		T                        dup_arg,
@@ -632,45 +606,23 @@ namespace gal::test::new_math
 		std::index_sequence<I...>)
 	noexcept(
 		noexcept(
-			utils::sequence_invoker::binary_invoke_dup<U::data_size>(
-																	std::declval<U&>(),
-																	std::declval<T>(),
-																	std::declval<decltype(std::forward<Pred>(pred))>(),
-																	std::declval<std::index_sequence<I...>>()
-																	)
+			utils::sequence_invoker::binary_invoke_dup<U::data_size, HasRet, All>(
+																				std::declval<U&>(),
+																				std::declval<T>(),
+																				std::declval<decltype(std::forward<
+																					Pred>(pred))>(),
+																				std::declval<std::index_sequence<I
+																					...>>()
+																				)
 		)
 	)
 	{
-		if constexpr (HasRet)
-		{
-			if constexpr (All)
-			{
-				return utils::sequence_invoker::binary_invoke_dup_all<U::data_size>(
+		return utils::sequence_invoker::binary_invoke_dup<U::data_size, HasRet, All>(
 																					scalar,
 																					dup_arg,
 																					std::forward<Pred>(pred),
 																					std::index_sequence<I...>{}
 																					);
-			}
-			else
-			{
-				return utils::sequence_invoker::binary_invoke_dup_any<U::data_size>(
-																					scalar,
-																					dup_arg,
-																					std::forward<Pred>(pred),
-																					std::index_sequence<I...>{}
-																					);
-			}
-		}
-		else
-		{
-			utils::sequence_invoker::binary_invoke_dup<U::data_size>(
-																	scalar,
-																	dup_arg,
-																	std::forward<Pred>(pred),
-																	std::index_sequence<I...>{}
-																	);
-		}
 	}
 
 	/**
@@ -686,14 +638,13 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U,
 		typename T,
 		typename Pred
 	>
 		requires is_math_type_v<U>
-	// ReSharper disable once CppNotAllPathsReturnValue (actually all paths have return value)
 	constexpr std::conditional_t<HasRet, bool, void> binary_apply_dup(
 		U&     scalar,
 		T      dup_arg,
@@ -730,7 +681,7 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U,
 		typename Pred,
@@ -738,7 +689,6 @@ namespace gal::test::new_math
 	>
 		requires is_math_type_v<U> &&
 		(sizeof...(I) == U::data_size)
-	// ReSharper disable once CppNotAllPathsReturnValue (actually all paths have return value)
 	constexpr std::conditional_t<HasRet, bool, void> unary_apply(
 		U&                       scalar,
 		Pred&&                   pred,
@@ -753,33 +703,11 @@ namespace gal::test::new_math
 		)
 	)
 	{
-		if constexpr (HasRet)
-		{
-			if constexpr (All)
-			{
-				return utils::sequence_invoker::unary_invoke_all<U::data_size>(
+		return utils::sequence_invoker::unary_invoke<U::data_size, HasRet, All>(
 																				scalar,
 																				std::forward<Pred>(pred),
 																				std::index_sequence<I...>{}
-																			);
-			}
-			else
-			{
-				return utils::sequence_invoker::unary_invoke_any<U::data_size>(
-																				scalar,
-																				std::forward<Pred>(pred),
-																				std::index_sequence<I...>{}
-																			);
-			}
-		}
-		else
-		{
-			utils::sequence_invoker::unary_invoke<U::data_size>(
-																scalar,
-																std::forward<Pred>(pred),
-																std::index_sequence<I...>{}
-																);
-		}
+																				);
 	}
 
 	/**
@@ -793,13 +721,12 @@ namespace gal::test::new_math
 	 * @return bool or void
 	*/
 	template <
-		bool HasRet,
+		bool HasRet = false,
 		bool All = true,
 		typename U,
 		typename Pred
 	>
 		requires is_math_type_v<U>
-	// ReSharper disable once CppNotAllPathsReturnValue (actually all paths have return value)
 	constexpr std::conditional_t<HasRet, bool, void> unary_apply(
 		U&     scalar,
 		Pred&& pred
@@ -818,6 +745,237 @@ namespace gal::test::new_math
 										scalar,
 										std::forward<Pred>(pred),
 										std::make_index_sequence<U::data_size>{}
+										);
+	}
+
+	// matrix + matrix / vector + vector -> return a matrix/vector
+	template <typename RetType, typename T1, typename T2, typename Pred>
+		requires
+		(
+			(is_matrix_v<T1> && is_matrix_v<T2>) ||
+			(is_vector_type_v<T1> && is_vector_type_v<T2>)
+		)
+		&&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator_base(const T1& t1, const T2& t2, Pred&& pred)
+	noexcept(noexcept(
+		ternary_apply_seq<RetType>(
+									std::declval<const T1&>(),
+									std::declval<const T2&>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return ternary_apply_seq<RetType>(
+										t1,
+										t2,
+										std::forward<Pred>(pred)
+										);
+	}
+
+	// matrix/vector + one arg -> return a matrix/vector
+	template <typename RetType, typename T1, typename T2, typename Pred>
+		requires
+		is_math_type_v<T1> &&
+		(!is_math_type_v<T2>)
+	constexpr auto operator_base(const T1& t1, T2 t2, Pred&& pred)
+	noexcept(noexcept(
+		ternary_apply_dup<RetType>(
+									std::declval<const T1&>(),
+									std::declval<T2>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return ternary_apply_dup<RetType>(
+										t1,
+										t2,
+										std::forward<Pred>(pred)
+										);
+	}
+
+	// matrix/vector + one parameters pack -> return a matrix/vector
+	template <typename RetType, typename T, typename Pred, typename...Args>
+		requires
+		is_math_type_v<T> &&
+		(sizeof...(Args) == T::data_size)
+	constexpr auto operator_base(const T& t, Pred&& pred, Args&&...args)
+	noexcept(noexcept(
+		ternary_apply<RetType>(
+								std::declval<const T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>(),
+								std::declval<decltype(std::forward<Args>(args))>()...
+							)
+	))
+	{
+		return ternary_apply<RetType>(
+									t,
+									std::forward<Pred>(pred),
+									std::forward<Args>(args)...
+									);
+	}
+
+	// matrix + matrix / vector + vector
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		(
+			(is_matrix_v<T1> && is_matrix_v<T2>) ||
+			(is_vector_v<T1> && is_vector_type_v<T2>)
+		)
+		&&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator_base(T1& t1, const T2& t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_seq<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<const T2&>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
+	{
+		return binary_apply_seq<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
+
+	// vector_view + vector/vector_view
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator_base(T1 t1, const T2& t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_seq<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<const T2&>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
+	{
+		return binary_apply_seq<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
+
+	// one matrix/vector, one arg
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		(is_vector_v<T1> || is_matrix_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr auto operator_base(T1& t1, T2 t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_dup<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<T2>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
+	{
+		return binary_apply_dup<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
+
+	// one vector_view, one arg
+	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
+		requires
+		is_vector_view_v<T1> &&
+		(!is_math_type_v<T2>)
+	constexpr auto operator_base(T1 t1, T2 t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_dup<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<T2>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
+	{
+		return binary_apply_dup<HasRet, All>(
+											t1,
+											t2,
+											std::forward<Pred>(pred)
+											);
+	}
+
+	// one matrix/vector, one parameters pack
+	template <bool HasRet = false, bool All = true, typename T, typename Pred, typename ...Args>
+		requires
+		(is_matrix_v<T> || is_vector_v<T>) &&
+		(sizeof...(Args) == T::data_size)
+	constexpr auto operator_base(T& t, Pred&& pred, Args&&...args)
+	noexcept(noexcept(
+		binary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>(),
+								std::declval<decltype(std::forward<Args>(args))>()...
+								)
+	))
+	{
+		return binary_apply<HasRet, All>(
+										t,
+										std::forward<Pred>(pred),
+										std::forward<Args>(args)...
+										);
+	}
+
+	// one vector_view, one parameters pack
+	template <bool HasRet = false, bool All = true, typename T, typename Pred, typename ...Args>
+		requires
+		is_vector_view_v<T> &&
+		(sizeof...(Args) == T::data_size)
+	constexpr auto operator_base(T t, Pred&& pred, Args&&...args)
+	noexcept(noexcept(
+		binary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>(),
+								std::declval<decltype(std::forward<Args>(args))>()...
+								)
+	))
+	{
+		return binary_apply<HasRet, All>(
+										t,
+										std::forward<Pred>(pred),
+										std::forward<Args>(args)...
+										);
+	}
+
+	// one matrix/vector
+	template <bool HasRet = false, bool All = true, typename T, typename Pred>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr auto operator_base(T& t, Pred&& pred)
+	noexcept(noexcept(
+		unary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return unary_apply<HasRet, All>(
+										t,
+										std::forward<Pred>(pred)
+										);
+	}
+
+	// one vector_view
+	template <bool HasRet = false, bool All = true, typename T, typename Pred>
+		requires is_vector_view_v<T>
+	constexpr auto operator_base(T t, Pred&& pred)
+	noexcept(noexcept(
+		unary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return unary_apply<HasRet, All>(
+										t,
+										std::forward<Pred>(pred)
 										);
 	}
 }
