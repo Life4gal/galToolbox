@@ -1,10 +1,10 @@
 #pragma once
 
-#include "new_vector.hpp"
-#include "new_matrix.hpp"
+#include "vector.hpp"
+#include "matrix.hpp"
 #include "../utils/sequence_invoker.hpp"
 
-namespace gal::test::new_math
+namespace gal::test::math
 {
 	template <typename T>
 	constexpr static bool is_math_type_v =
@@ -748,6 +748,73 @@ namespace gal::test::new_math
 										);
 	}
 
+	// matrix + matrix / vector + vector -> return a matrix/vector
+	template <typename RetType, typename T1, typename T2, typename Pred>
+		requires
+		(
+			(is_matrix_v<T1> && is_matrix_v<T2>) ||
+			(is_vector_type_v<T1> && is_vector_type_v<T2>)
+		)
+		&&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator_base(const T1& t1, const T2& t2, Pred&& pred)
+	noexcept(noexcept(
+		ternary_apply_seq<RetType>(
+									std::declval<const T1&>(),
+									std::declval<const T2&>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return ternary_apply_seq<RetType>(
+										t1,
+										t2,
+										std::forward<Pred>(pred)
+										);
+	}
+
+	// matrix/vector + one arg -> return a matrix/vector
+	template <typename RetType, typename T1, typename T2, typename Pred>
+		requires
+		is_math_type_v<T1> &&
+		(!is_math_type_v<T2>)
+	constexpr auto operator_base(const T1& t1, T2 t2, Pred&& pred)
+	noexcept(noexcept(
+		ternary_apply_dup<RetType>(
+									std::declval<const T1&>(),
+									std::declval<T2>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return ternary_apply_dup<RetType>(
+										t1,
+										t2,
+										std::forward<Pred>(pred)
+										);
+	}
+
+	// matrix/vector + one parameters pack -> return a matrix/vector
+	template <typename RetType, typename T, typename Pred, typename...Args>
+		requires
+		is_math_type_v<T> &&
+		(sizeof...(Args) == T::data_size)
+	constexpr auto operator_base(const T& t, Pred&& pred, Args&&...args)
+	noexcept(noexcept(
+		ternary_apply<RetType>(
+								std::declval<const T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>(),
+								std::declval<decltype(std::forward<Args>(args))>()...
+							)
+	))
+	{
+		return ternary_apply<RetType>(
+									t,
+									std::forward<Pred>(pred),
+									std::forward<Args>(args)...
+									);
+	}
+
 	// matrix + matrix / vector + vector
 	template <bool HasRet = false, bool All = true, typename T1, typename T2, typename Pred>
 		requires
@@ -758,6 +825,13 @@ namespace gal::test::new_math
 		&&
 		is_math_same_size_v<T1, T2>
 	constexpr auto operator_base(T1& t1, const T2& t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_seq<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<const T2&>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
 	{
 		return binary_apply_seq<HasRet, All>(
 											t1,
@@ -772,6 +846,13 @@ namespace gal::test::new_math
 		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
 		is_math_same_size_v<T1, T2>
 	constexpr auto operator_base(T1 t1, const T2& t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_seq<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<const T2&>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
 	{
 		return binary_apply_seq<HasRet, All>(
 											t1,
@@ -786,6 +867,13 @@ namespace gal::test::new_math
 		(is_vector_v<T1> || is_matrix_v<T1>) &&
 		(!is_math_type_v<T2>)
 	constexpr auto operator_base(T1& t1, T2 t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_dup<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<T2>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
 	{
 		return binary_apply_dup<HasRet, All>(
 											t1,
@@ -800,6 +888,13 @@ namespace gal::test::new_math
 		is_vector_view_v<T1> &&
 		(!is_math_type_v<T2>)
 	constexpr auto operator_base(T1 t1, T2 t2, Pred&& pred)
+	noexcept(noexcept(
+		binary_apply_dup<HasRet, All>(
+									std::declval<T1&>(),
+									std::declval<T2>(),
+									std::declval<decltype(std::forward<Pred>(pred))>()
+									)
+	))
 	{
 		return binary_apply_dup<HasRet, All>(
 											t1,
@@ -809,30 +904,78 @@ namespace gal::test::new_math
 	}
 
 	// one matrix/vector, one parameters pack
-	template <bool HasRet = false, bool All = true, typename T1, typename Pred, typename ...Args>
+	template <bool HasRet = false, bool All = true, typename T, typename Pred, typename ...Args>
 		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(sizeof...(Args) == T1::data_size)
-	constexpr auto operator_base(T1& t1, Pred&& pred, Args&&...args)
+		(is_matrix_v<T> || is_vector_v<T>) &&
+		(sizeof...(Args) == T::data_size)
+	constexpr auto operator_base(T& t, Pred&& pred, Args&&...args)
+	noexcept(noexcept(
+		binary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>(),
+								std::declval<decltype(std::forward<Args>(args))>()...
+								)
+	))
 	{
 		return binary_apply<HasRet, All>(
-										t1,
+										t,
 										std::forward<Pred>(pred),
 										std::forward<Args>(args)...
 										);
 	}
 
 	// one vector_view, one parameters pack
-	template <bool HasRet = false, bool All = true, typename T1, typename Pred, typename ...Args>
+	template <bool HasRet = false, bool All = true, typename T, typename Pred, typename ...Args>
 		requires
-		is_vector_view_v<T1> &&
-		(sizeof...(Args) == T1::data_size)
-	constexpr auto operator_base(T1 t1, Pred&& pred, Args&&...args)
+		is_vector_view_v<T> &&
+		(sizeof...(Args) == T::data_size)
+	constexpr auto operator_base(T t, Pred&& pred, Args&&...args)
+	noexcept(noexcept(
+		binary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>(),
+								std::declval<decltype(std::forward<Args>(args))>()...
+								)
+	))
 	{
 		return binary_apply<HasRet, All>(
-										t1,
+										t,
 										std::forward<Pred>(pred),
 										std::forward<Args>(args)...
+										);
+	}
+
+	// one matrix/vector
+	template <bool HasRet = false, bool All = true, typename T, typename Pred>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr auto operator_base(T& t, Pred&& pred)
+	noexcept(noexcept(
+		unary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return unary_apply<HasRet, All>(
+										t,
+										std::forward<Pred>(pred)
+										);
+	}
+
+	// one vector_view
+	template <bool HasRet = false, bool All = true, typename T, typename Pred>
+		requires is_vector_view_v<T>
+	constexpr auto operator_base(T t, Pred&& pred)
+	noexcept(noexcept(
+		unary_apply<HasRet, All>(
+								std::declval<T&>(),
+								std::declval<decltype(std::forward<Pred>(pred))>()
+								)
+	))
+	{
+		return unary_apply<HasRet, All>(
+										t,
+										std::forward<Pred>(pred)
 										);
 	}
 }

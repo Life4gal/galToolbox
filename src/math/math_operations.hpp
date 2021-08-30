@@ -1,11 +1,11 @@
 #pragma once
 
-#include "new_vector.hpp"
-#include "new_matrix.hpp"
+#include "vector.hpp"
+#include "matrix.hpp"
 #include "math_apply.hpp"
 #include "../utils/tuple_maker.hpp"
 
-namespace gal::test::new_math
+namespace gal::test::math
 {
 	/**
 	 * @brief specialize math_invoker for the actual implementer of the operation
@@ -176,7 +176,7 @@ namespace gal::test::new_math
 		// unchecked
 		template <typename U>
 			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_and(
+		constexpr static void operator_bit_and(
 			value_type& value,
 			U           scalar
 			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
@@ -187,7 +187,7 @@ namespace gal::test::new_math
 		// unchecked
 		template <typename U>
 			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_or(
+		constexpr static void operator_bit_or(
 			value_type& value,
 			U           scalar
 			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
@@ -198,7 +198,7 @@ namespace gal::test::new_math
 		// unchecked
 		template <typename U>
 			requires std::is_convertible_v<U, value_type>
-		constexpr static void operator_xor(
+		constexpr static void operator_bit_xor(
 			value_type& value,
 			U           scalar
 			) noexcept(std::is_nothrow_convertible_v<U, value_type>)
@@ -229,17 +229,22 @@ namespace gal::test::new_math
 		}
 
 		// unchecked
-		constexpr static void operator_unary_minus(value_type& value)
+		constexpr static void operator_negative(value_type& value)
 		noexcept
 		{
 			value = -value;
 		}
 
 		// unchecked
-		constexpr static void operator_unary_tilde(value_type& value)
+		constexpr static void operator_bit_not(value_type& value)
 		noexcept
 		{
 			value = ~value;
+		}
+
+		constexpr static void operator_not(value_type& value)
+		{
+			value = !value;
 		}
 
 		// unchecked
@@ -471,7 +476,8 @@ namespace gal::test::new_math
 		(is_matrix_v<T2> || is_vector_type_v<T2>)
 	constexpr auto operator+(T1 t1, const T2& t2)
 	noexcept(noexcept(
-		std::declval<typename T2::template copy_type<math_value_type<T1>>>() += std::declval<const T2&>()
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() +=
+		std::declval<const T2&>()
 	))
 	{
 		typename T2::template copy_type<math_value_type<T1>> ret{
@@ -658,7 +664,8 @@ namespace gal::test::new_math
 		(is_matrix_v<T2> || is_vector_type_v<T2>)
 	constexpr auto operator-(T1 t1, const T2& t2)
 	noexcept(noexcept(
-		std::declval<typename T2::template copy_type<math_value_type<T1>>>() -= std::declval<const T2&>()
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() -=
+		std::declval<const T2&>()
 	))
 	{
 		typename T2::template copy_type<math_value_type<T1>> ret{
@@ -845,7 +852,8 @@ namespace gal::test::new_math
 		(is_matrix_v<T2> || is_vector_type_v<T2>)
 	constexpr auto operator*(T1 t1, const T2& t2)
 	noexcept(noexcept(
-		std::declval<typename T2::template copy_type<math_value_type<T1>>>() *= std::declval<const T2&>()
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() *=
+		std::declval<const T2&>()
 	))
 	{
 		typename T2::template copy_type<math_value_type<T1>> ret{
@@ -1032,7 +1040,8 @@ namespace gal::test::new_math
 		(is_matrix_v<T2> || is_vector_type_v<T2>)
 	constexpr auto operator/(T1 t1, const T2& t2)
 	noexcept(noexcept(
-		std::declval<typename T2::template copy_type<math_value_type<T1>>>() /= std::declval<const T2&>()
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() /=
+		std::declval<const T2&>()
 	))
 	{
 		typename T2::template copy_type<math_value_type<T1>> ret{
@@ -1219,13 +1228,1371 @@ namespace gal::test::new_math
 		(is_matrix_v<T2> || is_vector_type_v<T2>)
 	constexpr auto operator%(T1 t1, const T2& t2)
 	noexcept(noexcept(
-		std::declval<typename T2::template copy_type<math_value_type<T1>>>() %= std::declval<const T2&>()
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() %=
+		std::declval<const T2&>()
 	))
 	{
 		typename T2::template copy_type<math_value_type<T1>> ret{
 			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
 		};
 		ret %= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Bit and` two matrices/vectors, requires the same size of the matrix/vector (if it is a matrix, both row_size and column_size are required)
+	* @tparam T1 matrix/vector1 type
+	* @tparam T2 matrix/vector2 type
+	* @param t1 matrix/vector1
+	* @param t2 matrix/vector2
+	* @return matrix/vector after bit and
+	*/
+	template <typename T1, typename T2>
+		requires
+		(
+			(is_vector_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1& operator&=(T1& t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Bit and` a vector/vector_view to another vector_view, requires the same size of the two vectors
+	* @tparam T1 vector_view type
+	* @tparam T2 vector/vector_view type
+	* @param t1 vector_view
+	* @param t2 vector/vector_view
+	* @return matrix/vector after bit and
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1 operator&=(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Bit and` another matrix/vector/vector_view to it, and finally return it
+	* @tparam T1 matrix/vector/vector_view1 type
+	* @tparam T2 matrix/vector/vector_view2 type
+	* @param t1 matrix/vector/vector_view1
+	* @param t2 matrix/vector/vector_view2
+	* @return matrix/vector copy after bit and
+	*/
+	template <typename T1, typename T2>
+		requires
+		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator&(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() &= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret &= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Bit and` a value to a matrix/vector, repeat this value matrix/vector::data_size times to add to each value of the matrix/vector
+	* @tparam T1 matrix/vector type
+	* @tparam T2 value type
+	* @param t1 matrix/vector
+	* @param t2 value
+	* @return matrix/vector after bit and
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_matrix_v<T1> || is_vector_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr T1& operator&=(T1& t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Bit and` a value to a vector_view, repeat this value vector_view::data_size times to add to each value of the vector_view
+	* @tparam T1 vector_view type
+	* @tparam T2 value type
+	* @param t1 vector_view
+	* @param t2 value
+	* @return vector_view after bit and
+	*/
+	template <typename T1, typename T2>
+		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	constexpr T1 operator&=(T1 t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Bit and` a value to a vector_view,
+	* repeat this value vector_view::data_size times to `Bit and` to each value of the matrix/vector/vector_view, and finally return it
+	* @tparam T1 matrix/vector/vector_view type
+	* @tparam T2 value type
+	* @param t1 matrix/vector/vector_view
+	* @param t2 value
+	* @return matrix/vector copy after bit and
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator&(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() &= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret &= t2;
+		return ret;
+	}
+
+	/**
+	* @brief A value (type T) `Bit and` a matrix/vector/vector_view will get a matrix/vector/vector_view::copy_type<T>
+	* that is initialized with this value repeated matrix/vector/vector_view::data_size times,
+	* and then the corresponding value of matrix/vector/vector_view `Bit and` this copied matrix/vector/vector_view::copy_type<T>
+	* @tparam T1 value type
+	* @tparam T2 matrix/vector/vector_view type
+	* @param t1 value
+	* @param t2 matrix/vector/vector_view
+	* @return matrix/vector/vector_view::copy_type<T1>
+	*/
+	template <typename T1, typename T2>
+		requires
+		(!is_math_type_v<T1>) &&
+		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	constexpr auto operator&(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() &=
+		std::declval<const T2&>()
+	))
+	{
+		typename T2::template copy_type<math_value_type<T1>> ret{
+			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
+		};
+		ret &= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Bit or` two matrices/vectors, requires the same size of the matrix/vector (if it is a matrix, both row_size and column_size are required)
+	* @tparam T1 matrix/vector1 type
+	* @tparam T2 matrix/vector2 type
+	* @param t1 matrix/vector1
+	* @param t2 matrix/vector2
+	* @return matrix/vector after bit or
+	*/
+	template <typename T1, typename T2>
+		requires
+		(
+			(is_vector_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1& operator|=(T1& t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Bit or` a vector/vector_view to another vector_view, requires the same size of the two vectors
+	* @tparam T1 vector_view type
+	* @tparam T2 vector/vector_view type
+	* @param t1 vector_view
+	* @param t2 vector/vector_view
+	* @return matrix/vector after bit or
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1 operator|=(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Bit or` another matrix/vector/vector_view to it, and finally return it
+	* @tparam T1 matrix/vector/vector_view1 type
+	* @tparam T2 matrix/vector/vector_view2 type
+	* @param t1 matrix/vector/vector_view1
+	* @param t2 matrix/vector/vector_view2
+	* @return matrix/vector copy after bit or
+	*/
+	template <typename T1, typename T2>
+		requires
+		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator|(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() |= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret |= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Bit or` a value to a matrix/vector, repeat this value matrix/vector::data_size times to add to each value of the matrix/vector
+	* @tparam T1 matrix/vector type
+	* @tparam T2 value type
+	* @param t1 matrix/vector
+	* @param t2 value
+	* @return matrix/vector after bit or
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_matrix_v<T1> || is_vector_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr T1& operator|=(T1& t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Bit or` a value to a vector_view, repeat this value vector_view::data_size times to add to each value of the vector_view
+	* @tparam T1 vector_view type
+	* @tparam T2 value type
+	* @param t1 vector_view
+	* @param t2 value
+	* @return vector_view after bit or
+	*/
+	template <typename T1, typename T2>
+		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	constexpr T1 operator|=(T1 t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Bit or` a value to a vector_view,
+	* repeat this value vector_view::data_size times to `Bit or` to each value of the matrix/vector/vector_view, and finally return it
+	* @tparam T1 matrix/vector/vector_view type
+	* @tparam T2 value type
+	* @param t1 matrix/vector/vector_view
+	* @param t2 value
+	* @return matrix/vector copy after bit or
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator|(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() |= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret |= t2;
+		return ret;
+	}
+
+	/**
+	* @brief A value (type T) `Bit or` a matrix/vector/vector_view will get a matrix/vector/vector_view::copy_type<T>
+	* that is initialized with this value repeated matrix/vector/vector_view::data_size times,
+	* and then the corresponding value of matrix/vector/vector_view `Bit or` this copied matrix/vector/vector_view::copy_type<T>
+	* @tparam T1 value type
+	* @tparam T2 matrix/vector/vector_view type
+	* @param t1 value
+	* @param t2 matrix/vector/vector_view
+	* @return matrix/vector/vector_view::copy_type<T1>
+	*/
+	template <typename T1, typename T2>
+		requires
+		(!is_math_type_v<T1>) &&
+		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	constexpr auto operator|(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() |=
+		std::declval<const T2&>()
+	))
+	{
+		typename T2::template copy_type<math_value_type<T1>> ret{
+			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
+		};
+		ret |= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Bit xor` two matrices/vectors, requires the same size of the matrix/vector (if it is a matrix, both row_size and column_size are required)
+	* @tparam T1 matrix/vector1 type
+	* @tparam T2 matrix/vector2 type
+	* @param t1 matrix/vector1
+	* @param t2 matrix/vector2
+	* @return matrix/vector after bit xor
+	*/
+	template <typename T1, typename T2>
+		requires
+		(
+			(is_vector_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1& operator^=(T1& t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Bit xor` a vector/vector_view to another vector_view, requires the same size of the two vectors
+	* @tparam T1 vector_view type
+	* @tparam T2 vector/vector_view type
+	* @param t1 vector_view
+	* @param t2 vector/vector_view
+	* @return matrix/vector after bit xor
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1 operator^=(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Bit xor` another matrix/vector/vector_view to it, and finally return it
+	* @tparam T1 matrix/vector/vector_view1 type
+	* @tparam T2 matrix/vector/vector_view2 type
+	* @param t1 matrix/vector/vector_view1
+	* @param t2 matrix/vector/vector_view2
+	* @return matrix/vector copy after bit xor
+	*/
+	template <typename T1, typename T2>
+		requires
+		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator^(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() ^= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret ^= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Bit xor` a value to a matrix/vector, repeat this value matrix/vector::data_size times to add to each value of the matrix/vector
+	* @tparam T1 matrix/vector type
+	* @tparam T2 value type
+	* @param t1 matrix/vector
+	* @param t2 value
+	* @return matrix/vector after bit xor
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_matrix_v<T1> || is_vector_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr T1& operator^=(T1& t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Bit xor` a value to a vector_view, repeat this value vector_view::data_size times to add to each value of the vector_view
+	* @tparam T1 vector_view type
+	* @tparam T2 value type
+	* @param t1 vector_view
+	* @param t2 value
+	* @return vector_view after bit or
+	*/
+	template <typename T1, typename T2>
+		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	constexpr T1 operator^=(T1 t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Bit xor` a value to a vector_view,
+	* repeat this value vector_view::data_size times to `Bit xor` to each value of the matrix/vector/vector_view, and finally return it
+	* @tparam T1 matrix/vector/vector_view type
+	* @tparam T2 value type
+	* @param t1 matrix/vector/vector_view
+	* @param t2 value
+	* @return matrix/vector copy after bit xor
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator^(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() ^= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret ^= t2;
+		return ret;
+	}
+
+	/**
+	* @brief A value (type T) `Bit xor` a matrix/vector/vector_view will get a matrix/vector/vector_view::copy_type<T>
+	* that is initialized with this value repeated matrix/vector/vector_view::data_size times,
+	* and then the corresponding value of matrix/vector/vector_view `Bit xor` this copied matrix/vector/vector_view::copy_type<T>
+	* @tparam T1 value type
+	* @tparam T2 matrix/vector/vector_view type
+	* @param t1 value
+	* @param t2 matrix/vector/vector_view
+	* @return matrix/vector/vector_view::copy_type<T1>
+	*/
+	template <typename T1, typename T2>
+		requires
+		(!is_math_type_v<T1>) &&
+		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	constexpr auto operator^(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() ^=
+		std::declval<const T2&>()
+	))
+	{
+		typename T2::template copy_type<math_value_type<T1>> ret{
+			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
+		};
+		ret ^= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Left shift` two matrices/vectors, requires the same size of the matrix/vector (if it is a matrix, both row_size and column_size are required)
+	* @tparam T1 matrix/vector1 type
+	* @tparam T2 matrix/vector2 type
+	* @param t1 matrix/vector1
+	* @param t2 matrix/vector2
+	* @return matrix/vector after left shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		(
+			(is_vector_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1& operator<<=(T1& t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Left shift` a vector/vector_view to another vector_view, requires the same size of the two vectors
+	* @tparam T1 vector_view type
+	* @tparam T2 vector/vector_view type
+	* @param t1 vector_view
+	* @param t2 vector/vector_view
+	* @return matrix/vector after left shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1 operator<<=(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Left shift` another matrix/vector/vector_view to it, and finally return it
+	* @tparam T1 matrix/vector/vector_view1 type
+	* @tparam T2 matrix/vector/vector_view2 type
+	* @param t1 matrix/vector/vector_view1
+	* @param t2 matrix/vector/vector_view2
+	* @return matrix/vector copy after left shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator<<(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() <<= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret <<= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Left shift` a value to a matrix/vector, repeat this value matrix/vector::data_size times to add to each value of the matrix/vector
+	* @tparam T1 matrix/vector type
+	* @tparam T2 value type
+	* @param t1 matrix/vector
+	* @param t2 value
+	* @return matrix/vector after left shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_matrix_v<T1> || is_vector_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr T1& operator<<=(T1& t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Left shift` a value to a vector_view, repeat this value vector_view::data_size times to add to each value of the vector_view
+	* @tparam T1 vector_view type
+	* @tparam T2 value type
+	* @param t1 vector_view
+	* @param t2 value
+	* @return vector_view after left shift
+	*/
+	template <typename T1, typename T2>
+		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	constexpr T1 operator<<=(T1 t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Left shift` a value to a vector_view,
+	* repeat this value vector_view::data_size times to `Left shift` to each value of the matrix/vector/vector_view, and finally return it
+	* @tparam T1 matrix/vector/vector_view type
+	* @tparam T2 value type
+	* @param t1 matrix/vector/vector_view
+	* @param t2 value
+	* @return matrix/vector copy after left shift
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator<<(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() <<= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret <<= t2;
+		return ret;
+	}
+
+	/**
+	* @brief A value (type T) `Left shift` a matrix/vector/vector_view will get a matrix/vector/vector_view::copy_type<T>
+	* that is initialized with this value repeated matrix/vector/vector_view::data_size times,
+	* and then the corresponding value of matrix/vector/vector_view `Left shift` this copied matrix/vector/vector_view::copy_type<T>
+	* @tparam T1 value type
+	* @tparam T2 matrix/vector/vector_view type
+	* @param t1 value
+	* @param t2 matrix/vector/vector_view
+	* @return matrix/vector/vector_view::copy_type<T1>
+	*/
+	template <typename T1, typename T2>
+		requires
+		(!is_math_type_v<T1>) &&
+		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	constexpr auto operator<<(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() <<=
+		std::declval<const T2&>()
+	))
+	{
+		typename T2::template copy_type<math_value_type<T1>> ret{
+			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
+		};
+		ret <<= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Right shift` two matrices/vectors, requires the same size of the matrix/vector (if it is a matrix, both row_size and column_size are required)
+	* @tparam T1 matrix/vector1 type
+	* @tparam T2 matrix/vector2 type
+	* @param t1 matrix/vector1
+	* @param t2 matrix/vector2
+	* @return matrix/vector after right shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		(
+			(is_vector_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1& operator>>=(T1& t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Right shift` a vector/vector_view to another vector_view, requires the same size of the two vectors
+	* @tparam T1 vector_view type
+	* @tparam T2 vector/vector_view type
+	* @param t1 vector_view
+	* @param t2 vector/vector_view
+	* @return matrix/vector after right shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
+		is_math_same_size_v<T1, T2>
+	constexpr T1 operator>>=(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<const T2&>(),
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Right shift` another matrix/vector/vector_view to it, and finally return it
+	* @tparam T1 matrix/vector/vector_view1 type
+	* @tparam T2 matrix/vector/vector_view2 type
+	* @param t1 matrix/vector/vector_view1
+	* @param t2 matrix/vector/vector_view2
+	* @return matrix/vector copy after right shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
+			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator>>(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() >>= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret >>= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Right shift` a value to a matrix/vector, repeat this value matrix/vector::data_size times to add to each value of the matrix/vector
+	* @tparam T1 matrix/vector type
+	* @tparam T2 value type
+	* @param t1 matrix/vector
+	* @param t2 value
+	* @return matrix/vector after right shift
+	*/
+	template <typename T1, typename T2>
+		requires
+		(is_matrix_v<T1> || is_vector_v<T1>) &&
+		(!is_math_type_v<T2>)
+	constexpr T1& operator>>=(T1& t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief `Right shift` a value to a vector_view, repeat this value vector_view::data_size times to add to each value of the vector_view
+	* @tparam T1 vector_view type
+	* @tparam T2 value type
+	* @param t1 vector_view
+	* @param t2 value
+	* @return vector_view after right shift
+	*/
+	template <typename T1, typename T2>
+		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	constexpr T1 operator>>=(T1 t1, T2 t2)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T1&>(),
+					std::declval<T2>(),
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					)
+	))
+	{
+		operator_base(
+					t1,
+					t2,
+					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
+					);
+		return t1;
+	}
+
+	/**
+	* @brief get a copy of matrix/vector/vector_view, then `Right shift` a value to a vector_view,
+	* repeat this value vector_view::data_size times to `Right shift` to each value of the matrix/vector/vector_view, and finally return it
+	* @tparam T1 matrix/vector/vector_view type
+	* @tparam T2 value type
+	* @param t1 matrix/vector/vector_view
+	* @param t2 value
+	* @return matrix/vector copy after right shift
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator>>(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() >>= std::declval<T2>()
+	))
+	{
+		auto ret = t1.copy();
+		ret >>= t2;
+		return ret;
+	}
+
+	/**
+	* @brief A value (type T) `Right shift` a matrix/vector/vector_view will get a matrix/vector/vector_view::copy_type<T>
+	* that is initialized with this value repeated matrix/vector/vector_view::data_size times,
+	* and then the corresponding value of matrix/vector/vector_view `Right shift` this copied matrix/vector/vector_view::copy_type<T>
+	* @tparam T1 value type
+	* @tparam T2 matrix/vector/vector_view type
+	* @param t1 value
+	* @param t2 matrix/vector/vector_view
+	* @return matrix/vector/vector_view::copy_type<T1>
+	*/
+	template <typename T1, typename T2>
+		requires
+		(!is_math_type_v<T1>) &&
+		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	constexpr auto operator>>(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() >>=
+		std::declval<const T2&>()
+	))
+	{
+		typename T2::template copy_type<math_value_type<T1>> ret{
+			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
+		};
+		ret >>= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Invert` the matrix/vector itself
+	* @tparam T matrix/vector type
+	* @param t matrix/vector
+	* @return inverted matrix/vector
+	*/
+	template <typename T>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr T& make_inverse(T& t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_negative
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_negative
+					);
+		return t;
+	}
+
+	/**
+	* @brief `Invert` the vector_view itself
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return inverted vector_view
+	*/
+	template <typename T>
+		requires is_vector_view_v<T>
+	constexpr T make_inverse(T t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_negative
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_negative
+					);
+		return t;
+	}
+
+	/**
+	 * @brief get a copy of the `Inverse` of matrix/vector
+	 * @tparam T matrix/vector type
+	 * @param t matrix/vector
+	 * @return inverted matrix/vector
+	*/
+	template <typename T>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr auto operator-(const T& t)
+	noexcept(noexcept(
+		make_inverse(
+					std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+					)
+	))
+	{
+		auto ret = t.copy();
+		make_inverse(ret);
+		return ret;
+	}
+
+	/**
+	* @brief get a copy of the `Inverse` of vector_view
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return inverted vector_view
+	*/
+	template <typename T>
+		requires is_vector_view_v<T>
+	constexpr auto operator-(T t)
+	noexcept(noexcept(
+		make_inverse(
+					std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+					)
+	))
+	{
+		auto ret = t.copy();
+		make_inverse(ret);
+		return ret;
+	}
+
+	/**
+	* @brief `Bitwise not` the matrix/vector itself
+	* @tparam T matrix/vector type
+	* @param t matrix/vector
+	* @return matrix/vector after bitwise not
+	*/
+	template <typename T>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr T& make_bitwise_not(T& t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_bit_not
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_bit_not
+					);
+		return t;
+	}
+
+	/**
+	* @brief `Bitwise not` the vector_view itself
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return vector_view after bitwise not
+	*/
+	template <typename T>
+		requires is_vector_view_v<T>
+	constexpr T make_bitwise_not(T t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_bit_not
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_bit_not
+					);
+		return t;
+	}
+
+	/**
+	* @brief get a copy of the `Bitwise not` of matrix/vector
+	* @tparam T matrix/vector type
+	* @param t matrix/vector
+	* @return matrix/vector after bitwise not
+	*/
+	template <typename T>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr auto operator~(const T& t)
+	noexcept(noexcept(
+		make_bitwise_not(
+						std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+						)
+	))
+	{
+		auto ret = t.copy();
+		make_bitwise_not(ret);
+		return ret;
+	}
+
+	/**
+	* @brief get a copy of the `Bitwise not` of vector_view
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return vector_view after bitwise not
+	*/
+	template <typename T>
+		requires is_vector_view_v<T>
+	constexpr auto operator~(T t)
+	noexcept(noexcept(
+		make_bitwise_not(
+						std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+						)
+	))
+	{
+		auto ret = t.copy();
+		make_bitwise_not(ret);
+		return ret;
+	}
+
+	/**
+	* @brief `Not` the matrix/vector itself
+	* @tparam T matrix/vector type
+	* @param t matrix/vector
+	* @return matrix/vector after bitwise not
+	*/
+	template <typename T>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr T& make_not(T& t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_not
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_not
+					);
+		return t;
+	}
+
+	/**
+	* @brief `Not` the vector_view itself
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return vector_view after bitwise not
+	*/
+	template <typename T>
+		requires is_vector_view_v<T>
+	constexpr T make_not(T t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_not
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_not
+					);
+		return t;
+	}
+
+	/**
+	* @brief get a copy of the `Not` of matrix/vector
+	* @tparam T matrix/vector type
+	* @param t matrix/vector
+	* @return matrix/vector after bitwise not
+	*/
+	template <typename T>
+		requires (is_matrix_v<T> || is_vector_v<T>)
+	constexpr auto operator!(const T& t)
+	noexcept(noexcept(
+		make_not(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+				)
+	))
+	{
+		auto ret = t.copy();
+		make_not(ret);
+		return ret;
+	}
+
+	/**
+	* @brief get a copy of the `Not` of vector_view
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return vector_view after bitwise not
+	*/
+	template <typename T>
+		requires is_vector_view_v<T>
+	constexpr auto operator!(T t)
+	noexcept(noexcept(
+		make_not(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+				)
+	))
+	{
+		auto ret = t.copy();
+		make_not(ret);
+		return ret;
+	}
+
+	/**
+	 * @brief compare two matrices/vectors and return a matrix/vector whose value_type is bool,
+	 * and the value of the corresponding position is whether the values of the two matrices/vectors are `Equal` at that point
+	 * @tparam T1 matrix/vector1 type
+	 * @tparam T2 matrix/vector2 type
+	 * @param t1 matrix/vector
+	 * @param t2 matrix/vector
+	 * @return matrix/vector
+	*/
+	template <typename T1, typename T2>
+		requires(
+			(is_matrix_v<T1> && is_matrix_v<T2>) ||
+			(is_vector_type_v<T1> && is_vector_type_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator==(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base<bool>(
+							std::declval<const T1&>(),
+							std::declval<const T2&>(),
+							math_invoker<math_value_type<T1>>::template operator_equal_to<math_value_type<T2>>
+							)
+	))
+	{
+		return operator_base<bool>(
+									t1,
+									t2,
+									math_invoker<math_value_type<T1>>::template operator_equal_to<math_value_type<T2>>
+								);
+	}
+
+	/**
+	 * @brief compare a matrix/vector with a value and return a matrix/vector whose value_type is bool,
+	 * and the value of the corresponding position is whether the values of the matrix/vector and the value  are `Equal` at that point
+	 * @tparam T1 matrix/vector type
+	 * @tparam T2 value type
+	 * @param t1 matrix/vector
+	 * @param t2 value
+	 * @return matrix/vector
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator==(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		operator_base<bool>(
+							std::declval<const T1&>(),
+							std::declval<T2>(),
+							math_invoker<math_value_type<T1>>::template operator_equal_to<math_value_type<T2>>
+							)
+	))
+	{
+		return operator_base<bool>(
+									t1,
+									t2,
+									math_invoker<math_value_type<T1>>::template operator_equal_to<math_value_type<T2>>
+								);
+	}
+
+	/**
+	 * @brief compare a matrix/vector with a value and return a matrix/vector whose value_type is bool,
+	 * and the value of the corresponding position is whether the values of the matrix/vector and the value  are `Equal` at that point
+	 * @tparam T1 value type
+	 * @tparam T2 matrix/vector type
+	 * @param t1 value
+	 * @param t2 matrix/vector
+	 * @return matrix/vector
+	*/
+	template <typename T1, typename T2>
+		requires (!is_math_type_v<T1>) && is_math_type_v<T2>
+	constexpr auto operator==(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		operator_base<bool>(
+							std::declval<const T2&>(),
+							std::declval<T1>(),
+							math_invoker<math_value_type<T2>>::template operator_equal_to<math_value_type<T1>>
+							)
+	))
+	{
+		return operator_base<bool>(
+									t2,
+									t1,
+									math_invoker<math_value_type<T2>>::template operator_equal_to<math_value_type<T1>>
+								);
+	}
+
+	/**
+	* @brief compare two matrices/vectors and return a matrix/vector whose value_type is bool,
+	* and the value of the corresponding position is whether the values of the two matrices/vectors are `Not equal` at that point
+	* @tparam T1 matrix/vector1 type
+	* @tparam T2 matrix/vector2 type
+	* @param t1 matrix/vector
+	* @param t2 matrix/vector
+	* @return matrix/vector
+	*/
+	template <typename T1, typename T2>
+		requires(
+			(is_matrix_v<T1> && is_matrix_v<T2>) ||
+			(is_vector_type_v<T1> && is_vector_type_v<T2>)
+		) &&
+		is_math_same_size_v<T1, T2>
+	constexpr auto operator!=(const T1& t1, const T2& t2)
+	noexcept(noexcept(
+		make_not(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>() == std::declval<const T2&>()
+				)>>()
+				)
+	))
+	{
+		auto ret = t1 == t2;
+		make_not(ret);
+		return ret;
+	}
+
+	/**
+	* @brief compare a matrix/vector with a value and return a matrix/vector whose value_type is bool,
+	* and the value of the corresponding position is whether the values of the matrix/vector and the value  are `Not equal` at that point
+	* @tparam T1 matrix/vector type
+	* @tparam T2 value type
+	* @param t1 matrix/vector
+	* @param t2 value
+	* @return matrix/vector
+	*/
+	template <typename T1, typename T2>
+		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	constexpr auto operator!=(const T1& t1, T2 t2)
+	noexcept(noexcept(
+		make_not(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>() == std::declval<T2>())>>()
+				)
+	))
+	{
+		auto ret = t1 == t2;
+		make_not(ret);
+		return ret;
+	}
+
+	/**
+	* @brief compare a matrix/vector with a value and return a matrix/vector whose value_type is bool,
+	* and the value of the corresponding position is whether the values of the matrix/vector and the value  are `Not equal` at that point
+	* @tparam T1 value type
+	* @tparam T2 matrix/vector type
+	* @param t1 value
+	* @param t2 matrix/vector
+	* @return matrix/vector
+	*/
+	template <typename T1, typename T2>
+		requires (!is_math_type_v<T1>) && is_math_type_v<T2>
+	constexpr auto operator!=(T1 t1, const T2& t2)
+	noexcept(noexcept(
+		make_not(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<T1>() == std::declval<const T2&>())>>()
+				)
+	))
+	{
+		auto ret = t1 == t2;
+		make_not(ret);
 		return ret;
 	}
 }

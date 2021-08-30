@@ -4,12 +4,12 @@
 
 TEST(TestViewOperations, TestApply)
 {
-	using namespace gal::test::new_math;
+	using namespace gal::test::math;
 
-	constexpr vector<int, 4> vector1{ 1, 2, 3, 4 };
-	constexpr vector<int, 4> vector2{ 4, 3, 2, 1 };
-	constexpr matrix<int, 4, 4> matrix1{ vector1, vector1, vector2, vector2 };
-	constexpr matrix<int, 4, 4> matrix2{ vector2, vector2, vector1, vector1 };
+	constexpr vector4<int> vector1{ 1, 2, 3, 4 };
+	constexpr vector4<int> vector2{ 4, 3, 2, 1 };
+	constexpr matrix4x4<int> matrix1{ vector1, vector1, vector2, vector2 };
+	constexpr matrix4x4<int> matrix2{ vector2, vector2, vector1, vector1 };
 	
 	{
 		{
