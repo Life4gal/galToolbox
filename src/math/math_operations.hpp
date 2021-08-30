@@ -94,8 +94,7 @@ namespace gal::test::math
 
 	public:
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_add(
 			value_type& value,
 			U           scalar
@@ -105,8 +104,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_subtract(
 			value_type& value,
 			U           scalar
@@ -116,8 +114,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_multiply(
 			value_type& value,
 			U           scalar
@@ -127,8 +124,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_divide(
 			value_type& value,
 			U           scalar
@@ -138,8 +134,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_model(
 			value_type& value,
 			U           scalar
@@ -174,8 +169,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_bit_and(
 			value_type& value,
 			U           scalar
@@ -185,8 +179,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_bit_or(
 			value_type& value,
 			U           scalar
@@ -196,8 +189,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_bit_xor(
 			value_type& value,
 			U           scalar
@@ -207,8 +199,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_left_shift(
 			value_type& value,
 			U           scalar
@@ -218,8 +209,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static void operator_right_shift(
 			value_type& value,
 			U           scalar
@@ -248,8 +238,7 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires std::is_convertible_v<U, value_type>
+		template <std::convertible_to<value_type> U>
 		constexpr static bool operator_equal_to(value_type v1, U v2)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -257,8 +246,8 @@ namespace gal::test::math
 		}
 
 		// unchecked
-		template <typename U>
-			requires (std::is_convertible_v<U, value_type> && std::is_floating_point_v<value_type>)
+		template <std::convertible_to<value_type> U>
+			requires std::is_floating_point_v<value_type>
 		constexpr static bool operator_equal_to(value_type v1, U v2, value_type epsilon = 0.000001)
 		noexcept(std::is_nothrow_convertible_v<U, value_type>)
 		{
@@ -307,13 +296,7 @@ namespace gal::test::math
 	 * @param t2 matrix/vector2
 	 * @return added matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator+=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -339,10 +322,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return added matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator+=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -368,11 +348,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return added matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator+(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() += std::declval<T2>()
@@ -391,10 +367,7 @@ namespace gal::test::math
 	 * @param t2 value
 	 * @return added matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator+=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -420,8 +393,7 @@ namespace gal::test::math
 	 * @param t2 value
 	 * @return added vector_view self
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator+=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -448,8 +420,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return added matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator+(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() += std::declval<T2>()
@@ -470,10 +441,7 @@ namespace gal::test::math
 	 * @param t2 matrix/vector/vector_view
 	 * @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator+(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() +=
@@ -495,13 +463,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return subtracted matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator-=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -527,10 +489,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return subtracted matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator-=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -556,11 +515,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return subtracted matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator-(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() -= std::declval<T2>()
@@ -579,10 +534,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return subtracted matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator-=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -608,8 +560,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return subtracted vector_view self
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator-=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -636,8 +587,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return subtracted matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator-(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() -= std::declval<T2>()
@@ -658,10 +608,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator-(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() -=
@@ -683,13 +630,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return multiplied matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator*=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -715,10 +656,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return multiplied matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator*=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -744,11 +682,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return multiplied matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator*(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() *= std::declval<T2>()
@@ -767,10 +701,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return multiplied matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator*=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -796,8 +727,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return multiplied vector_view self
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator*=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -824,8 +754,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return multiplied matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator*(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() *= std::declval<T2>()
@@ -846,10 +775,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator*(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() *=
@@ -871,13 +797,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return divided matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator/=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -903,10 +823,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return divided matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator/=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -932,11 +849,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return divided matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator/(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() /= std::declval<T2>()
@@ -955,10 +868,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return divided matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator/=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -984,8 +894,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return divided vector_view self
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator/=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1012,8 +921,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return divided matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator/(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() /= std::declval<T2>()
@@ -1034,10 +942,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator/(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() /=
@@ -1059,13 +964,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return modeled matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator%=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1091,10 +990,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return modeled matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator%=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1120,11 +1016,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return modeled matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator%(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() %= std::declval<T2>()
@@ -1143,10 +1035,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return modeled matrix/vector self
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator%=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1172,8 +1061,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return modeled vector_view self
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator%=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1200,8 +1088,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return modeled matrix/vector copy
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator%(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() %= std::declval<T2>()
@@ -1222,10 +1109,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator%(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() %=
@@ -1247,13 +1131,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return matrix/vector after bit and
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator&=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1279,10 +1157,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return matrix/vector after bit and
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator&=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1308,11 +1183,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return matrix/vector copy after bit and
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator&(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() &= std::declval<T2>()
@@ -1331,10 +1202,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector after bit and
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator&=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1360,8 +1228,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return vector_view after bit and
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator&=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1388,8 +1255,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector copy after bit and
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator&(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() &= std::declval<T2>()
@@ -1410,10 +1276,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator&(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() &=
@@ -1435,13 +1298,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return matrix/vector after bit or
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator|=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1467,10 +1324,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return matrix/vector after bit or
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator|=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1496,11 +1350,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return matrix/vector copy after bit or
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator|(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() |= std::declval<T2>()
@@ -1519,10 +1369,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector after bit or
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator|=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1548,8 +1395,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return vector_view after bit or
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator|=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1576,8 +1422,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector copy after bit or
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator|(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() |= std::declval<T2>()
@@ -1598,10 +1443,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator|(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() |=
@@ -1623,13 +1465,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return matrix/vector after bit xor
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator^=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1655,10 +1491,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return matrix/vector after bit xor
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator^=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1684,11 +1517,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return matrix/vector copy after bit xor
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator^(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() ^= std::declval<T2>()
@@ -1707,10 +1536,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector after bit xor
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator^=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1736,8 +1562,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return vector_view after bit or
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator^=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1764,8 +1589,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector copy after bit xor
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator^(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() ^= std::declval<T2>()
@@ -1786,10 +1610,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator^(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() ^=
@@ -1811,13 +1632,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return matrix/vector after left shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator<<=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1843,10 +1658,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return matrix/vector after left shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator<<=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1872,11 +1684,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return matrix/vector copy after left shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator<<(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() <<= std::declval<T2>()
@@ -1895,10 +1703,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector after left shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator<<=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1924,8 +1729,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return vector_view after left shift
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator<<=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -1952,8 +1756,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector copy after left shift
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator<<(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() <<= std::declval<T2>()
@@ -1974,10 +1777,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator<<(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() <<=
@@ -1999,13 +1799,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector2
 	* @return matrix/vector after right shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		(
-			(is_vector_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr T1& operator>>=(T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -2031,10 +1825,7 @@ namespace gal::test::math
 	* @param t2 vector/vector_view
 	* @return matrix/vector after right shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_vector_view_v<T1> && is_vector_type_v<T2>) &&
-		is_math_same_size_v<T1, T2>
+	template <vector_view_t T1, math_vector_same_size_t<T1> T2>
 	constexpr T1 operator>>=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
@@ -2060,11 +1851,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view2
 	* @return matrix/vector copy after right shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		((is_vector_type_v<T1> && is_vector_type_v<T2>) ||
-			(is_matrix_v<T1> && is_matrix_v<T2>)) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator>>(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() >>= std::declval<T2>()
@@ -2083,10 +1870,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector after right shift
 	*/
-	template <typename T1, typename T2>
-		requires
-		(is_matrix_v<T1> || is_vector_v<T1>) &&
-		(!is_math_type_v<T2>)
+	template <matrix_or_vector_t T1, not_math_type_t T2>
 	constexpr T1& operator>>=(T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -2112,8 +1896,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return vector_view after right shift
 	*/
-	template <typename T1, typename T2>
-		requires is_vector_view_v<T1> && (!is_math_type_v<T2>)
+	template <vector_view_t T1, not_math_type_t T2>
 	constexpr T1 operator>>=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
@@ -2140,8 +1923,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector copy after right shift
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator>>(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T1&>().copy())>>() >>= std::declval<T2>()
@@ -2162,10 +1944,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector/vector_view
 	* @return matrix/vector/vector_view::copy_type<T1>
 	*/
-	template <typename T1, typename T2>
-		requires
-		(!is_math_type_v<T1>) &&
-		(is_matrix_v<T2> || is_vector_type_v<T2>)
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator>>(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		std::declval<std::add_lvalue_reference_t<typename T2::template copy_type<math_value_type<T1>>>>() >>=
@@ -2185,8 +1964,7 @@ namespace gal::test::math
 	* @param t matrix/vector
 	* @return inverted matrix/vector
 	*/
-	template <typename T>
-		requires (is_matrix_v<T> || is_vector_v<T>)
+	template <matrix_or_vector_t T>
 	constexpr T& make_inverse(T& t)
 	noexcept(noexcept(
 		operator_base(
@@ -2208,8 +1986,7 @@ namespace gal::test::math
 	* @param t vector_view
 	* @return inverted vector_view
 	*/
-	template <typename T>
-		requires is_vector_view_v<T>
+	template <vector_view_t T>
 	constexpr T make_inverse(T t)
 	noexcept(noexcept(
 		operator_base(
@@ -2231,8 +2008,7 @@ namespace gal::test::math
 	 * @param t matrix/vector
 	 * @return inverted matrix/vector
 	*/
-	template <typename T>
-		requires (is_matrix_v<T> || is_vector_v<T>)
+	template <matrix_or_vector_t T>
 	constexpr auto operator-(const T& t)
 	noexcept(noexcept(
 		make_inverse(
@@ -2251,8 +2027,7 @@ namespace gal::test::math
 	* @param t vector_view
 	* @return inverted vector_view
 	*/
-	template <typename T>
-		requires is_vector_view_v<T>
+	template <vector_view_t T>
 	constexpr auto operator-(T t)
 	noexcept(noexcept(
 		make_inverse(
@@ -2271,8 +2046,7 @@ namespace gal::test::math
 	* @param t matrix/vector
 	* @return matrix/vector after bitwise not
 	*/
-	template <typename T>
-		requires (is_matrix_v<T> || is_vector_v<T>)
+	template <matrix_or_vector_t T>
 	constexpr T& make_bitwise_not(T& t)
 	noexcept(noexcept(
 		operator_base(
@@ -2294,8 +2068,7 @@ namespace gal::test::math
 	* @param t vector_view
 	* @return vector_view after bitwise not
 	*/
-	template <typename T>
-		requires is_vector_view_v<T>
+	template <vector_view_t T>
 	constexpr T make_bitwise_not(T t)
 	noexcept(noexcept(
 		operator_base(
@@ -2317,8 +2090,7 @@ namespace gal::test::math
 	* @param t matrix/vector
 	* @return matrix/vector after bitwise not
 	*/
-	template <typename T>
-		requires (is_matrix_v<T> || is_vector_v<T>)
+	template <matrix_or_vector_t T>
 	constexpr auto operator~(const T& t)
 	noexcept(noexcept(
 		make_bitwise_not(
@@ -2337,8 +2109,7 @@ namespace gal::test::math
 	* @param t vector_view
 	* @return vector_view after bitwise not
 	*/
-	template <typename T>
-		requires is_vector_view_v<T>
+	template <vector_view_t T>
 	constexpr auto operator~(T t)
 	noexcept(noexcept(
 		make_bitwise_not(
@@ -2357,8 +2128,7 @@ namespace gal::test::math
 	* @param t matrix/vector
 	* @return matrix/vector after bitwise not
 	*/
-	template <typename T>
-		requires (is_matrix_v<T> || is_vector_v<T>)
+	template <matrix_or_vector_t T>
 	constexpr T& make_not(T& t)
 	noexcept(noexcept(
 		operator_base(
@@ -2380,8 +2150,7 @@ namespace gal::test::math
 	* @param t vector_view
 	* @return vector_view after bitwise not
 	*/
-	template <typename T>
-		requires is_vector_view_v<T>
+	template <vector_view_t T>
 	constexpr T make_not(T t)
 	noexcept(noexcept(
 		operator_base(
@@ -2403,8 +2172,7 @@ namespace gal::test::math
 	* @param t matrix/vector
 	* @return matrix/vector after bitwise not
 	*/
-	template <typename T>
-		requires (is_matrix_v<T> || is_vector_v<T>)
+	template <matrix_or_vector_t T>
 	constexpr auto operator!(const T& t)
 	noexcept(noexcept(
 		make_not(
@@ -2423,8 +2191,7 @@ namespace gal::test::math
 	* @param t vector_view
 	* @return vector_view after bitwise not
 	*/
-	template <typename T>
-		requires is_vector_view_v<T>
+	template <vector_view_t T>
 	constexpr auto operator!(T t)
 	noexcept(noexcept(
 		make_not(
@@ -2446,12 +2213,7 @@ namespace gal::test::math
 	 * @param t2 matrix/vector
 	 * @return matrix/vector
 	*/
-	template <typename T1, typename T2>
-		requires(
-			(is_matrix_v<T1> && is_matrix_v<T2>) ||
-			(is_vector_type_v<T1> && is_vector_type_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator==(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base<bool>(
@@ -2477,8 +2239,7 @@ namespace gal::test::math
 	 * @param t2 value
 	 * @return matrix/vector
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator==(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		operator_base<bool>(
@@ -2504,8 +2265,7 @@ namespace gal::test::math
 	 * @param t2 matrix/vector
 	 * @return matrix/vector
 	*/
-	template <typename T1, typename T2>
-		requires (!is_math_type_v<T1>) && is_math_type_v<T2>
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator==(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base<bool>(
@@ -2531,12 +2291,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector
 	* @return matrix/vector
 	*/
-	template <typename T1, typename T2>
-		requires(
-			(is_matrix_v<T1> && is_matrix_v<T2>) ||
-			(is_vector_type_v<T1> && is_vector_type_v<T2>)
-		) &&
-		is_math_same_size_v<T1, T2>
+	template <typename T1, math_same_type_and_size_ignore_view_t<T1> T2>
 	constexpr auto operator!=(const T1& t1, const T2& t2)
 	noexcept(noexcept(
 		make_not(
@@ -2559,8 +2314,7 @@ namespace gal::test::math
 	* @param t2 value
 	* @return matrix/vector
 	*/
-	template <typename T1, typename T2>
-		requires is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <math_type_t T1, not_math_type_t T2>
 	constexpr auto operator!=(const T1& t1, T2 t2)
 	noexcept(noexcept(
 		make_not(
@@ -2582,8 +2336,7 @@ namespace gal::test::math
 	* @param t2 matrix/vector
 	* @return matrix/vector
 	*/
-	template <typename T1, typename T2>
-		requires (!is_math_type_v<T1>) && is_math_type_v<T2>
+	template <not_math_type_t T1, math_type_t T2>
 	constexpr auto operator!=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		make_not(
