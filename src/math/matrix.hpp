@@ -9,21 +9,6 @@ namespace gal::test::math
 {
 	template <typename T, std::size_t Row, std::size_t Column>
 	class matrix;
-
-	template <typename T>
-	struct is_matrix : std::false_type {};
-
-	template <typename T, std::size_t Row, std::size_t Column>
-	struct is_matrix<matrix<T, Row, Column>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_matrix_v = is_matrix<T>::value;
-
-	template <typename T>
-	concept matrix_t = is_matrix_v<T>;
-
-	template <typename T>
-	concept not_matrix_t = !is_matrix_v<T>;
 }
 
 namespace gal::test::utils

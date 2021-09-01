@@ -1,117 +1,12 @@
 #pragma once
 
+#include "math_fwd.hpp"
 #include "vector.hpp"
 #include "matrix.hpp"
 #include "../utils/sequence_invoker.hpp"
 
 namespace gal::test::math
 {
-	template <typename T>
-	constexpr static bool is_math_type_v =
-		is_vector_type_v<T> ||
-		is_matrix_v<T>;
-
-	template <typename T>
-	concept math_type_t = is_math_type_v<T>;
-
-	template <typename T>
-	concept not_math_type_t = !math_type_t<T>;
-
-	template <typename T>
-	concept matrix_or_vector_t = matrix_t<T> || vector_t<T>;
-
-	template <typename T>
-	struct math_value_type_helper
-	{
-		using type = T;
-	};
-
-	template <math_type_t T>
-	struct math_value_type_helper<T>
-	{
-		using type = typename T::value_type;
-	};
-
-	template <typename T>
-	using math_value_type = typename math_value_type_helper<T>::type;
-
-	template <typename T1, typename T2>
-	struct is_math_same_type : std::false_type {};
-
-	template <vector_t T1, vector_t T2>
-	struct is_math_same_type<T1, T2> : std::true_type {};
-
-	template <vector_view_t T1, vector_view_t T2>
-	struct is_math_same_type<T1, T2> : std::true_type {};
-
-	template <matrix_t T1, matrix_t T2>
-	struct is_math_same_type<T1, T2> : std::true_type {};
-
-	template <typename T1, typename T2>
-	constexpr static bool is_math_same_type_v = is_math_same_type<T1, T2>::value;
-
-	template <typename T1, typename T2>
-	concept math_same_type_t = is_math_same_type_v<T1, T2>;
-
-	template <bool, typename T1, typename T2>
-	struct is_math_same_type_ignore_view : is_math_same_type<T1, T2> {};
-
-	template <vector_type_t T1, vector_type_t T2>
-	struct is_math_same_type_ignore_view<true, T1, T2> : std::true_type {};
-
-	template <typename T1, typename T2>
-	constexpr static bool is_math_same_type_ignore_view_v = is_math_same_type_ignore_view<true, T1, T2>::value;
-
-	template <typename T1, typename T2>
-	concept math_same_type_ignore_view_t = is_math_same_type_ignore_view_v<T1, T2>;
-
-	template <typename T1, typename T2, bool>
-	struct is_math_same_size : std::false_type {};
-
-	template <vector_type_t T1, vector_type_t T2>
-		requires (T1::data_size == T2::data_size)
-	struct is_math_same_size<T1, T2, true> : std::true_type {};
-
-	template <matrix_t T1, matrix_t T2>
-		requires
-		(T1::column_size == T2::column_size) &&
-		(T1::row_size == T2::row_size)
-	struct is_math_same_size<T1, T2, true> : std::true_type {};
-
-	template <matrix_t T1, vector_type_t T2, bool AsRow>
-		requires
-		(AsRow
-			? (T1::row_size == T2::data_size)
-			: (T1::column_size == T2::data_size)
-		)
-	struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
-
-	template <vector_type_t T1, matrix_t T2, bool AsRow>
-		requires
-		(AsRow
-			? (T1::data_size == T2::row_size)
-			: (T1::data_size == T2::column_size)
-		)
-	struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
-
-	template <typename T1, typename T2, bool AsRow = true>
-	constexpr static bool is_math_same_size_v = is_math_same_size<T1, T2, AsRow>::value;
-
-	template <typename T1, typename T2, bool AsRow = true>
-	concept math_same_size_t = is_math_same_size_v<T1, T2, AsRow>;
-
-	template <typename T1, typename T2>
-	concept math_same_type_and_size_t = math_same_type_t<T1, T2> && math_same_size_t<T1, T2>;
-
-	template <typename T1, typename T2>
-	concept math_same_type_and_size_ignore_view_t = math_same_type_ignore_view_t<T1, T2> && math_same_size_t<T1, T2>;
-
-	template <typename T1, typename T2>
-	concept math_vector_same_size_t = vector_type_t<T1> && vector_type_t<T2> && math_same_size_t<T1, T2>;
-
-	template <typename T1, typename T2>
-	concept math_matrix_same_size_t = matrix_t<T1> && matrix_t<T2> && math_same_size_t<T1, T2>;
-
 	/**
 	 * @brief process a vector/matrix with parameters pack
 	 * @tparam RetType because there is no way to get the return value type through Pred, it needs to be specified by the user (the user should ensure that RetType is compatible with the actual return type of Pred)

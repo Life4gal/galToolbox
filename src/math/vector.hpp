@@ -10,47 +10,8 @@ namespace gal::test::math
 	template <typename T, std::size_t N>
 	class vector;
 
-	template <typename T>
-	struct is_vector : std::false_type {};
-
-	template <typename T, std::size_t N>
-	struct is_vector<vector<T, N>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_vector_v = is_vector<T>::value;
-
-	template<typename T>
-	concept vector_t = is_vector_v<T>;
-
-	template<typename T>
-	concept not_vector_t = !vector_t<T>;
-
 	template <std::size_t Stride, std::size_t Size, typename Iterator>
 	class vector_view;
-
-	template <typename T>
-	struct is_vector_view : std::false_type {};
-
-	template <std::size_t Stride, std::size_t Size, typename Iterator>
-	struct is_vector_view<vector_view<Stride, Size, Iterator>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
-
-	template<typename T>
-	concept vector_view_t = is_vector_view_v<T>;
-
-	template<typename T>
-	concept not_vector_view_t = !vector_view_t<T>;
-
-	template <typename T>
-	constexpr static bool is_vector_type_v = is_vector_v<T> || is_vector_view_v<T>;
-
-	template<typename T>
-	concept vector_type_t = is_vector_type_v<T>;
-
-	template<typename T>
-	concept not_vector_type_t = !vector_type_t<T>;
 }
 
 namespace gal::test::utils
