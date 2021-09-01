@@ -23,17 +23,17 @@ namespace gal::test::math
 	template <typename T>
 	struct math_value_type_helper
 	{
-		using value_type = T;
+		using type = T;
 	};
 
 	template <math_type_t T>
 	struct math_value_type_helper<T>
 	{
-		using value_type = typename T::value_type;
+		using type = typename T::value_type;
 	};
 
 	template <typename T>
-	using math_value_type = typename math_value_type_helper<T>::value_type;
+	using math_value_type = typename math_value_type_helper<T>::type;
 
 	template <typename T1, typename T2>
 	struct is_math_same_type : std::false_type {};
@@ -100,16 +100,16 @@ namespace gal::test::math
 	template <typename T1, typename T2, bool AsRow = true>
 	concept math_same_size_t = is_math_same_size_v<T1, T2, AsRow>;
 
-	template<typename T1, typename T2>
+	template <typename T1, typename T2>
 	concept math_same_type_and_size_t = math_same_type_t<T1, T2> && math_same_size_t<T1, T2>;
 
-	template<typename T1, typename T2>
+	template <typename T1, typename T2>
 	concept math_same_type_and_size_ignore_view_t = math_same_type_ignore_view_t<T1, T2> && math_same_size_t<T1, T2>;
 
-	template<typename T1, typename T2>
+	template <typename T1, typename T2>
 	concept math_vector_same_size_t = vector_type_t<T1> && vector_type_t<T2> && math_same_size_t<T1, T2>;
 
-	template<typename T1, typename T2>
+	template <typename T1, typename T2>
 	concept math_matrix_same_size_t = matrix_t<T1> && matrix_t<T2> && math_same_size_t<T1, T2>;
 
 	/**
@@ -227,13 +227,12 @@ namespace gal::test::math
 	template <
 		typename RetType,
 		typename U1,
-		typename U2,
+		math_same_size_t<U1> U2,
 		typename Pred,
 		std::size_t...I1,
 		std::size_t...I2,
 		std::size_t...I3>
 		requires
-		is_math_same_size_v<U1, U2> &&
 		(sizeof...(I1) == sizeof...(I2)) &&
 		(sizeof...(I2) == sizeof...(I3)) &&
 		(sizeof...(I1) == U1::data_size)
@@ -284,11 +283,9 @@ namespace gal::test::math
 	template <
 		typename RetType,
 		typename U1,
-		typename U2,
+		math_same_size_t<U1> U2,
 		typename Pred
 	>
-		requires
-		is_math_same_size_v<U1, U2>
 	constexpr auto ternary_apply_seq(
 		const U1& scalar1,
 		const U2& scalar2,
@@ -527,12 +524,12 @@ namespace gal::test::math
 		bool HasRet = false,
 		bool All = true,
 		typename U1,
-		typename U2,
+		math_same_size_t<U1> U2,
 		typename Pred,
 		std::size_t...I1,
 		std::size_t...I2
 	>
-		requires is_math_same_size_v<U1, U2> &&
+		requires
 		(sizeof...(I1) == sizeof...(I2)) &&
 		(sizeof...(I1) == U1::data_size)
 	// ReSharper disable once CppNotAllPathsReturnValue (actually all paths have return value)
@@ -584,10 +581,9 @@ namespace gal::test::math
 		bool HasRet = false,
 		bool All = true,
 		typename U1,
-		typename U2,
+		math_same_size_t<U1> U2,
 		typename Pred
 	>
-		requires is_math_same_size_v<U1, U2>
 	// ReSharper disable once CppNotAllPathsReturnValue (actually all paths have return value)
 	constexpr std::conditional_t<HasRet, bool, void> binary_apply_seq(
 		U1&       scalar1,
@@ -786,9 +782,7 @@ namespace gal::test::math
 	}
 
 	// matrix + matrix / vector + vector -> return a matrix/vector
-	template <typename RetType, typename T1, typename T2, typename Pred>
-		requires
-		is_math_same_type_ignore_view_v<T1, T2> && is_math_same_size_v<T1, T2>
+	template <typename RetType, typename T1, math_same_type_and_size_ignore_view_t<T1> T2, typename Pred>
 	constexpr auto operator_base(const T1& t1, const T2& t2, Pred&& pred)
 	noexcept(noexcept(
 		ternary_apply_seq<RetType>(
@@ -806,9 +800,7 @@ namespace gal::test::math
 	}
 
 	// matrix/vector + one arg -> return a matrix/vector
-	template <typename RetType, typename T1, typename T2, typename Pred>
-		requires
-		is_math_type_v<T1> && (!is_math_type_v<T2>)
+	template <typename RetType, math_type_t T1, not_math_type_t T2, typename Pred>
 	constexpr auto operator_base(const T1& t1, T2 t2, Pred&& pred)
 	noexcept(noexcept(
 		ternary_apply_dup<RetType>(
@@ -826,9 +818,9 @@ namespace gal::test::math
 	}
 
 	// matrix/vector + one parameters pack -> return a matrix/vector
-	template <typename RetType, typename T, typename Pred, typename...Args>
+	template <typename RetType, math_type_t T, typename Pred, typename...Args>
 		requires
-		is_math_type_v<T> && (sizeof...(Args) == T::data_size)
+		(sizeof...(Args) == T::data_size)
 	constexpr auto operator_base(const T& t, Pred&& pred, Args&&...args)
 	noexcept(noexcept(
 		ternary_apply<RetType>(
@@ -846,10 +838,8 @@ namespace gal::test::math
 	}
 
 	// matrix + matrix / vector + vector
-	template <bool HasRet = false, bool All = true, not_vector_view_t T1, typename T2, typename Pred>
-		requires
-		is_math_same_type_ignore_view_v<T1, T2> &&
-		is_math_same_size_v<T1, T2>
+	template <bool HasRet = false, bool All = true, not_vector_view_t T1, math_same_type_and_size_ignore_view_t<T1> T2,
+			typename Pred>
 	constexpr auto operator_base(T1& t1, const T2& t2, Pred&& pred)
 	noexcept(noexcept(
 		binary_apply_seq<HasRet, All>(
@@ -867,9 +857,7 @@ namespace gal::test::math
 	}
 
 	// vector_view + vector/vector_view
-	template <bool HasRet = false, bool All = true, vector_view_t T1, vector_type_t T2, typename Pred>
-		requires
-		is_math_same_size_v<T1, T2>
+	template <bool HasRet = false, bool All = true, vector_view_t T1, math_vector_same_size_t<T1> T2, typename Pred>
 	constexpr auto operator_base(T1 t1, const T2& t2, Pred&& pred)
 	noexcept(noexcept(
 		binary_apply_seq<HasRet, All>(

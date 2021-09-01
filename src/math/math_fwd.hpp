@@ -1,8 +1,6 @@
 // ReSharper disable CppInconsistentNaming
 #pragma once
 
-#include <type_traits>
-
 namespace gal::test::math
 {
 	template <typename T, std::size_t N>

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/math/math_operations.hpp"
+#include "../src/math/basic_math_operations.hpp"
 
 using namespace gal::test::math;
 
@@ -870,4 +870,169 @@ TEST(TestMathOperations, TestOperatorEqualAndNotEqual)
 	static_assert(!matrix43[3]);
 	static_assert(!matrix43[4]);
 	static_assert(!matrix43[5]);
+}
+
+TEST(TestMathOperations, TestOperatorEqualAndNotEqualFloatingPoint)
+{
+	// +1.0e-10
+	constexpr vector3<double> vector1{ 1.2300000001, 4.5600000001, 7.8900000001 };
+	constexpr vector3<double> vector2{ 1.2300000001, 1.2300000001, 1.2300000001 };
+
+	// epsilon = 1.0e-9
+	constexpr auto epsilon = 1.0e-9;
+	
+	constexpr auto vector31 = equal(vector1, vector2, epsilon);
+	constexpr auto vector32 = equal(vector1, 4.5600000001, epsilon);
+	constexpr auto vector33 = equal(4.5600000001, vector1, epsilon);
+
+	static_assert(vector31[0]);
+	static_assert(!vector31[1]);
+	static_assert(!vector31[2]);
+
+	static_assert(!vector32[0]);
+	static_assert(vector32[1]);
+	static_assert(!vector32[2]);
+
+	static_assert(!vector33[0]);
+	static_assert(vector33[1]);
+	static_assert(!vector33[2]);
+
+	constexpr auto vector41 = not_equal(vector1, vector2, epsilon);
+	constexpr auto vector42 = not_equal(vector1, 4.5600000001, epsilon);
+	constexpr auto vector43 = not_equal(4.5600000001, vector1, epsilon);
+
+	static_assert(!vector41[0]);
+	static_assert(vector41[1]);
+	static_assert(vector41[2]);
+
+	static_assert(vector42[0]);
+	static_assert(!vector42[1]);
+	static_assert(vector42[2]);
+
+	static_assert(vector43[0]);
+	static_assert(!vector43[1]);
+	static_assert(vector43[2]);
+
+	constexpr matrix2x3<double> matrix1{ vector1, vector2 };
+	constexpr matrix2x3<double> matrix2{ vector2, vector1 };
+
+	constexpr auto matrix31 = equal(matrix1, matrix2, epsilon);
+	constexpr auto matrix32 = equal(matrix1, 1.2300000001, epsilon);
+	constexpr auto matrix33 = equal(1.2300000001, matrix1, epsilon);
+
+	static_assert(matrix31[0]);
+	static_assert(!matrix31[1]);
+	static_assert(!matrix31[2]);
+	static_assert(matrix31[3]);
+	static_assert(!matrix31[4]);
+	static_assert(!matrix31[5]);
+
+	static_assert(matrix32[0]);
+	static_assert(!matrix32[1]);
+	static_assert(!matrix32[2]);
+	static_assert(matrix32[3]);
+	static_assert(matrix32[4]);
+	static_assert(matrix32[5]);
+
+	static_assert(matrix33[0]);
+	static_assert(!matrix33[1]);
+	static_assert(!matrix33[2]);
+	static_assert(matrix33[3]);
+	static_assert(matrix33[4]);
+	static_assert(matrix33[5]);
+
+	constexpr auto matrix41 = not_equal(matrix1, matrix2, epsilon);
+	constexpr auto matrix42 = not_equal(matrix1, 1.2300000001, epsilon);
+	constexpr auto matrix43 = not_equal(1.2300000001, matrix1, epsilon);
+
+	static_assert(!matrix41[0]);
+	static_assert(matrix41[1]);
+	static_assert(matrix41[2]);
+	static_assert(!matrix41[3]);
+	static_assert(matrix41[4]);
+	static_assert(matrix41[5]);
+
+	static_assert(!matrix42[0]);
+	static_assert(matrix42[1]);
+	static_assert(matrix42[2]);
+	static_assert(!matrix42[3]);
+	static_assert(!matrix42[4]);
+	static_assert(!matrix42[5]);
+
+	static_assert(!matrix43[0]);
+	static_assert(matrix43[1]);
+	static_assert(matrix43[2]);
+	static_assert(!matrix43[3]);
+	static_assert(!matrix43[4]);
+	static_assert(!matrix43[5]);
+}
+
+TEST(TestMathOperations, TestOperatorGreaterAndLess)
+{
+	constexpr vector3<unsigned> vector1{ 123, 456, 789 };
+	constexpr vector3<unsigned> vector2{ 123, 123, 123 };
+
+	constexpr auto vector31 = vector1 > vector2;
+	constexpr auto vector32 = vector1 > 456;
+	constexpr auto vector33 = 456 > vector1;
+
+	static_assert(!vector31[0]);
+	static_assert(vector31[1]);
+	static_assert(vector31[2]);
+
+	static_assert(!vector32[0]);
+	static_assert(!vector32[1]);
+	static_assert(vector32[2]);
+
+	static_assert(vector33[0]);
+	static_assert(!vector33[1]);
+	static_assert(!vector33[2]);
+
+	constexpr auto vector41 = vector1 >= vector2;
+	constexpr auto vector42 = vector1 >= 456;
+	constexpr auto vector43 = 456 >= vector1;
+
+	static_assert(vector41[0]);
+	static_assert(vector41[1]);
+	static_assert(vector41[2]);
+
+	static_assert(!vector42[0]);
+	static_assert(vector42[1]);
+	static_assert(vector42[2]);
+
+	static_assert(vector43[0]);
+	static_assert(vector43[1]);
+	static_assert(!vector43[2]);
+
+	constexpr auto vector51 = vector1 < vector2;
+	constexpr auto vector52 = vector1 < 456;
+	constexpr auto vector53 = 456 < vector1;
+	
+	static_assert(!vector51[0]);
+	static_assert(!vector51[1]);
+	static_assert(!vector51[2]);
+	
+	static_assert(vector52[0]);
+	static_assert(!vector52[1]);
+	static_assert(!vector52[2]);
+	
+	static_assert(!vector53[0]);
+	static_assert(!vector53[1]);
+	static_assert(vector53[2]);
+	
+	constexpr auto vector61 = vector1 <= vector2;
+	constexpr auto vector62 = vector1 <= 456;
+	constexpr auto vector63 = 456 <= vector1;
+	
+	static_assert(vector61[0]);
+	static_assert(!vector61[1]);
+	static_assert(!vector61[2]);
+	
+	static_assert(vector62[0]);
+	static_assert(vector62[1]);
+	static_assert(!vector62[2]);
+	
+	static_assert(!vector63[0]);
+	static_assert(vector63[1]);
+	static_assert(vector63[2]);
 }
