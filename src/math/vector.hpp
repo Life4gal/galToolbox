@@ -10,29 +10,8 @@ namespace gal::test::math
 	template <typename T, std::size_t N>
 	class vector;
 
-	template <typename T>
-	struct is_vector : std::false_type {};
-
-	template <typename T, std::size_t N>
-	struct is_vector<vector<T, N>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_vector_v = is_vector<T>::value;
-
 	template <std::size_t Stride, std::size_t Size, typename Iterator>
 	class vector_view;
-
-	template <typename T>
-	struct is_vector_view : std::false_type {};
-
-	template <std::size_t Stride, std::size_t Size, typename Iterator>
-	struct is_vector_view<vector_view<Stride, Size, Iterator>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
-
-	template <typename T>
-	constexpr static bool is_vector_type_v = is_vector_v<T> || is_vector_view_v<T>;
 }
 
 namespace gal::test::utils
@@ -41,8 +20,7 @@ namespace gal::test::utils
 	 * @brief specialize the vector/vector_view to support the construction of other vectors
 	 * @tparam T vector/vector_view
 	*/
-	template <typename T>
-		requires (math::is_vector_v<T> || math::is_vector_view_v<T>)
+	template <math::vector_type_t T>
 	struct tuple_maker_trait<T> : std::true_type
 	{
 		using value_type = typename T::value_type;
@@ -87,7 +65,7 @@ namespace gal::test::math
 		/**
 		 * @brief default construction
 		*/
-		constexpr vector() noexcept(std::is_nothrow_default_constructible_v<container_type>) = default;
+		constexpr explicit vector() noexcept(std::is_nothrow_default_constructible_v<container_type>) = default;
 
 		/**
 		 * @brief tuple composition parameter construction
@@ -97,7 +75,7 @@ namespace gal::test::math
 		*/
 		template <typename Tuple, size_type...I>
 			requires (sizeof...(I) <= data_size)
-		constexpr vector(Tuple&& tuple, std::index_sequence<I...>)
+		constexpr explicit vector(Tuple&& tuple, std::index_sequence<I...>)
 		noexcept((noexcept(static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))) && ...))
 			: data_({static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))...}) {}
 
@@ -244,7 +222,7 @@ namespace gal::test::math
 		{
 			return { utils::tuple_maker::to_tuple<data_size>(iterator_), std::make_index_sequence<data_size>{} };
 		}
-		
+
 		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) noexcept
 		{
 			return iterator_[index];

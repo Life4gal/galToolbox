@@ -9,15 +9,6 @@ namespace gal::test::math
 {
 	template <typename T, std::size_t Row, std::size_t Column>
 	class matrix;
-
-	template <typename T>
-	struct is_matrix : std::false_type {};
-
-	template <typename T, std::size_t Row, std::size_t Column>
-	struct is_matrix<matrix<T, Row, Column>> : std::true_type {};
-
-	template <typename T>
-	constexpr static bool is_matrix_v = is_matrix<T>::value;
 }
 
 namespace gal::test::utils
@@ -26,8 +17,7 @@ namespace gal::test::utils
 	 * @brief specialize the matrix to support the construction of other matrix
 	 * @tparam T matrix
 	*/
-	template <typename T>
-		requires math::is_matrix_v<T>
+	template <math::matrix_t T>
 	struct tuple_maker_trait<T> : std::true_type
 	{
 		using value_type = typename T::value_type;
@@ -75,7 +65,7 @@ namespace gal::test::math
 		/**
 		 * @brief default construction
 		*/
-		constexpr matrix() noexcept(std::is_nothrow_default_constructible_v<container_type>) = default;
+		constexpr explicit matrix() noexcept(std::is_nothrow_default_constructible_v<container_type>) = default;
 
 		/**
 		 * @brief tuple composition parameter construction
