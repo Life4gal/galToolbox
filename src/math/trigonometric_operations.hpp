@@ -13,8 +13,7 @@ namespace gal::test::math
 	 * @param degrees vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_radians(T& degrees)
 	noexcept(noexcept(
 		operator_base(
@@ -43,8 +42,7 @@ namespace gal::test::math
 	 * @param degrees vector_view
 	 * @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_radians(T degrees)
 	noexcept(noexcept(
 		operator_base(
@@ -73,8 +71,7 @@ namespace gal::test::math
 	 * @param degrees vector/vector_view
 	 * @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_type_t T>
 	constexpr auto radians(const T& degrees)
 	noexcept(noexcept(
 		make_radians(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
@@ -90,8 +87,7 @@ namespace gal::test::math
 	 * @param radians vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_degrees(T& radians)
 	noexcept(noexcept(
 		operator_base(
@@ -120,8 +116,7 @@ namespace gal::test::math
 	 * @param radians vector_view
 	 * @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_degrees(T radians)
 	noexcept(noexcept(
 		operator_base(
@@ -150,8 +145,7 @@ namespace gal::test::math
 	 * @param radians vector/vector_view
 	 * @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_type_t T>
 	constexpr auto degrees(const T& radians)
 	noexcept(noexcept(
 		make_degrees(std::declval<std::add_lvalue_reference_t<decltype(radians.copy())>>())
@@ -170,8 +164,7 @@ namespace gal::test::math
 	 * @param angle vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_sin(T& angle)
 	noexcept(noexcept(
 		operator_base(
@@ -195,8 +188,7 @@ namespace gal::test::math
 	 * @param angle vector_view
 	 * @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_sin(T angle)
 	noexcept(noexcept(
 		operator_base(
@@ -220,9 +212,11 @@ namespace gal::test::math
 	 * @param angle vector/vector_view
 	 * @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto sin(const T& angle)
+	noexcept(noexcept(
+		make_sin(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = angle.copy;
 		make_sin(ret);
@@ -236,8 +230,7 @@ namespace gal::test::math
 	 * @param angle vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_sinh(T& angle)
 	noexcept(noexcept(
 		operator_base(
@@ -260,8 +253,7 @@ namespace gal::test::math
 	 * @param angle vector_view
 	 * @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_sinh(T angle)
 	noexcept(noexcept(
 		operator_base(
@@ -284,9 +276,11 @@ namespace gal::test::math
 	 * @param angle vector/vector_view
 	 * @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto sinh(const T& angle)
+	noexcept(noexcept(
+		make_sinh(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = angle.copy;
 		make_sinh(ret);
@@ -301,8 +295,7 @@ namespace gal::test::math
 	 * @param angle vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_cos(T& angle)
 	noexcept(noexcept(
 		operator_base(
@@ -326,8 +319,7 @@ namespace gal::test::math
 	 * @param angle vector_view
 	 * @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_cos(T angle)
 	noexcept(noexcept(
 		operator_base(
@@ -351,9 +343,11 @@ namespace gal::test::math
 	* @param angle vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto cos(const T& angle)
+	noexcept(noexcept(
+		make_cos(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = angle.copy;
 		make_cos(ret);
@@ -367,8 +361,7 @@ namespace gal::test::math
 	 * @param angle vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_cosh(T& angle)
 	noexcept(noexcept(
 		operator_base(
@@ -391,8 +384,7 @@ namespace gal::test::math
 	* @param angle vector_view
 	* @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_cosh(T angle)
 	noexcept(noexcept(
 		operator_base(
@@ -415,9 +407,11 @@ namespace gal::test::math
 	* @param angle vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto cosh(const T& angle)
+	noexcept(noexcept(
+		make_cosh(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = angle.copy;
 		make_cosh(ret);
@@ -431,8 +425,7 @@ namespace gal::test::math
 	 * @param angle vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_tan(T& angle)
 	noexcept(noexcept(
 		operator_base(
@@ -455,8 +448,7 @@ namespace gal::test::math
 	* @param angle vector_view
 	* @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_tan(T angle)
 	noexcept(noexcept(
 		operator_base(
@@ -479,9 +471,11 @@ namespace gal::test::math
 	* @param angle vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto tan(const T& angle)
+	noexcept(noexcept(
+		make_tan(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = angle.copy;
 		make_tan(ret);
@@ -495,8 +489,7 @@ namespace gal::test::math
 	 * @param angle vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_tanh(T& angle)
 	noexcept(noexcept(
 		operator_base(
@@ -519,8 +512,7 @@ namespace gal::test::math
 	* @param angle vector_view
 	* @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_tanh(T angle)
 	noexcept(noexcept(
 		operator_base(
@@ -543,9 +535,11 @@ namespace gal::test::math
 	* @param angle vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto tanh(const T& angle)
+	noexcept(noexcept(
+		make_tanh(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = angle.copy;
 		make_tanh(ret);
@@ -560,8 +554,7 @@ namespace gal::test::math
 	 * @param x vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_asin(T& x)
 	noexcept(noexcept(
 		operator_base(
@@ -585,8 +578,7 @@ namespace gal::test::math
 	* @param x vector_view
 	* @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_asin(T x)
 	noexcept(noexcept(
 		operator_base(
@@ -610,9 +602,11 @@ namespace gal::test::math
 	* @param x vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto asin(const T& x)
+	noexcept(noexcept(
+		make_asin(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = x.copy;
 		make_asin(ret);
@@ -621,8 +615,7 @@ namespace gal::test::math
 
 	using std::asinh;
 
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_asinh(T& t)
 	noexcept(noexcept(
 		operator_base(
@@ -640,8 +633,7 @@ namespace gal::test::math
 		return t;
 	}
 
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_asinh(T t)
 	noexcept(noexcept(
 		operator_base(
@@ -659,9 +651,11 @@ namespace gal::test::math
 		return t;
 	}
 
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto asinh(const T& t)
+	noexcept(noexcept(
+		make_asinh(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = t.copy;
 		make_asinh(ret);
@@ -676,8 +670,7 @@ namespace gal::test::math
 	 * @param x vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_acos(T& x)
 	noexcept(noexcept(
 		operator_base(
@@ -701,8 +694,7 @@ namespace gal::test::math
 	* @param x vector_view
 	* @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_acos(T x)
 	noexcept(noexcept(
 		operator_base(
@@ -726,9 +718,11 @@ namespace gal::test::math
 	* @param x vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto acos(const T& x)
+	noexcept(noexcept(
+		make_acos(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = x.copy;
 		make_acos(ret);
@@ -737,8 +731,7 @@ namespace gal::test::math
 
 	using std::acosh;
 
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_acosh(T& t)
 	noexcept(noexcept(
 		operator_base(
@@ -756,8 +749,7 @@ namespace gal::test::math
 		return t;
 	}
 
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_acosh(T t)
 	noexcept(noexcept(
 		operator_base(
@@ -775,9 +767,11 @@ namespace gal::test::math
 		return t;
 	}
 
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>>
+	template <math_mathematical_vector_type_t T>
 	constexpr auto acosh(const T& t)
+	noexcept(noexcept(
+		make_acosh(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = t.copy;
 		make_acosh(ret);
@@ -792,8 +786,7 @@ namespace gal::test::math
 	 * @param y_over_x vector
 	 * @return vector
 	*/
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_atan(T& y_over_x)
 	noexcept(noexcept(
 		operator_base(
@@ -817,8 +810,7 @@ namespace gal::test::math
 	* @param y_over_x vector_view
 	* @return vector
 	*/
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_atan(T y_over_x)
 	noexcept(noexcept(
 		operator_base(
@@ -842,9 +834,11 @@ namespace gal::test::math
 	* @param y_over_x vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_type_t T>
 	constexpr auto atan(const T& y_over_x)
+	noexcept(noexcept(
+		make_atan(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = y_over_x.copy;
 		make_atan(ret);
@@ -853,8 +847,7 @@ namespace gal::test::math
 
 	using std::atanh;
 
-	template <vector_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_t T>
 	constexpr T& make_atanh(T& t)
 	noexcept(noexcept(
 		operator_base(
@@ -872,8 +865,7 @@ namespace gal::test::math
 		return t;
 	}
 
-	template <vector_view_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_view_t T>
 	constexpr T make_atanh(T t)
 	noexcept(noexcept(
 		operator_base(
@@ -891,9 +883,11 @@ namespace gal::test::math
 		return t;
 	}
 
-	template <vector_type_t T>
-		requires std::is_floating_point_v<math_value_type<T>> && (T::data_size <= 4)
+	template <math_mathematical_vector_type_t T>
 	constexpr auto atanh(const T& t)
+	noexcept(noexcept(
+		make_atanh(std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>())
+	))
 	{
 		auto ret = t.copy;
 		make_atanh(ret);
@@ -910,8 +904,7 @@ namespace gal::test::math
 	 * @param x vector/vector_view
 	 * @return vector
 	*/
-	template <vector_t Y, math_same_type_and_size_ignore_view_t<Y> X>
-		requires std::is_floating_point_v<math_value_type<Y>> && (Y::data_size <= 4)
+	template <math_mathematical_vector_t Y, math_vector_same_size_t<Y> X>
 	constexpr Y& make_atan2(Y& y, const X& x)
 	noexcept(noexcept(
 		operator_base(
@@ -939,8 +932,7 @@ namespace gal::test::math
 	* @param x vector/vector_view
 	* @return vector
 	*/
-	template <vector_view_t Y, math_same_type_and_size_ignore_view_t<Y> X>
-		requires std::is_floating_point_v<math_value_type<Y>> && (Y::data_size <= 4)
+	template <math_mathematical_vector_view_t Y, math_vector_same_size_t<Y> X>
 	constexpr Y make_atan2(Y y, const X& x)
 	noexcept(noexcept(
 		operator_base(
@@ -968,9 +960,14 @@ namespace gal::test::math
 	* @param x vector/vector_view
 	* @return vector
 	*/
-	template <vector_type_t Y, math_same_type_and_size_ignore_view_t<Y> X>
-		requires std::is_floating_point_v<math_value_type<Y>> && (Y::data_size <= 4)
+	template <math_mathematical_vector_type_t Y, math_vector_same_size_t<Y> X>
 	constexpr auto atan2(const Y& y, const X& x)
+	noexcept(noexcept(
+		make_atan2(
+					std::declval<std::add_lvalue_reference_t<decltype(degrees.copy())>>(),
+					std::declval<const X&>()
+				)
+	))
 	{
 		auto ret = y.copy;
 		make_atan2(ret, x);

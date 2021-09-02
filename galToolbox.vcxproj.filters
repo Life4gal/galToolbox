@@ -47,5 +47,6 @@
     <ClInclude Include="src\math\matrix.hpp" />
     <ClInclude Include="src\math\basic_operations.hpp" />
     <ClInclude Include="src\math\trigonometric_operations.hpp" />
+    <ClInclude Include="src\math\exponential_operations.hpp" />
   </ItemGroup>
 </Project>

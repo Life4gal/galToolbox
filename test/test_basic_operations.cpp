@@ -682,6 +682,37 @@ TEST(TestMathOperations, TestOperatorRightShift)
 	}
 }
 
+TEST(TestMathOperations, TestOperatorAbs)
+{
+	constexpr vector3<int> vector1{ -123, -456, 789 };
+	constexpr auto vector2 = +vector1;
+
+	constexpr matrix2x3<int> matrix1{ vector1, vector2 };
+	constexpr auto matrix2 = +matrix1;
+
+	static_assert(vector1[0] == -123);
+	static_assert(vector1[1] == -456);
+	static_assert(vector1[2] == 789);
+
+	static_assert(vector2[0] == 123);
+	static_assert(vector2[1] == 456);
+	static_assert(vector2[2] == 789);
+
+	static_assert(matrix1[0] == -123);
+	static_assert(matrix1[1] == -456);
+	static_assert(matrix1[2] == 789);
+	static_assert(matrix1[3] == 123);
+	static_assert(matrix1[4] == 456);
+	static_assert(matrix1[5] == 789);
+
+	static_assert(matrix2[0] == 123);
+	static_assert(matrix2[1] == 456);
+	static_assert(matrix2[2] == 789);
+	static_assert(matrix2[3] == 123);
+	static_assert(matrix2[4] == 456);
+	static_assert(matrix2[5] == 789);
+}
+
 TEST(TestMathOperations, TestOperatorInvert)
 {
 	constexpr vector3<int> vector1{123, 456, 789};

@@ -220,6 +220,18 @@ namespace gal::test::math
 		}
 
 		// unchecked
+		constexpr static void operator_abs(value_type& value) noexcept
+		{
+			if constexpr (std::is_signed_v<value_type>)
+			{
+				if (value < value_type{0})
+				{
+					value = -value;
+				}
+			}
+		}
+
+		// unchecked
 		constexpr static void operator_negative(value_type& value) noexcept
 		{
 			value = -value;
@@ -1986,6 +1998,88 @@ namespace gal::test::math
 			utils::tuple_maker::duplicate<T2::data_size>(t1), std::make_index_sequence<T2::data_size>{}
 		};
 		ret >>= t2;
+		return ret;
+	}
+
+	/**
+	* @brief `Abs` the matrix/vector itself
+	* @tparam T matrix/vector type
+	* @param t matrix/vector
+	* @return inverted matrix/vector
+	*/
+	template <matrix_or_vector_t T>
+	constexpr T& make_abs(T& t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T&>(),
+					math_invoker<math_value_type<T>>::template operator_abs
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_abs
+					);
+		return t;
+	}
+
+	/**
+	* @brief `Abs` the vector_view itself
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return inverted vector_view
+	*/
+	template <vector_view_t T>
+	constexpr T make_abs(T t)
+	noexcept(noexcept(
+		operator_base(
+					std::declval<T>(),
+					math_invoker<math_value_type<T>>::template operator_abs
+					)
+	))
+	{
+		operator_base(
+					t,
+					math_invoker<math_value_type<T>>::template operator_abs
+					);
+		return t;
+	}
+
+	/**
+	 * @brief get a copy of the `Abs` of matrix/vector
+	 * @tparam T matrix/vector type
+	 * @param t matrix/vector
+	 * @return inverted matrix/vector
+	*/
+	template <matrix_or_vector_t T>
+	constexpr auto operator+(const T& t)
+	noexcept(noexcept(
+		make_abs(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+				)
+	))
+	{
+		auto ret = t.copy();
+		make_abs(ret);
+		return ret;
+	}
+
+	/**
+	* @brief get a copy of the `Abs` of vector_view
+	* @tparam T vector_view type
+	* @param t vector_view
+	* @return inverted vector_view
+	*/
+	template <vector_view_t T>
+	constexpr auto operator+(T t)
+	noexcept(noexcept(
+		make_abs(
+				std::declval<std::add_lvalue_reference_t<decltype(std::declval<const T&>().copy())>>()
+				)
+	))
+	{
+		auto ret = t.copy();
+		make_abs(ret);
 		return ret;
 	}
 

@@ -47,10 +47,10 @@ namespace gal::test::math
 	template <typename T>
 	constexpr static bool is_vector_v = is_vector<T>::value;
 
-	template<typename T>
+	template <typename T>
 	concept vector_t = is_vector_v<T>;
 
-	template<typename T>
+	template <typename T>
 	concept not_vector_t = !vector_t<T>;
 
 	template <typename T>
@@ -62,19 +62,19 @@ namespace gal::test::math
 	template <typename T>
 	constexpr static bool is_vector_view_v = is_vector_view<T>::value;
 
-	template<typename T>
+	template <typename T>
 	concept vector_view_t = is_vector_view_v<T>;
 
-	template<typename T>
+	template <typename T>
 	concept not_vector_view_t = !vector_view_t<T>;
 
 	template <typename T>
 	constexpr static bool is_vector_type_v = is_vector_v<T> || is_vector_view_v<T>;
 
-	template<typename T>
+	template <typename T>
 	concept vector_type_t = is_vector_type_v<T>;
 
-	template<typename T>
+	template <typename T>
 	concept not_vector_type_t = !vector_type_t<T>;
 
 	template <typename T>
@@ -155,30 +155,30 @@ namespace gal::test::math
 	struct is_math_same_size : std::false_type {};
 
 	template <vector_type_t T1, vector_type_t T2>
-	requires (T1::data_size == T2::data_size)
-		struct is_math_same_size<T1, T2, true> : std::true_type {};
+		requires (T1::data_size == T2::data_size)
+	struct is_math_same_size<T1, T2, true> : std::true_type {};
 
 	template <matrix_t T1, matrix_t T2>
-	requires
+		requires
 		(T1::column_size == T2::column_size) &&
 		(T1::row_size == T2::row_size)
-		struct is_math_same_size<T1, T2, true> : std::true_type {};
+	struct is_math_same_size<T1, T2, true> : std::true_type {};
 
 	template <matrix_t T1, vector_type_t T2, bool AsRow>
-	requires
+		requires
 		(AsRow
 			? (T1::row_size == T2::data_size)
 			: (T1::column_size == T2::data_size)
-			)
-		struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
+		)
+	struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
 
 	template <vector_type_t T1, matrix_t T2, bool AsRow>
-	requires
+		requires
 		(AsRow
 			? (T1::data_size == T2::row_size)
 			: (T1::data_size == T2::column_size)
-			)
-		struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
+		)
+	struct is_math_same_size<T1, T2, AsRow> : std::true_type {};
 
 	template <typename T1, typename T2, bool AsRow = true>
 	constexpr static bool is_math_same_size_v = is_math_same_size<T1, T2, AsRow>::value;
@@ -197,4 +197,25 @@ namespace gal::test::math
 
 	template <typename T1, typename T2>
 	concept math_matrix_same_size_t = matrix_t<T1> && matrix_t<T2> && math_same_size_t<T1, T2>;
+
+	template <typename T>
+	concept math_mathematical_vector_type_size_t = (1 <= T::data_size) && (T::data_size <= 4);
+
+	template <typename T>
+	concept math_mathematical_vector_t =
+	vector_t<T> &&
+	math_mathematical_vector_type_size_t<T> &&
+	std::is_floating_point_v<math_value_type<T>>;
+
+	template <typename T>
+	concept math_mathematical_vector_view_t =
+	vector_view_t<T> &&
+	math_mathematical_vector_type_size_t<T> &&
+	std::is_floating_point_v<math_value_type<T>>;
+
+	template <typename T>
+	concept math_mathematical_vector_type_t =
+	vector_type_t<T> &&
+	math_mathematical_vector_type_size_t<T> &&
+	std::is_floating_point_v<math_value_type<T>>;
 }
