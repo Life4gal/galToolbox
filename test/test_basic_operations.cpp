@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "../src/math/basic_math_operations.hpp"
+#include <ranges>
+#include "../src/math/basic_operations.hpp"
 
 using namespace gal::test::math;
 
@@ -1035,4 +1036,21 @@ TEST(TestMathOperations, TestOperatorGreaterAndLess)
 	static_assert(!vector63[0]);
 	static_assert(vector63[1]);
 	static_assert(vector63[2]);
+}
+
+TEST(TestMathOperations, TestRanges)
+{
+	constexpr vector3<unsigned> vector1{ 123, 456, 789 };
+	constexpr vector3<unsigned> vector2{ 123, 123, 123 };
+
+	constexpr matrix2x3<int> matrix1{ vector1, vector2 };
+	constexpr matrix2x3<int> matrix2{ vector2, vector1 };
+
+	static_assert(std::ranges::all_of(vector1, [](const int i) {return i > 100; }));
+	static_assert(std::ranges::any_of(vector1, [](const int i) {return i > 456; }));
+	static_assert(std::ranges::none_of(vector2, [](const int i) {return i > 123; }));
+
+	static_assert(std::ranges::all_of(matrix1, [](const int i) {return i > 100; }));
+	static_assert(std::ranges::any_of(matrix1, [](const int i) {return i > 456; }));
+	static_assert(std::ranges::none_of(matrix2, [](const int i) {return i > 789; }));
 }

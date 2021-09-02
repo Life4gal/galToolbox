@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math_fwd.hpp"
 #include "vector.hpp"
 #include "matrix.hpp"
 #include "math_apply.hpp"
@@ -356,7 +357,7 @@ namespace gal::test::math
 	constexpr T1 operator+=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_add<math_value_type<T2>>
 					)
@@ -427,7 +428,7 @@ namespace gal::test::math
 	constexpr T1 operator+=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_add<math_value_type<T2>>
 					)
@@ -523,7 +524,7 @@ namespace gal::test::math
 	constexpr T1 operator-=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_subtract<math_value_type<T2>>
 					)
@@ -594,7 +595,7 @@ namespace gal::test::math
 	constexpr T1 operator-=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_subtract<math_value_type<T2>>
 					)
@@ -690,7 +691,7 @@ namespace gal::test::math
 	constexpr T1 operator*=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_multiply<math_value_type<T2>>
 					)
@@ -761,7 +762,7 @@ namespace gal::test::math
 	constexpr T1 operator*=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_multiply<math_value_type<T2>>
 					)
@@ -857,7 +858,7 @@ namespace gal::test::math
 	constexpr T1 operator/=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_divide<math_value_type<T2>>
 					)
@@ -928,7 +929,7 @@ namespace gal::test::math
 	constexpr T1 operator/=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_divide<math_value_type<T2>>
 					)
@@ -1024,7 +1025,7 @@ namespace gal::test::math
 	constexpr T1 operator%=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_model<math_value_type<T2>>
 					)
@@ -1095,7 +1096,7 @@ namespace gal::test::math
 	constexpr T1 operator%=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_model<math_value_type<T2>>
 					)
@@ -1191,7 +1192,7 @@ namespace gal::test::math
 	constexpr T1 operator&=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
 					)
@@ -1262,7 +1263,7 @@ namespace gal::test::math
 	constexpr T1 operator&=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_bit_and<math_value_type<T2>>
 					)
@@ -1358,7 +1359,7 @@ namespace gal::test::math
 	constexpr T1 operator|=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
 					)
@@ -1429,7 +1430,7 @@ namespace gal::test::math
 	constexpr T1 operator|=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_bit_or<math_value_type<T2>>
 					)
@@ -1525,7 +1526,7 @@ namespace gal::test::math
 	constexpr T1 operator^=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
 					)
@@ -1596,7 +1597,7 @@ namespace gal::test::math
 	constexpr T1 operator^=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_bit_xor<math_value_type<T2>>
 					)
@@ -1692,7 +1693,7 @@ namespace gal::test::math
 	constexpr T1 operator<<=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
 					)
@@ -1763,7 +1764,7 @@ namespace gal::test::math
 	constexpr T1 operator<<=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_left_shift<math_value_type<T2>>
 					)
@@ -1859,7 +1860,7 @@ namespace gal::test::math
 	constexpr T1 operator>>=(T1 t1, const T2& t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<const T2&>(),
 					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
 					)
@@ -1930,7 +1931,7 @@ namespace gal::test::math
 	constexpr T1 operator>>=(T1 t1, T2 t2)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T1&>(),
+					std::declval<T1>(),
 					std::declval<T2>(),
 					math_invoker<math_value_type<T1>>::template operator_right_shift<math_value_type<T2>>
 					)
@@ -2020,7 +2021,7 @@ namespace gal::test::math
 	constexpr T make_inverse(T t)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T&>(),
+					std::declval<T>(),
 					math_invoker<math_value_type<T>>::template operator_negative
 					)
 	))
@@ -2102,7 +2103,7 @@ namespace gal::test::math
 	constexpr T make_bitwise_not(T t)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T&>(),
+					std::declval<T>(),
 					math_invoker<math_value_type<T>>::template operator_bit_not
 					)
 	))
@@ -2184,7 +2185,7 @@ namespace gal::test::math
 	constexpr T make_not(T t)
 	noexcept(noexcept(
 		operator_base(
-					std::declval<T&>(),
+					std::declval<T>(),
 					math_invoker<math_value_type<T>>::template operator_not
 					)
 	))
