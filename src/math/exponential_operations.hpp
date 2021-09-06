@@ -432,8 +432,9 @@ namespace gal::test::math
 			auto half = v.copy() * 0.5f;
 
 			const auto* p   = reinterpret_cast<const typename T::template copy_type<unsigned int>*>(&v); // bit hack
-			auto        ret = reinterpret_cast<T>(magic - (*p >> 1)); // Newton Iteration
+			auto        ret = reinterpret_cast<T>(magic - (*p >> 1)); 
 
+			// Newton Iteration
 			// ret *= 1.5f - half * ret * ret;
 			// return ret;
 

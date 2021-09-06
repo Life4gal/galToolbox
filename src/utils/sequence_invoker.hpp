@@ -28,13 +28,18 @@ namespace gal::test::utils
 			)
 		noexcept((
 			noexcept(
-				func(
-					std::declval<decltype(sequence2[I2])>(),
-					std::declval<decltype(std::forward<Args>(args))>())
+				// func(
+				// 	std::declval<decltype(sequence2[I2])>(),
+				// 	std::declval<decltype(std::forward<Args>(args))>())
+				std::invoke(
+							std::declval<decltype(std::forward<Func>(func))>(),
+							std::declval<decltype(sequence2[I2])>(),
+							std::declval<decltype(std::forward<Args>(args))>())
 			) && ...
 		))
 		{
-			((sequence1[I1] = func(sequence2[I2], args)), ...);
+			((sequence1[I1] = std::invoke(std::forward<Func>(func), sequence2[I2], std::forward<Args>(args))), ...);
+			// ((sequence1[I1] = func(sequence2[I2], std::forward<Args>(args))), ...);
 		}
 
 		template <
@@ -56,13 +61,19 @@ namespace gal::test::utils
 			std::index_sequence<I3...>)
 		noexcept((
 			noexcept(
-				func(
-					std::declval<decltype(sequence2[I2])>(),
-					std::declval<decltype(sequence3[I3])>())
+				// func(
+				// 	std::declval<decltype(sequence2[I2])>(),
+				// 	std::declval<decltype(sequence3[I3])>())
+				std::invoke(
+							std::declval<decltype(std::forward<Func>(func))>(),
+							std::declval<decltype(sequence2[I2])>(),
+							std::declval<decltype(sequence3[I3])>()
+							)
 			) && ...
 		))
 		{
-			((sequence1[I1] = func(sequence2[I2], sequence3[I3])), ...);
+			((sequence1[I1] = std::invoke(std::forward<Func>(func), sequence2[I2], sequence3[I3])), ...);
+			// ((sequence1[I1] = func(sequence2[I2], sequence3[I3])), ...);
 		}
 
 		template <
@@ -82,14 +93,18 @@ namespace gal::test::utils
 			std::index_sequence<I2...>)
 		noexcept((
 			noexcept(
-				func(
-					std::declval<decltype(sequence2[I2])>(),
-					std::declval<T>()
-					)
+				// func(
+				// 	std::declval<decltype(sequence2[I2])>(),
+				// 	std::declval<T>())
+				std::invoke(
+							std::declval<decltype(std::forward<Func>(func))>(),
+							std::declval<decltype(sequence2[I2])>(),
+							std::declval<T>())
 			) && ...
 		))
 		{
-			((sequence1[I1] = func(sequence2[I2], arg)), ...);
+			((sequence1[I1] = std::invoke(std::forward<Func>(func), sequence2[I2], arg)), ...);
+			// ((sequence1[I1] = func(sequence2[I2], arg)), ...);
 		}
 
 		template <
@@ -108,10 +123,13 @@ namespace gal::test::utils
 			)
 		noexcept((
 			noexcept(
-				func(
-					std::declval<decltype(sequence[I])>(),
-					std::declval<decltype(std::forward<Args>(args))>()
-					)
+				// func(
+				// 	std::declval<decltype(sequence[I])>(),
+				// 	std::declval<decltype(std::forward<Args>(args))>())
+				std::invoke(
+							std::declval<decltype(std::forward<Func>(func))>(),
+							std::declval<decltype(sequence[I])>(),
+							std::declval<decltype(std::forward<Args>(args))>())
 			) && ...
 		))
 		{
@@ -127,11 +145,12 @@ namespace gal::test::utils
 					{
 						return (x || ...);
 					}
-				}(func(sequence[I], args)...);
+				}(std::invoke(std::forward<Func>(func), sequence[I], args)...); // (func(sequence[I], args)...); 
 			}
 			else
 			{
-				(func(sequence[I], args), ...);
+				(std::invoke(std::forward<Func>(func), sequence[I], args), ...);
+				// (func(sequence[I], args), ...); 
 			}
 		}
 
@@ -152,10 +171,13 @@ namespace gal::test::utils
 			std::index_sequence<I2...>)
 		noexcept((
 			noexcept(
-				func(
-					std::declval<decltype(sequence1[I1])>(),
-					std::declval<decltype(sequence2[I2])>()
-					)
+				// func(
+				// 	std::declval<decltype(sequence1[I1])>(),
+				// 	std::declval<decltype(sequence2[I2])>())
+				std::invoke(
+							std::declval<decltype(std::forward<Func>(func))>(),
+							std::declval<decltype(sequence1[I1])>(),
+							std::declval<decltype(sequence2[I2])>())
 			) && ...
 		))
 		{
@@ -171,11 +193,13 @@ namespace gal::test::utils
 					{
 						return (x || ...);
 					}
-				}(func(sequence1[I1], sequence2[I2])...);
+				}(std::invoke(std::forward<Func>(func), sequence1[I1], sequence2[I2])...);
+				// (func(sequence1[I1], sequence2[I2])...);
 			}
 			else
 			{
-				(func(sequence1[I1], sequence2[I2]), ...);
+				(std::invoke(std::forward<Func>(func), sequence1[I1], sequence2[I2]), ...);
+				// (func(sequence1[I1], sequence2[I2]), ...);
 			}
 		}
 
@@ -194,10 +218,13 @@ namespace gal::test::utils
 			std::index_sequence<I...>)
 		noexcept((
 			noexcept(
-				func(
-					std::declval<decltype(sequence[I])>(),
-					std::declval<T>()
-					)
+				// func(
+				// 	std::declval<decltype(sequence[I])>(),
+				// 	std::declval<T>())
+				std::invoke(
+							std::declval<decltype(std::forward<Func>(func))>(),
+							std::declval<decltype(sequence[I])>(),
+							std::declval<T>())
 			) && ...
 		))
 		{
@@ -213,11 +240,12 @@ namespace gal::test::utils
 					{
 						return (x || ...);
 					}
-				}(func(sequence[I], arg)...);
+				}(std::invoke(std::forward<Func>(func), sequence[I], arg)...); // (func(sequence[I], arg)...);
 			}
 			else
 			{
-				(func(sequence[I], arg), ...);
+				(std::invoke(std::forward<Func>(func), sequence[I], arg), ...);
+				// (func(sequence[I], arg), ...);
 			}
 		}
 
@@ -234,7 +262,10 @@ namespace gal::test::utils
 			std::index_sequence<I...>)
 		noexcept((
 			noexcept(
-				func(std::declval<decltype(sequence[I])>())
+				// func(std::declval<decltype(sequence[I])>())
+				std::invoke(
+							std::forward<Func>(func),
+							std::declval<decltype(sequence[I])>())
 			) && ...
 		))
 		{
@@ -250,11 +281,12 @@ namespace gal::test::utils
 					{
 						return (x || ...);
 					}
-				}(func(sequence[I])...);
+				}(std::invoke(std::forward<Func>(func), sequence[I])...); // (func(sequence[I])...);
 			}
 			else
 			{
-				(func(sequence[I]), ...);
+				(std::invoke(std::forward<Func>(func), sequence[I]), ...);
+				// (func(sequence[I]), ...);
 			}
 		}
 
@@ -757,12 +789,12 @@ namespace gal::test::utils
 		)
 		{
 			return sequence_invoker::binary_invoke_seq<N, HasRet, All>(
-																sequence1,
-																sequence2,
-																std::forward<Func>(func),
-																std::make_index_sequence<N>{},
-																std::make_index_sequence<N>{}
-																);
+																		sequence1,
+																		sequence2,
+																		std::forward<Func>(func),
+																		std::make_index_sequence<N>{},
+																		std::make_index_sequence<N>{}
+																	);
 		}
 
 		/**
