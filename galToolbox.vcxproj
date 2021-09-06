@@ -29,6 +29,7 @@
     <ClCompile Include="src\utils\random.ixx" />
     <ClCompile Include="test\test_compile_time_matcher.cpp" />
     <ClCompile Include="test\test_dynamic_bitset.cpp" />
+    <ClCompile Include="test\test_exponential_operations.cpp" />
     <ClCompile Include="test\test_fifo.cpp" />
     <ClCompile Include="test\test_basic_operations.cpp" />
     <ClCompile Include="test\test_random.cpp" />
@@ -44,7 +45,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\iterator\stride_iterator.hpp" />
+    <ClInclude Include="src\math\constants.hpp" />
+    <ClInclude Include="src\math\numeric_and_algorithm.hpp" />
     <ClInclude Include="src\math\exponential_operations.hpp" />
+    <ClInclude Include="src\math\geometric_operations.hpp" />
     <ClInclude Include="src\math\trigonometric_operations.hpp" />
     <ClInclude Include="src\math\math_fwd.hpp" />
     <ClInclude Include="src\math\basic_operations.hpp" />

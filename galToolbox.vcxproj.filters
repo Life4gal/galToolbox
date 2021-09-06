@@ -30,6 +30,7 @@
     <ClCompile Include="test\test_sequence_invoker.cpp" />
     <ClCompile Include="test\test_math_apply.cpp" />
     <ClCompile Include="test\test_basic_operations.cpp" />
+    <ClCompile Include="test\test_exponential_operations.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -48,5 +49,8 @@
     <ClInclude Include="src\math\basic_operations.hpp" />
     <ClInclude Include="src\math\trigonometric_operations.hpp" />
     <ClInclude Include="src\math\exponential_operations.hpp" />
+    <ClInclude Include="src\math\geometric_operations.hpp" />
+    <ClInclude Include="src\math\numeric_and_algorithm.hpp" />
+    <ClInclude Include="src\math\constants.hpp" />
   </ItemGroup>
 </Project>

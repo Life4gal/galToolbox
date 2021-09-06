@@ -46,11 +46,6 @@ namespace gal::test::math
 		constexpr static size_type column_size = Row;
 		constexpr static size_type data_size   = row_size * column_size;
 
-		using self_type = matrix<value_type, column_size, row_size>;
-		using self_reference = matrix<value_type, column_size, row_size>&;
-		using const_self_reference = const matrix<value_type, column_size, row_size>&;
-		using self_rreference = matrix<value_type, column_size, row_size>&&;
-
 		template <typename U = value_type>
 		using copy_type = matrix<U, column_size, row_size>;
 
