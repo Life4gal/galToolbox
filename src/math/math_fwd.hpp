@@ -198,24 +198,39 @@ namespace gal::test::math
 	template <typename T1, typename T2>
 	concept math_matrix_same_size_t = matrix_t<T1> && matrix_t<T2> && math_same_size_t<T1, T2>;
 
+	//====================================================
+
 	template <typename T>
 	concept math_mathematical_vector_type_size_t = (1 <= T::data_size) && (T::data_size <= 4);
+
+	template <typename T>
+	concept math_mathematical_value_type_t = std::is_floating_point_v<math_value_type<T>>;
 
 	template <typename T>
 	concept math_mathematical_vector_t =
 	vector_t<T> &&
 	math_mathematical_vector_type_size_t<T> &&
-	std::is_floating_point_v<math_value_type<T>>;
+	math_mathematical_value_type_t<T>;
 
 	template <typename T>
 	concept math_mathematical_vector_view_t =
 	vector_view_t<T> &&
 	math_mathematical_vector_type_size_t<T> &&
-	std::is_floating_point_v<math_value_type<T>>;
+	math_mathematical_value_type_t<T>;
 
 	template <typename T>
 	concept math_mathematical_vector_type_t =
 	vector_type_t<T> &&
 	math_mathematical_vector_type_size_t<T> &&
-	std::is_floating_point_v<math_value_type<T>>;
+	math_mathematical_value_type_t<T>;
+
+	template <typename T1, typename T2>
+	concept math_mathematical_vector_same_type_and_size_t =
+	math_mathematical_vector_t<T1> &&
+	math_same_type_and_size_t<T1, T2>;
+
+	template <typename T1, typename T2>
+	concept math_mathematical_vector_same_type_and_size_ignore_view_t =
+	math_mathematical_vector_type_t<T1> &&
+	math_same_type_and_size_ignore_view_t<T1, T2>;
 }

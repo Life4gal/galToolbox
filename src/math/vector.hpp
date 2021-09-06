@@ -47,17 +47,12 @@ namespace gal::test::math
 
 		constexpr static size_type data_size = N;
 
-		using self_type = vector<value_type, data_size>;
-		using self_reference = vector<value_type, data_size>&;
-		using const_self_reference = const vector<value_type, data_size>&;
-		using self_rreference = vector<value_type, data_size>&&;
-
 		template<typename U = value_type>
 		using copy_type = vector<U, data_size>;
 
 		// Stride may not be 1, and even Iterator is not std::array<value_type, data_size>::iterator but std::array<value_type, N>::iterator (N != data_size)
 		template <std::size_t Stride, typename Iterator = iterator>
-		using view_type = vector_view<Stride, data_size, Iterator>;
+		using view_type = vector_view<Stride, data_size / Stride, Iterator>;
 		// Stride may not be 1, and even Iterator is not std::array<value_type, data_size>::const_iterator but std::array<value_type, N>::const_iterator (N != data_size)
 		template <std::size_t Stride, typename Iterator = const_iterator>
 		using const_view_type = vector_view<Stride, data_size, Iterator>;
@@ -137,6 +132,150 @@ namespace gal::test::math
 			return data_[index];
 		}
 
+		[[nodiscard]] constexpr reference x() noexcept
+		requires(data_size >= 1)
+		{
+			return data_[0];
+		}
+
+		[[nodiscard]] constexpr const_reference x() const noexcept
+			requires(data_size >= 1)
+		{
+			return data_[0];
+		}
+
+		[[nodiscard]] constexpr reference r() noexcept
+			requires(data_size >= 1)
+		{
+			return data_[0];
+		}
+
+		[[nodiscard]] constexpr const_reference r() const noexcept
+			requires(data_size >= 1)
+		{
+			return data_[0];
+		}
+
+		[[nodiscard]] constexpr reference s() noexcept
+			requires(data_size >= 1)
+		{
+			return data_[0];
+		}
+
+		[[nodiscard]] constexpr const_reference s() const noexcept
+			requires(data_size >= 1)
+		{
+			return data_[0];
+		}
+
+		[[nodiscard]] constexpr reference y() noexcept
+			requires(data_size >= 2)
+		{
+			return data_[1];
+		}
+
+		[[nodiscard]] constexpr const_reference y() const noexcept
+			requires(data_size >= 2)
+		{
+			return data_[1];
+		}
+
+		[[nodiscard]] constexpr reference g() noexcept
+			requires(data_size >= 2)
+		{
+			return data_[1];
+		}
+
+		[[nodiscard]] constexpr const_reference g() const noexcept
+			requires(data_size >= 2)
+		{
+			return data_[1];
+		}
+
+		[[nodiscard]] constexpr reference t() noexcept
+			requires(data_size >= 2)
+		{
+			return data_[1];
+		}
+
+		[[nodiscard]] constexpr const_reference t() const noexcept
+			requires(data_size >= 2)
+		{
+			return data_[1];
+		}
+
+		[[nodiscard]] constexpr reference z() noexcept
+			requires(data_size >= 3)
+		{
+			return data_[2];
+		}
+
+		[[nodiscard]] constexpr const_reference z() const noexcept
+			requires(data_size >= 3)
+		{
+			return data_[2];
+		}
+
+		[[nodiscard]] constexpr reference b() noexcept
+			requires(data_size >= 3)
+		{
+			return data_[2];
+		}
+
+		[[nodiscard]] constexpr const_reference b() const noexcept
+			requires(data_size >= 3)
+		{
+			return data_[2];
+		}
+
+		[[nodiscard]] constexpr reference p() noexcept
+			requires(data_size >= 3)
+		{
+			return data_[2];
+		}
+
+		[[nodiscard]] constexpr const_reference p() const noexcept
+			requires(data_size >= 3)
+		{
+			return data_[2];
+		}
+
+		[[nodiscard]] constexpr reference w() noexcept
+			requires(data_size >= 4)
+		{
+			return data_[3];
+		}
+
+		[[nodiscard]] constexpr const_reference w() const noexcept
+			requires(data_size >= 5)
+		{
+			return data_[3];
+		}
+
+		[[nodiscard]] constexpr reference a() noexcept
+			requires(data_size >= 4)
+		{
+			return data_[3];
+		}
+
+		[[nodiscard]] constexpr const_reference a() const noexcept
+			requires(data_size >= 5)
+		{
+			return data_[3];
+		}
+
+		[[nodiscard]] constexpr reference q() noexcept
+			requires(data_size >= 4)
+		{
+			return data_[3];
+		}
+
+		[[nodiscard]] constexpr const_reference q() const noexcept
+			requires(data_size >= 5)
+		{
+			return data_[3];
+		}
+
 		[[nodiscard]] constexpr iterator begin() noexcept
 		{
 			return data_.begin();
@@ -186,7 +325,7 @@ namespace gal::test::math
 		{
 			return data_.cend();
 		}
-	
+
 	private:
 		container_type data_;
 	};
@@ -203,13 +342,9 @@ namespace gal::test::math
 		using value_type = typename view_iterator::value_type;
 		using difference_type = typename view_iterator::difference_type;
 		using reference = typename view_iterator::reference;
+		using const_reference = std::add_const_t<reference>;
 		using rreference = typename view_iterator::rreference;
-
-		using self_type = vector_view<stride, data_size, iterator_type>;
-		using self_reference = vector_view<stride, data_size, iterator_type>&;
-		using const_self_reference = const vector_view<stride, data_size, iterator_type>&;
-		using self_rreference = vector_view<stride, data_size, iterator_type>&&;
-
+		
 		using vector_type = vector<value_type, data_size>;
 		using size_type = typename vector_type::size_type;
 
@@ -231,6 +366,150 @@ namespace gal::test::math
 		[[nodiscard]] constexpr decltype(auto) operator[](size_type index) const noexcept
 		{
 			return iterator_[index];
+		}
+
+		[[nodiscard]] constexpr reference x() noexcept
+			requires(data_size >= 1)
+		{
+			return iterator_[0];
+		}
+
+		[[nodiscard]] constexpr const_reference x() const noexcept
+			requires(data_size >= 1)
+		{
+			return iterator_[0];
+		}
+
+		[[nodiscard]] constexpr reference r() noexcept
+			requires(data_size >= 1)
+		{
+			return iterator_[0];
+		}
+
+		[[nodiscard]] constexpr const_reference r() const noexcept
+			requires(data_size >= 1)
+		{
+			return iterator_[0];
+		}
+
+		[[nodiscard]] constexpr reference s() noexcept
+			requires(data_size >= 1)
+		{
+			return iterator_[0];
+		}
+
+		[[nodiscard]] constexpr const_reference s() const noexcept
+			requires(data_size >= 1)
+		{
+			return iterator_[0];
+		}
+
+		[[nodiscard]] constexpr reference y() noexcept
+			requires(data_size >= 2)
+		{
+			return iterator_[1];
+		}
+
+		[[nodiscard]] constexpr const_reference y() const noexcept
+			requires(data_size >= 2)
+		{
+			return iterator_[1];
+		}
+
+		[[nodiscard]] constexpr reference g() noexcept
+			requires(data_size >= 2)
+		{
+			return iterator_[1];
+		}
+
+		[[nodiscard]] constexpr const_reference g() const noexcept
+			requires(data_size >= 2)
+		{
+			return iterator_[1];
+		}
+
+		[[nodiscard]] constexpr reference t() noexcept
+			requires(data_size >= 2)
+		{
+			return iterator_[1];
+		}
+
+		[[nodiscard]] constexpr const_reference t() const noexcept
+			requires(data_size >= 2)
+		{
+			return iterator_[1];
+		}
+
+		[[nodiscard]] constexpr reference z() noexcept
+			requires(data_size >= 3)
+		{
+			return iterator_[2];
+		}
+
+		[[nodiscard]] constexpr const_reference z() const noexcept
+			requires(data_size >= 3)
+		{
+			return iterator_[2];
+		}
+
+		[[nodiscard]] constexpr reference b() noexcept
+			requires(data_size >= 3)
+		{
+			return iterator_[2];
+		}
+
+		[[nodiscard]] constexpr const_reference b() const noexcept
+			requires(data_size >= 3)
+		{
+			return iterator_[2];
+		}
+
+		[[nodiscard]] constexpr reference p() noexcept
+			requires(data_size >= 3)
+		{
+			return iterator_[2];
+		}
+
+		[[nodiscard]] constexpr const_reference p() const noexcept
+			requires(data_size >= 3)
+		{
+			return iterator_[2];
+		}
+
+		[[nodiscard]] constexpr reference w() noexcept
+			requires(data_size >= 4)
+		{
+			return iterator_[3];
+		}
+
+		[[nodiscard]] constexpr const_reference w() const noexcept
+			requires(data_size >= 5)
+		{
+			return iterator_[3];
+		}
+
+		[[nodiscard]] constexpr reference a() noexcept
+			requires(data_size >= 4)
+		{
+			return iterator_[3];
+		}
+
+		[[nodiscard]] constexpr const_reference a() const noexcept
+			requires(data_size >= 5)
+		{
+			return iterator_[3];
+		}
+
+		[[nodiscard]] constexpr reference q() noexcept
+			requires(data_size >= 4)
+		{
+			return iterator_[3];
+		}
+
+		[[nodiscard]] constexpr const_reference q() const noexcept
+			requires(data_size >= 5)
+		{
+			return iterator_[3];
 		}
 
 		// stl compatible, can also be used for for-loop

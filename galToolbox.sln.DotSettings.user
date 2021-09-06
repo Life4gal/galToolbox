@@ -31,5 +31,14 @@
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestOperatorInvert&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestOperatorEqual&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestOperatorEqualAndNotEqualFloatingPoint&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestExp&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestExp2&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestSqrt&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestInverseSqrt&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestLength&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestDot&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestCross&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestNormalize&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;GTest::C9C452C5-3A19-4E26-A868-9E43E6E0C335::.NETFramework,Version=v4.0::TestMathOperations.TestRelect&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
