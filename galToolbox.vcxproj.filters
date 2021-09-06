@@ -31,6 +31,7 @@
     <ClCompile Include="test\test_math_apply.cpp" />
     <ClCompile Include="test\test_basic_operations.cpp" />
     <ClCompile Include="test\test_exponential_operations.cpp" />
+    <ClCompile Include="test\test_geometric_operations.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

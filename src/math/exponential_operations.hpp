@@ -434,7 +434,7 @@ namespace gal::test::math
 	}
 
 	template <not_math_type_t T>
-	constexpr void inverse_sqrt(float& v) noexcept
+	constexpr void inverse_sqrt(T& v) noexcept
 	{
 		if constexpr (std::is_same_v<T, float>)
 		{
