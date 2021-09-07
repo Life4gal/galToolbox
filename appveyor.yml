@@ -28,9 +28,10 @@ before_build:
     - cmake -G "%CMAKE_GENERATOR%" ..
     - cmake --build . --config Release -- /m
 
-    - copy lib\Release\gtest.lib %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib
-    - copy lib\gtest\Release\gtest_main.lib %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib
+    - copy lib\Release\gtest.lib %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib\
+    - copy lib\Release\gtest_main.lib %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib\
     - cd %APPVEYOR_BUILD_FOLDER%
+
 build:
   project: galToolbox.sln
   parallel: true
