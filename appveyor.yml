@@ -11,34 +11,27 @@ configuration:
 
 environment:
     GTEST_VERSION: 1.11.0
-    CMAKE_GENERATOR: Visual Studio 14 2015 Win64
+    CMAKE_GENERATOR: Visual Studio 16 2019
 
 before_build:
+    - rm -r $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
+    - mkdir $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
+
     - curl -fsSL -o release-%GTEST_VERSION%.zip https://github.com/google/googletest/archive/release-%GTEST_VERSION%.zip
     - unzip -q release-%GTEST_VERSION%.zip
     - cd googletest-release-%GTEST_VERSION%
-    - cmake
-        -G "%CMAKE_GENERATOR%"
-        -DCVF_VERSION=%GTEST_VERSION%
-      .
-    - cmake --build . --config Release -- /m
-    # BEGIN Enrich folder to make FindGTest.cmake happy
-    - md googletest\lib
-    - copy googlemock\gtest\Release\gtest.lib googletest\lib
-    - copy googlemock\gtest\Release\gtest_main.lib googletest\lib
-    # END
-    - cd ..
+
     - mkdir build
     - cd build
-    # NOTE: GTEST_ROOT is relative to source CMakeLists.txt, not the build directory
+
     - cmake
         -G "%CMAKE_GENERATOR%"
-        -DGTEST_ROOT=googletest-release-%GTEST_VERSION%/googletest
-        -DURIPARSER_BUILD_DOCS=OFF
-        -DURIPARSER_MSVC_RUNTIME=/MT
-        -DURIPARSER_WARNINGS_AS_ERRORS=ON
-        ..
+    - cmake --build . --config Release -- /m
+
+    - copy lib\Release\gtest.lib $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
+    - copy lib\gtest\Release\gtest_main.lib $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
+    - cd $(APPVEYOR_BUILD_FOLDER)
 
 build:
     parallel: true
-    project: $(APPVEYOR_BUILD_FOLDER)\build\$(APPVEYOR_PROJECT_NAME).sln
+    project: $(APPVEYOR_BUILD_FOLDER)\$(APPVEYOR_PROJECT_NAME).sln
