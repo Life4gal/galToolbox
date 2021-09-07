@@ -14,8 +14,10 @@ environment:
     CMAKE_GENERATOR: Visual Studio 16 2019
 
 before_build:
-    - rm -r $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
-    - mkdir $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
+    - echo "project build at $(APPVEYOR_BUILD_FOLDER)"
+
+    - rm -r "$(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib"
+    - mkdir "$(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib"
 
     - curl -fsSL -o release-%GTEST_VERSION%.zip https://github.com/google/googletest/archive/release-%GTEST_VERSION%.zip
     - unzip -q release-%GTEST_VERSION%.zip
@@ -28,8 +30,8 @@ before_build:
         -G "%CMAKE_GENERATOR%"
     - cmake --build . --config Release -- /m
 
-    - copy lib\Release\gtest.lib $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
-    - copy lib\gtest\Release\gtest_main.lib $(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib
+    - copy "lib\Release\gtest.lib" "$(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib"
+    - copy "lib\gtest\Release\gtest_main.lib" "$(APPVEYOR_BUILD_FOLDER)\3rd-party\googletest\lib"
     - cd $(APPVEYOR_BUILD_FOLDER)
 
 build:
