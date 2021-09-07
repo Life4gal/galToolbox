@@ -1,5 +1,10 @@
 # A toolbox base on cxx20
 
+![Build status](https://img.shields.io/appveyor/build/Life4gal/galToolbox?label=AppVeyor-Build&style=for-the-badge)
+![License](https://img.shields.io/badge/license-unlicense-blue)
+![Code Size](https://img.shields.io/github/languages/code-size/life4gal/galToolbox?style=for-the-badge)
+![File Count](https://img.shields.io/github/directory-file-count/life4gal/galToolbox?style=for-the-badge)
+
 ## Modern CPP first step: don't use macros
 
 ## CMAKE not supported module yet, so we have to use MSVC now
