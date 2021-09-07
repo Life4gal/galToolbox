@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="appveyor.yml" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
   </ItemGroup>

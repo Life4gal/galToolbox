@@ -38,6 +38,7 @@
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
+    <None Include="appveyor.yml" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\string\compile_time_matcher.hpp" />
