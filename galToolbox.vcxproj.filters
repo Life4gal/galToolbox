@@ -56,4 +56,7 @@
     <ClInclude Include="src\math\numeric_and_algorithm.hpp" />
     <ClInclude Include="src\math\constants.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="3rd-party\googletest\LICENSE.txt" />
+  </ItemGroup>
 </Project>

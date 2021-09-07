@@ -62,6 +62,9 @@
     <ClInclude Include="src\utils\tuple_maker.hpp" />
     <ClInclude Include="src\string\compile_time_matcher.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="3rd-party\googletest\LICENSE.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
