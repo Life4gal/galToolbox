@@ -1,9 +1,11 @@
 # A toolbox base on cxx20
 
 ![Build status](https://img.shields.io/appveyor/build/Life4gal/galToolbox?label=AppVeyor-Build&style=for-the-badge)
-![License](https://img.shields.io/badge/license-unlicense-blue)
 ![Code Size](https://img.shields.io/github/languages/code-size/life4gal/galToolbox?style=for-the-badge)
-![File Count](https://img.shields.io/github/directory-file-count/life4gal/galToolbox?style=for-the-badge)
+![Watchers](https://img.shields.io/github/watchers/life4gal/galToolbox?style=for-the-badge)
+
+![Standard](https://img.shields.io/badge/requirement-c%2B%2B20-orange)
+![License](https://img.shields.io/badge/license-unlicense-blue)
 
 ## Modern CPP first step: don't use macros
 
