@@ -38,6 +38,7 @@
     <ClCompile Include="test\test_sequence_invoker.cpp" />
     <ClCompile Include="test\test_stride_iterator.cpp" />
     <ClCompile Include="test\test_math_apply.cpp" />
+    <ClCompile Include="test\test_trigonometric_operations.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

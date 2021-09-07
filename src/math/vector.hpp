@@ -247,7 +247,7 @@ namespace gal::test::math
 		}
 
 		[[nodiscard]] constexpr const_reference w() const noexcept
-			requires(data_size >= 5)
+			requires(data_size >= 4)
 		{
 			return data_[3];
 		}
@@ -259,7 +259,7 @@ namespace gal::test::math
 		}
 
 		[[nodiscard]] constexpr const_reference a() const noexcept
-			requires(data_size >= 5)
+			requires(data_size >= 4)
 		{
 			return data_[3];
 		}
@@ -271,7 +271,7 @@ namespace gal::test::math
 		}
 
 		[[nodiscard]] constexpr const_reference q() const noexcept
-			requires(data_size >= 5)
+			requires(data_size >= 4)
 		{
 			return data_[3];
 		}
@@ -483,7 +483,7 @@ namespace gal::test::math
 		}
 
 		[[nodiscard]] constexpr const_reference w() const noexcept
-			requires(data_size >= 5)
+			requires(data_size >= 4)
 		{
 			return iterator_[3];
 		}
@@ -495,7 +495,7 @@ namespace gal::test::math
 		}
 
 		[[nodiscard]] constexpr const_reference a() const noexcept
-			requires(data_size >= 5)
+			requires(data_size >= 4)
 		{
 			return iterator_[3];
 		}
@@ -507,7 +507,7 @@ namespace gal::test::math
 		}
 
 		[[nodiscard]] constexpr const_reference q() const noexcept
-			requires(data_size >= 5)
+			requires(data_size >= 4)
 		{
 			return iterator_[3];
 		}
