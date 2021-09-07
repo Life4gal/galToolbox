@@ -10,8 +10,8 @@ environment:
     matrix:
         # Visual Studio 2019, 64 bit
         - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-            CMAKE_GENERATOR: Visual Studio 16 2019 Win64
-            PLATFORM: x64
+          CMAKE_GENERATOR: Visual Studio 16 2019 Win64
+          PLATFORM: x64
 
 before_build:
     - curl -fsSL -o release-%GTEST_VERSION%.zip https://github.com/google/googletest/archive/release-%GTEST_VERSION%.zip
