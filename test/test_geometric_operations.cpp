@@ -2,7 +2,6 @@
 
 #include "../src/math/basic_operations.hpp"
 #include "../src/math/geometric_operations.hpp"
-#include "../src/math/trigonometric_operations.hpp"
 #include "../src/math/numeric_and_algorithm.hpp"
 
 using namespace gal::test::math;
