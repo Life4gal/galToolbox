@@ -1,9 +1,11 @@
-export module gal.toolbox.math.matrix;
+export module gal.toolbox.math.basic_type:matrix;
 
 import <array>;
+import <tuple>;
 
 import gal.toolbox.utils.tuple_maker;
-export import gal.toolbox.math.vector;
+
+import :vector;
 
 namespace gal::toolbox::math
 {
@@ -16,16 +18,18 @@ namespace gal::toolbox::math
 
 namespace gal::toolbox::utils
 {
-	/**
-	 * @brief specialize the matrix to support the construction of other matrix
-	 * @tparam T matrix
-	*/
-	template <math::matrix_t T>
-	struct tuple_maker_trait<T> : std::true_type
+	export
 	{
-		using value_type = typename T::value_type;
-		constexpr static std::size_t size = T::data_size;
-	};
+		/**
+		 * @brief specialize the matrix to support the construction of other vectors
+		*/
+		template <typename T, std::size_t Row, std::size_t Column>
+		struct tuple_maker_trait<math::matrix<T, Row, Column>> : std::true_type
+		{
+			using value_type = typename T::value_type;
+			constexpr static std::size_t size = T::data_size;
+		};
+	}
 }
 
 namespace gal::toolbox::math

@@ -384,5 +384,3 @@ TEST(TestViewOperations, TestApply)
 		ASSERT_EQ(vector3[3], vector1[3] * 2 - 2);
 	}
 }
-
-

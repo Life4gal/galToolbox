@@ -14,6 +14,7 @@ namespace gal::toolbox::utils
 		template<typename T>
 		struct tuple_maker_trait : std::false_type
 		{
+			using value_type = T;
 			constexpr static std::size_t size = 1;
 		};
 
@@ -23,7 +24,7 @@ namespace gal::toolbox::utils
 	struct tuple_maker
 	{
 		/**
-		 * @brief construction assistance: take out the vector/matrix data and put it into a tuple
+		 * @brief extract all elements in a container and put them into a tuple
 		 * @tparam T arg type
 		 * @param arg arg
 		 * @return tuple(rvalue reference) containing all data
@@ -46,7 +47,7 @@ namespace gal::toolbox::utils
 		}
 
 		/**
-		 * @brief construction assistance: take out the vector/matrix data and put it into a tuple
+		 * @brief extract all elements in a container and put them into a tuple
 		 * @tparam T arg type
 		 * @param arg arg
 		 * @return tuple containing all data

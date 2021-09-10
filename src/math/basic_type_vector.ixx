@@ -1,10 +1,10 @@
-export module gal.toolbox.math.vector;
+export module gal.toolbox.math.basic_type:vector;
 
 import <array>;
+import <tuple>;
 
-import gal.toolbox.utils.tuple_maker;
 import gal.toolbox.iterator.stride_iterator;
-export import gal.toolbox.math.math_fwd;
+import gal.toolbox.utils.tuple_maker;
 
 namespace gal::toolbox::math
 {
@@ -20,16 +20,28 @@ namespace gal::toolbox::math
 
 namespace gal::toolbox::utils
 {
-	/**
-	 * @brief specialize the vector/vector_view to support the construction of other vectors
-	 * @tparam T vector/vector_view
-	*/
-	template <math::vector_type_t T>
-	struct tuple_maker_trait<T> : std::true_type
+	export
 	{
-		using value_type = typename T::value_type;
-		constexpr static std::size_t size = T::data_size;
-	};
+		/**
+		 * @brief specialize the vector to support the construction of other vectors
+		*/
+		template <typename T, std::size_t N>
+		struct tuple_maker_trait<math::vector<T, N>> : std::true_type
+		{
+			using value_type = typename math::vector<T, N>::value_type;
+			constexpr static std::size_t size = math::vector<T, N>::data_size;
+		};
+
+		/**
+		 * @brief specialize the vector_view to support the construction of other vectors
+		*/
+		template <std::size_t Stride, std::size_t Size, typename Iterator>
+		struct tuple_maker_trait<math::vector_view<Stride, Size, Iterator>> : std::true_type
+		{
+			using value_type = typename math::vector_view<Stride, Size, Iterator>::value_type;
+			constexpr static std::size_t size = math::vector_view<Stride, Size, Iterator>::data_size;
+		};
+	}
 }
 
 namespace gal::toolbox::math

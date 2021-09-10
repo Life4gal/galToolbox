@@ -1,11 +1,12 @@
 #include <gtest/gtest.h>
 
-#include "../src/utils/sequence_invoker.hpp"
 #include <array>
+
+import gal.toolbox.utils.sequence_invoker;
 
 TEST(TestSequenceInvoker, TestAll)
 {
-	using namespace gal::test::utils;
+	using namespace gal::toolbox::utils;
 	
 	constexpr std::array array1{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 	constexpr std::array array2{ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };

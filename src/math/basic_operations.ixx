@@ -5,9 +5,10 @@ import <concepts>;
 import <utility>;
 
 import gal.toolbox.utils.tuple_maker;
-import gal.toolbox.math.math_apply;
-export import gal.toolbox.math.vector;
-export import gal.toolbox.math.matrix;
+
+export import gal.toolbox.math.basic_type;
+
+import :math_apply;
 
 namespace gal::toolbox::math
 {

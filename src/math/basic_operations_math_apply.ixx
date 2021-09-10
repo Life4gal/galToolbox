@@ -1,11 +1,10 @@
-export module gal.toolbox.math.math_apply;
+export module gal.toolbox.math.basic_operations:math_apply;
 
 import <type_traits>;
 
 import gal.toolbox.utils.sequence_invoker;
 
-import gal.toolbox.math.vector;
-import gal.toolbox.math.matrix;
+import gal.toolbox.math.basic_type;
 
 namespace gal::toolbox::math
 {
