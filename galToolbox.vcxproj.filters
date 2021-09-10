@@ -33,6 +33,15 @@
     <ClCompile Include="test\test_exponential_operations.cpp" />
     <ClCompile Include="test\test_geometric_operations.cpp" />
     <ClCompile Include="test\test_trigonometric_operations.cpp" />
+    <ClCompile Include="src\math\vector.ixx" />
+    <ClCompile Include="src\iterator\stride_iterator.ixx" />
+    <ClCompile Include="src\utils\tuple_maker.ixx" />
+    <ClCompile Include="src\utils\sequence_invoker.ixx" />
+    <ClCompile Include="src\math\math_fwd.ixx" />
+    <ClCompile Include="src\math\matrix.ixx" />
+    <ClCompile Include="src\math\constants.ixx" />
+    <ClCompile Include="src\math\basic_operations.ixx" />
+    <ClCompile Include="src\math\math_apply.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

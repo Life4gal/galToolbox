@@ -5,236 +5,239 @@
 
 using namespace gal::test::math;
 
+// import gal.toolbox.math.basic_operations;
+// using namespace gal::toolbox::math;
+
 TEST(TestMathOperations, TestOperatorAdd)
 {
-	constexpr vector3<int> vector1{1, 2, 3};
-	constexpr vector3<int> vector2{3, 2, 1};
+	constexpr vector3<int> vec1{1, 2, 3};
+	constexpr vector3<int> vec2{3, 2, 1};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix + matrix + value + matrix
-		((matrix3 += matrix2) += 42) += matrix1;
+		((mat3 += mat2) += 42) += mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] + matrix2[0] + 42 + matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] + matrix2[1] + 42 + matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] + matrix2[2] + 42 + matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] + matrix2[3] + 42 + matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] + matrix2[4] + 42 + matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] + matrix2[5] + 42 + matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] + mat2[0] + 42 + mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] + mat2[1] + 42 + mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] + mat2[2] + 42 + mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] + mat2[3] + 42 + mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] + mat2[4] + 42 + mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] + mat2[5] + 42 + mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector + vector + vector_view + vector + value + vector
-		(((vector3 += vector2).to_view() += vector2) += 42) += vector1;
+		(((vec3 += vec2).to_view() += vec2) += 42) += vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] + vector2[0] + vector2[0] + 42 + vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] + vector2[1] + vector2[1] + 42 + vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] + vector2[2] + vector2[2] + 42 + vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] + vec2[0] + vec2[0] + 42 + vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] + vec2[1] + vec2[1] + 42 + vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] + vec2[2] + vec2[2] + 42 + vec1[2]);
 	}
 	{
 		// matrix + matrix + value + matrix
-		constexpr auto matrix31 = matrix1 + matrix2 + 1 + matrix1;
+		constexpr auto mat31 = mat1 + mat2 + 1 + mat1;
 
-		static_assert(matrix31[0] == matrix1[0] + matrix2[0] + 1 + matrix1[0]);
-		static_assert(matrix31[1] == matrix1[1] + matrix2[1] + 1 + matrix1[1]);
-		static_assert(matrix31[2] == matrix1[2] + matrix2[2] + 1 + matrix1[2]);
-		static_assert(matrix31[3] == matrix1[3] + matrix2[3] + 1 + matrix1[3]);
-		static_assert(matrix31[4] == matrix1[4] + matrix2[4] + 1 + matrix1[4]);
-		static_assert(matrix31[5] == matrix1[5] + matrix2[5] + 1 + matrix1[5]);
+		static_assert(mat31[0] == mat1[0] + mat2[0] + 1 + mat1[0]);
+		static_assert(mat31[1] == mat1[1] + mat2[1] + 1 + mat1[1]);
+		static_assert(mat31[2] == mat1[2] + mat2[2] + 1 + mat1[2]);
+		static_assert(mat31[3] == mat1[3] + mat2[3] + 1 + mat1[3]);
+		static_assert(mat31[4] == mat1[4] + mat2[4] + 1 + mat1[4]);
+		static_assert(mat31[5] == mat1[5] + mat2[5] + 1 + mat1[5]);
 
 		// value + matrix + value + matrix
-		constexpr auto matrix32 = 42 + matrix1 + 1 + matrix2;
+		constexpr auto mat32 = 42 + mat1 + 1 + mat2;
 
-		static_assert(matrix32[0] == 42 + matrix1[0] + 1 + matrix2[0]);
-		static_assert(matrix32[1] == 42 + matrix1[1] + 1 + matrix2[1]);
-		static_assert(matrix32[2] == 42 + matrix1[2] + 1 + matrix2[2]);
-		static_assert(matrix32[3] == 42 + matrix1[3] + 1 + matrix2[3]);
-		static_assert(matrix32[4] == 42 + matrix1[4] + 1 + matrix2[4]);
-		static_assert(matrix32[5] == 42 + matrix1[5] + 1 + matrix2[5]);
+		static_assert(mat32[0] == 42 + mat1[0] + 1 + mat2[0]);
+		static_assert(mat32[1] == 42 + mat1[1] + 1 + mat2[1]);
+		static_assert(mat32[2] == 42 + mat1[2] + 1 + mat2[2]);
+		static_assert(mat32[3] == 42 + mat1[3] + 1 + mat2[3]);
+		static_assert(mat32[4] == 42 + mat1[4] + 1 + mat2[4]);
+		static_assert(mat32[5] == 42 + mat1[5] + 1 + mat2[5]);
 
 		// vector + vector + value + vector_view + vector
-		constexpr auto vector31 = vector1 + vector2 + 42 + vector1.to_view() + vector2;
+		constexpr auto vec31 = vec1 + vec2 + 42 + vec1.to_view() + vec2;
 
-		static_assert(vector31[0] == vector1[0] + vector2[0] + 42 + vector1[0] + vector2[0]);
-		static_assert(vector31[1] == vector1[1] + vector2[1] + 42 + vector1[1] + vector2[1]);
-		static_assert(vector31[2] == vector1[2] + vector2[2] + 42 + vector1[2] + vector2[2]);
+		static_assert(vec31[0] == vec1[0] + vec2[0] + 42 + vec1[0] + vec2[0]);
+		static_assert(vec31[1] == vec1[1] + vec2[1] + 42 + vec1[1] + vec2[1]);
+		static_assert(vec31[2] == vec1[2] + vec2[2] + 42 + vec1[2] + vec2[2]);
 
 		// value + vector + vector_view + vector
-		constexpr auto vector32 = 42 + vector1 + vector2.to_view() + vector2;
+		constexpr auto vec32 = 42 + vec1 + vec2.to_view() + vec2;
 
-		static_assert(vector32[0] == 42 + vector1[0] + vector2[0] + vector2[0]);
-		static_assert(vector32[1] == 42 + vector1[1] + vector2[1] + vector2[1]);
-		static_assert(vector32[2] == 42 + vector1[2] + vector2[2] + vector2[2]);
+		static_assert(vec32[0] == 42 + vec1[0] + vec2[0] + vec2[0]);
+		static_assert(vec32[1] == 42 + vec1[1] + vec2[1] + vec2[1]);
+		static_assert(vec32[2] == 42 + vec1[2] + vec2[2] + vec2[2]);
 	}
 }
 
 TEST(TestMathOperations, TestOperatorSubtract)
 {
-	constexpr vector3<int> vector1{1, 2, 3};
-	constexpr vector3<int> vector2{3, 2, 1};
+	constexpr vector3<int> vec1{1, 2, 3};
+	constexpr vector3<int> vec2{3, 2, 1};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix - matrix - value - matrix
-		((matrix3 -= matrix2) -= 42) -= matrix1;
+		((mat3 -= mat2) -= 42) -= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] - matrix2[0] - 42 - matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] - matrix2[1] - 42 - matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] - matrix2[2] - 42 - matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] - matrix2[3] - 42 - matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] - matrix2[4] - 42 - matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] - matrix2[5] - 42 - matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] - mat2[0] - 42 - mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] - mat2[1] - 42 - mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] - mat2[2] - 42 - mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] - mat2[3] - 42 - mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] - mat2[4] - 42 - mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] - mat2[5] - 42 - mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector - vector - vector_view - vector - value - vector
-		(((vector3 -= vector2).to_view() -= vector2) -= 42) -= vector1;
+		(((vec3 -= vec2).to_view() -= vec2) -= 42) -= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] - vector2[0] - vector2[0] - 42 - vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] - vector2[1] - vector2[1] - 42 - vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] - vector2[2] - vector2[2] - 42 - vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] - vec2[0] - vec2[0] - 42 - vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] - vec2[1] - vec2[1] - 42 - vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] - vec2[2] - vec2[2] - 42 - vec1[2]);
 	}
 	{
 		// matrix - matrix - value - matrix
-		constexpr auto matrix31 = matrix1 - matrix2 - 1 - matrix1;
+		constexpr auto mat31 = mat1 - mat2 - 1 - mat1;
 
-		static_assert(matrix31[0] == matrix1[0] - matrix2[0] - 1 - matrix1[0]);
-		static_assert(matrix31[1] == matrix1[1] - matrix2[1] - 1 - matrix1[1]);
-		static_assert(matrix31[2] == matrix1[2] - matrix2[2] - 1 - matrix1[2]);
-		static_assert(matrix31[3] == matrix1[3] - matrix2[3] - 1 - matrix1[3]);
-		static_assert(matrix31[4] == matrix1[4] - matrix2[4] - 1 - matrix1[4]);
-		static_assert(matrix31[5] == matrix1[5] - matrix2[5] - 1 - matrix1[5]);
+		static_assert(mat31[0] == mat1[0] - mat2[0] - 1 - mat1[0]);
+		static_assert(mat31[1] == mat1[1] - mat2[1] - 1 - mat1[1]);
+		static_assert(mat31[2] == mat1[2] - mat2[2] - 1 - mat1[2]);
+		static_assert(mat31[3] == mat1[3] - mat2[3] - 1 - mat1[3]);
+		static_assert(mat31[4] == mat1[4] - mat2[4] - 1 - mat1[4]);
+		static_assert(mat31[5] == mat1[5] - mat2[5] - 1 - mat1[5]);
 
 		// value - matrix - value - matrix
-		constexpr auto matrix32 = 42 - matrix1 - 1 - matrix2;
+		constexpr auto mat32 = 42 - mat1 - 1 - mat2;
 
-		static_assert(matrix32[0] == 42 - matrix1[0] - 1 - matrix2[0]);
-		static_assert(matrix32[1] == 42 - matrix1[1] - 1 - matrix2[1]);
-		static_assert(matrix32[2] == 42 - matrix1[2] - 1 - matrix2[2]);
-		static_assert(matrix32[3] == 42 - matrix1[3] - 1 - matrix2[3]);
-		static_assert(matrix32[4] == 42 - matrix1[4] - 1 - matrix2[4]);
-		static_assert(matrix32[5] == 42 - matrix1[5] - 1 - matrix2[5]);
+		static_assert(mat32[0] == 42 - mat1[0] - 1 - mat2[0]);
+		static_assert(mat32[1] == 42 - mat1[1] - 1 - mat2[1]);
+		static_assert(mat32[2] == 42 - mat1[2] - 1 - mat2[2]);
+		static_assert(mat32[3] == 42 - mat1[3] - 1 - mat2[3]);
+		static_assert(mat32[4] == 42 - mat1[4] - 1 - mat2[4]);
+		static_assert(mat32[5] == 42 - mat1[5] - 1 - mat2[5]);
 
 		// vector - vector - value - vector_view - vector
-		constexpr auto vector3 = vector1 - vector2 - 42 - vector1.to_view() - vector2;
+		constexpr auto vec3 = vec1 - vec2 - 42 - vec1.to_view() - vec2;
 
-		static_assert(vector3[0] == vector1[0] - vector2[0] - 42 - vector1[0] - vector2[0]);
-		static_assert(vector3[1] == vector1[1] - vector2[1] - 42 - vector1[1] - vector2[1]);
-		static_assert(vector3[2] == vector1[2] - vector2[2] - 42 - vector1[2] - vector2[2]);
+		static_assert(vec3[0] == vec1[0] - vec2[0] - 42 - vec1[0] - vec2[0]);
+		static_assert(vec3[1] == vec1[1] - vec2[1] - 42 - vec1[1] - vec2[1]);
+		static_assert(vec3[2] == vec1[2] - vec2[2] - 42 - vec1[2] - vec2[2]);
 
 		// value - vector - vector_view - vector
-		constexpr auto vector32 = 42 - vector1 - vector2.to_view() - vector2;
+		constexpr auto vec32 = 42 - vec1 - vec2.to_view() - vec2;
 
-		static_assert(vector32[0] == 42 - vector1[0] - vector2[0] - vector2[0]);
-		static_assert(vector32[1] == 42 - vector1[1] - vector2[1] - vector2[1]);
-		static_assert(vector32[2] == 42 - vector1[2] - vector2[2] - vector2[2]);
+		static_assert(vec32[0] == 42 - vec1[0] - vec2[0] - vec2[0]);
+		static_assert(vec32[1] == 42 - vec1[1] - vec2[1] - vec2[1]);
+		static_assert(vec32[2] == 42 - vec1[2] - vec2[2] - vec2[2]);
 	}
 }
 
 TEST(TestMathOperations, TestOperatorMultiply)
 {
-	constexpr vector3<int> vector1{1, 2, 3};
-	constexpr vector3<int> vector2{3, 2, 1};
+	constexpr vector3<int> vec1{1, 2, 3};
+	constexpr vector3<int> vec2{3, 2, 1};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix * matrix * value * matrix
-		((matrix3 *= matrix2) *= 42) *= matrix1;
+		((mat3 *= mat2) *= 42) *= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] * matrix2[0] * 42 * matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] * matrix2[1] * 42 * matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] * matrix2[2] * 42 * matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] * matrix2[3] * 42 * matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] * matrix2[4] * 42 * matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] * matrix2[5] * 42 * matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] * mat2[0] * 42 * mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] * mat2[1] * 42 * mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] * mat2[2] * 42 * mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] * mat2[3] * 42 * mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] * mat2[4] * 42 * mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] * mat2[5] * 42 * mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector * vector * vector_view * vector * value * vector
-		(((vector3 *= vector2).to_view() *= vector2) *= 42) *= vector1;
+		(((vec3 *= vec2).to_view() *= vec2) *= 42) *= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] * vector2[0] * vector2[0] * 42 * vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] * vector2[1] * vector2[1] * 42 * vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] * vector2[2] * vector2[2] * 42 * vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] * vec2[0] * vec2[0] * 42 * vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] * vec2[1] * vec2[1] * 42 * vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] * vec2[2] * vec2[2] * 42 * vec1[2]);
 	}
 	{
 		// matrix * matrix * value * matrix
-		constexpr auto matrix31 = matrix1 * matrix2 * 1 * matrix1;
+		constexpr auto mat31 = mat1 * mat2 * 1 * mat1;
 
-		static_assert(matrix31[0] == matrix1[0] * matrix2[0] * 1 * matrix1[0]);
-		static_assert(matrix31[1] == matrix1[1] * matrix2[1] * 1 * matrix1[1]);
-		static_assert(matrix31[2] == matrix1[2] * matrix2[2] * 1 * matrix1[2]);
-		static_assert(matrix31[3] == matrix1[3] * matrix2[3] * 1 * matrix1[3]);
-		static_assert(matrix31[4] == matrix1[4] * matrix2[4] * 1 * matrix1[4]);
-		static_assert(matrix31[5] == matrix1[5] * matrix2[5] * 1 * matrix1[5]);
+		static_assert(mat31[0] == mat1[0] * mat2[0] * 1 * mat1[0]);
+		static_assert(mat31[1] == mat1[1] * mat2[1] * 1 * mat1[1]);
+		static_assert(mat31[2] == mat1[2] * mat2[2] * 1 * mat1[2]);
+		static_assert(mat31[3] == mat1[3] * mat2[3] * 1 * mat1[3]);
+		static_assert(mat31[4] == mat1[4] * mat2[4] * 1 * mat1[4]);
+		static_assert(mat31[5] == mat1[5] * mat2[5] * 1 * mat1[5]);
 
 		// value * matrix * value * matrix
-		constexpr auto matrix32 = 42 * matrix1 * 1 * matrix2;
+		constexpr auto mat32 = 42 * mat1 * 1 * mat2;
 
-		static_assert(matrix32[0] == 42 * matrix1[0] * 1 * matrix2[0]);
-		static_assert(matrix32[1] == 42 * matrix1[1] * 1 * matrix2[1]);
-		static_assert(matrix32[2] == 42 * matrix1[2] * 1 * matrix2[2]);
-		static_assert(matrix32[3] == 42 * matrix1[3] * 1 * matrix2[3]);
-		static_assert(matrix32[4] == 42 * matrix1[4] * 1 * matrix2[4]);
-		static_assert(matrix32[5] == 42 * matrix1[5] * 1 * matrix2[5]);
+		static_assert(mat32[0] == 42 * mat1[0] * 1 * mat2[0]);
+		static_assert(mat32[1] == 42 * mat1[1] * 1 * mat2[1]);
+		static_assert(mat32[2] == 42 * mat1[2] * 1 * mat2[2]);
+		static_assert(mat32[3] == 42 * mat1[3] * 1 * mat2[3]);
+		static_assert(mat32[4] == 42 * mat1[4] * 1 * mat2[4]);
+		static_assert(mat32[5] == 42 * mat1[5] * 1 * mat2[5]);
 
 		// vector * vector * value * vector_view * vector
-		constexpr auto vector3 = vector1 * vector2 * 42 * vector1.to_view() * vector2;
+		constexpr auto vec3 = vec1 * vec2 * 42 * vec1.to_view() * vec2;
 
-		static_assert(vector3[0] == vector1[0] * vector2[0] * 42 * vector1[0] * vector2[0]);
-		static_assert(vector3[1] == vector1[1] * vector2[1] * 42 * vector1[1] * vector2[1]);
-		static_assert(vector3[2] == vector1[2] * vector2[2] * 42 * vector1[2] * vector2[2]);
+		static_assert(vec3[0] == vec1[0] * vec2[0] * 42 * vec1[0] * vec2[0]);
+		static_assert(vec3[1] == vec1[1] * vec2[1] * 42 * vec1[1] * vec2[1]);
+		static_assert(vec3[2] == vec1[2] * vec2[2] * 42 * vec1[2] * vec2[2]);
 
 		// value * vector * vector_view * vector
-		constexpr auto vector32 = 42 * vector1 * vector2.to_view() * vector2;
+		constexpr auto vec32 = 42 * vec1 * vec2.to_view() * vec2;
 
-		static_assert(vector32[0] == 42 * vector1[0] * vector2[0] * vector2[0]);
-		static_assert(vector32[1] == 42 * vector1[1] * vector2[1] * vector2[1]);
-		static_assert(vector32[2] == 42 * vector1[2] * vector2[2] * vector2[2]);
+		static_assert(vec32[0] == 42 * vec1[0] * vec2[0] * vec2[0]);
+		static_assert(vec32[1] == 42 * vec1[1] * vec2[1] * vec2[1]);
+		static_assert(vec32[2] == 42 * vec1[2] * vec2[2] * vec2[2]);
 	}
 }
 
 TEST(TestMathOperations, TestOperatorDivide)
 {
-	constexpr vector3<double> vector1{1, 2, 3};
-	constexpr vector3<double> vector2{3, 2, 1};
+	constexpr vector3<double> vec1{1, 2, 3};
+	constexpr vector3<double> vec2{3, 2, 1};
 
-	constexpr matrix2x3<double> matrix1{vector1, vector2};
-	constexpr matrix2x3<double> matrix2{vector2, vector1};
+	constexpr matrix2x3<double> mat1{vec1, vec2};
+	constexpr matrix2x3<double> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix / matrix / value / matrix
-		((matrix3 /= matrix2) /= 42) /= matrix1;
+		((mat3 /= mat2) /= 42) /= mat1;
 
-		ASSERT_DOUBLE_EQ(matrix3[0], matrix1[0] / matrix2[0] / 42 / matrix1[0]);
-		ASSERT_DOUBLE_EQ(matrix3[1], matrix1[1] / matrix2[1] / 42 / matrix1[1]);
-		ASSERT_DOUBLE_EQ(matrix3[2], matrix1[2] / matrix2[2] / 42 / matrix1[2]);
-		ASSERT_DOUBLE_EQ(matrix3[3], matrix1[3] / matrix2[3] / 42 / matrix1[3]);
-		ASSERT_DOUBLE_EQ(matrix3[4], matrix1[4] / matrix2[4] / 42 / matrix1[4]);
-		ASSERT_DOUBLE_EQ(matrix3[5], matrix1[5] / matrix2[5] / 42 / matrix1[5]);
+		ASSERT_DOUBLE_EQ(mat3[0], mat1[0] / mat2[0] / 42 / mat1[0]);
+		ASSERT_DOUBLE_EQ(mat3[1], mat1[1] / mat2[1] / 42 / mat1[1]);
+		ASSERT_DOUBLE_EQ(mat3[2], mat1[2] / mat2[2] / 42 / mat1[2]);
+		ASSERT_DOUBLE_EQ(mat3[3], mat1[3] / mat2[3] / 42 / mat1[3]);
+		ASSERT_DOUBLE_EQ(mat3[4], mat1[4] / mat2[4] / 42 / mat1[4]);
+		ASSERT_DOUBLE_EQ(mat3[5], mat1[5] / mat2[5] / 42 / mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector / vector / vector_view / vector / value / vector
-		(((vector3 /= vector2).to_view() /= vector2) /= 42) /= vector1;
+		(((vec3 /= vec2).to_view() /= vec2) /= 42) /= vec1;
 
-		ASSERT_DOUBLE_EQ(vector3[0], vector1[0] / vector2[0] / vector2[0] / 42 / vector1[0]);
-		ASSERT_DOUBLE_EQ(vector3[1], vector1[1] / vector2[1] / vector2[1] / 42 / vector1[1]);
-		ASSERT_DOUBLE_EQ(vector3[2], vector1[2] / vector2[2] / vector2[2] / 42 / vector1[2]);
+		ASSERT_DOUBLE_EQ(vec3[0], vec1[0] / vec2[0] / vec2[0] / 42 / vec1[0]);
+		ASSERT_DOUBLE_EQ(vec3[1], vec1[1] / vec2[1] / vec2[1] / 42 / vec1[1]);
+		ASSERT_DOUBLE_EQ(vec3[2], vec1[2] / vec2[2] / vec2[2] / 42 / vec1[2]);
 	}
 	{
 		constexpr auto double_eq = [](const double a, const double b) constexpr
@@ -245,843 +248,843 @@ TEST(TestMathOperations, TestOperatorDivide)
 		};
 
 		// matrix / matrix / value / matrix
-		constexpr auto matrix31 = matrix1 / matrix2 / 1 / matrix1;
+		constexpr auto mat31 = mat1 / mat2 / 1 / mat1;
 
-		static_assert(double_eq(matrix31[0], matrix1[0] / matrix2[0] / 1 / matrix1[0]));
-		static_assert(double_eq(matrix31[1], matrix1[1] / matrix2[1] / 1 / matrix1[1]));
-		static_assert(double_eq(matrix31[2], matrix1[2] / matrix2[2] / 1 / matrix1[2]));
-		static_assert(double_eq(matrix31[3], matrix1[3] / matrix2[3] / 1 / matrix1[3]));
-		static_assert(double_eq(matrix31[4], matrix1[4] / matrix2[4] / 1 / matrix1[4]));
-		static_assert(double_eq(matrix31[5], matrix1[5] / matrix2[5] / 1 / matrix1[5]));
+		static_assert(double_eq(mat31[0], mat1[0] / mat2[0] / 1 / mat1[0]));
+		static_assert(double_eq(mat31[1], mat1[1] / mat2[1] / 1 / mat1[1]));
+		static_assert(double_eq(mat31[2], mat1[2] / mat2[2] / 1 / mat1[2]));
+		static_assert(double_eq(mat31[3], mat1[3] / mat2[3] / 1 / mat1[3]));
+		static_assert(double_eq(mat31[4], mat1[4] / mat2[4] / 1 / mat1[4]));
+		static_assert(double_eq(mat31[5], mat1[5] / mat2[5] / 1 / mat1[5]));
 
 		// value / matrix / value / matrix
-		constexpr auto matrix32 = 42.0 / matrix1 / 1 / matrix2;
+		constexpr auto mat32 = 42.0 / mat1 / 1 / mat2;
 
-		static_assert(double_eq(matrix32[0], 42 / matrix1[0] / 1 / matrix2[0]));
-		static_assert(double_eq(matrix32[1], 42 / matrix1[1] / 1 / matrix2[1]));
-		static_assert(double_eq(matrix32[2], 42 / matrix1[2] / 1 / matrix2[2]));
-		static_assert(double_eq(matrix32[3], 42 / matrix1[3] / 1 / matrix2[3]));
-		static_assert(double_eq(matrix32[4], 42 / matrix1[4] / 1 / matrix2[4]));
-		static_assert(double_eq(matrix32[5], 42 / matrix1[5] / 1 / matrix2[5]));
+		static_assert(double_eq(mat32[0], 42 / mat1[0] / 1 / mat2[0]));
+		static_assert(double_eq(mat32[1], 42 / mat1[1] / 1 / mat2[1]));
+		static_assert(double_eq(mat32[2], 42 / mat1[2] / 1 / mat2[2]));
+		static_assert(double_eq(mat32[3], 42 / mat1[3] / 1 / mat2[3]));
+		static_assert(double_eq(mat32[4], 42 / mat1[4] / 1 / mat2[4]));
+		static_assert(double_eq(mat32[5], 42 / mat1[5] / 1 / mat2[5]));
 
 		// vector / vector / value / vector_view / vector
-		constexpr auto vector3 = vector1 / vector2 / 42 / vector1.to_view() / vector2;
+		constexpr auto vec3 = vec1 / vec2 / 42 / vec1.to_view() / vec2;
 
-		static_assert(double_eq(vector3[0], vector1[0] / vector2[0] / 42 / vector1[0] / vector2[0]));
-		static_assert(double_eq(vector3[1], vector1[1] / vector2[1] / 42 / vector1[1] / vector2[1]));
-		static_assert(double_eq(vector3[2], vector1[2] / vector2[2] / 42 / vector1[2] / vector2[2]));
+		static_assert(double_eq(vec3[0], vec1[0] / vec2[0] / 42 / vec1[0] / vec2[0]));
+		static_assert(double_eq(vec3[1], vec1[1] / vec2[1] / 42 / vec1[1] / vec2[1]));
+		static_assert(double_eq(vec3[2], vec1[2] / vec2[2] / 42 / vec1[2] / vec2[2]));
 
 		// value / vector / vector_view / vector
-		constexpr auto vector32 = 42.0 / vector1 / vector2.to_view() / vector2;
+		constexpr auto vec32 = 42.0 / vec1 / vec2.to_view() / vec2;
 
-		static_assert(double_eq(vector32[0], 42 / vector1[0] / vector2[0] / vector2[0]));
-		static_assert(double_eq(vector32[1], 42 / vector1[1] / vector2[1] / vector2[1]));
-		static_assert(double_eq(vector32[2], 42 / vector1[2] / vector2[2] / vector2[2]));
+		static_assert(double_eq(vec32[0], 42 / vec1[0] / vec2[0] / vec2[0]));
+		static_assert(double_eq(vec32[1], 42 / vec1[1] / vec2[1] / vec2[1]));
+		static_assert(double_eq(vec32[2], 42 / vec1[2] / vec2[2] / vec2[2]));
 	}
 }
 
 TEST(TestMathOperations, TestOperatorModel)
 {
-	constexpr vector3<int> vector1{123, 456, 789};
-	constexpr vector3<int> vector2{987, 654, 321};
+	constexpr vector3<int> vec1{123, 456, 789};
+	constexpr vector3<int> vec2{987, 654, 321};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix % matrix % value % matrix
-		((matrix3 %= matrix2) %= 42) %= matrix1;
+		((mat3 %= mat2) %= 42) %= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] % matrix2[0] % 42 % matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] % matrix2[1] % 42 % matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] % matrix2[2] % 42 % matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] % matrix2[3] % 42 % matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] % matrix2[4] % 42 % matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] % matrix2[5] % 42 % matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] % mat2[0] % 42 % mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] % mat2[1] % 42 % mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] % mat2[2] % 42 % mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] % mat2[3] % 42 % mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] % mat2[4] % 42 % mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] % mat2[5] % 42 % mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector % vector % vector_view % vector % value % vector
-		(((vector3 %= vector2).to_view() %= vector2) %= 42) %= vector1;
+		(((vec3 %= vec2).to_view() %= vec2) %= 42) %= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] % vector2[0] % vector2[0] % 42 % vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] % vector2[1] % vector2[1] % 42 % vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] % vector2[2] % vector2[2] % 42 % vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] % vec2[0] % vec2[0] % 42 % vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] % vec2[1] % vec2[1] % 42 % vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] % vec2[2] % vec2[2] % 42 % vec1[2]);
 	}
 	{
 		// matrix % matrix % value % matrix
-		constexpr auto matrix31 = matrix1 % matrix2 % 1 % matrix1;
+		constexpr auto mat31 = mat1 % mat2 % 1 % mat1;
 
-		static_assert(matrix31[0] == matrix1[0] % matrix2[0] % 1 % matrix1[0]);
-		static_assert(matrix31[1] == matrix1[1] % matrix2[1] % 1 % matrix1[1]);
-		static_assert(matrix31[2] == matrix1[2] % matrix2[2] % 1 % matrix1[2]);
-		static_assert(matrix31[3] == matrix1[3] % matrix2[3] % 1 % matrix1[3]);
-		static_assert(matrix31[4] == matrix1[4] % matrix2[4] % 1 % matrix1[4]);
-		static_assert(matrix31[5] == matrix1[5] % matrix2[5] % 1 % matrix1[5]);
+		static_assert(mat31[0] == mat1[0] % mat2[0] % 1 % mat1[0]);
+		static_assert(mat31[1] == mat1[1] % mat2[1] % 1 % mat1[1]);
+		static_assert(mat31[2] == mat1[2] % mat2[2] % 1 % mat1[2]);
+		static_assert(mat31[3] == mat1[3] % mat2[3] % 1 % mat1[3]);
+		static_assert(mat31[4] == mat1[4] % mat2[4] % 1 % mat1[4]);
+		static_assert(mat31[5] == mat1[5] % mat2[5] % 1 % mat1[5]);
 
 		// value % matrix % value % matrix
-		constexpr auto matrix32 = 42 % matrix1 % 1 % matrix2;
+		constexpr auto mat32 = 42 % mat1 % 1 % mat2;
 
-		static_assert(matrix32[0] == 42 % matrix1[0] % 1 % matrix2[0]);
-		static_assert(matrix32[1] == 42 % matrix1[1] % 1 % matrix2[1]);
-		static_assert(matrix32[2] == 42 % matrix1[2] % 1 % matrix2[2]);
-		static_assert(matrix32[3] == 42 % matrix1[3] % 1 % matrix2[3]);
-		static_assert(matrix32[4] == 42 % matrix1[4] % 1 % matrix2[4]);
-		static_assert(matrix32[5] == 42 % matrix1[5] % 1 % matrix2[5]);
+		static_assert(mat32[0] == 42 % mat1[0] % 1 % mat2[0]);
+		static_assert(mat32[1] == 42 % mat1[1] % 1 % mat2[1]);
+		static_assert(mat32[2] == 42 % mat1[2] % 1 % mat2[2]);
+		static_assert(mat32[3] == 42 % mat1[3] % 1 % mat2[3]);
+		static_assert(mat32[4] == 42 % mat1[4] % 1 % mat2[4]);
+		static_assert(mat32[5] == 42 % mat1[5] % 1 % mat2[5]);
 
 		// vector % vector % value % vector_view % vector
-		constexpr auto vector3 = vector1 % vector2 % 42 % vector1.to_view() % vector2;
+		constexpr auto vec3 = vec1 % vec2 % 42 % vec1.to_view() % vec2;
 
-		static_assert(vector3[0] == vector1[0] % vector2[0] % 42 % vector1[0] % vector2[0]);
-		static_assert(vector3[1] == vector1[1] % vector2[1] % 42 % vector1[1] % vector2[1]);
-		static_assert(vector3[2] == vector1[2] % vector2[2] % 42 % vector1[2] % vector2[2]);
+		static_assert(vec3[0] == vec1[0] % vec2[0] % 42 % vec1[0] % vec2[0]);
+		static_assert(vec3[1] == vec1[1] % vec2[1] % 42 % vec1[1] % vec2[1]);
+		static_assert(vec3[2] == vec1[2] % vec2[2] % 42 % vec1[2] % vec2[2]);
 
 		// value % vector % vector_view % vector
-		constexpr auto vector32 = 42 % vector1 % vector2.to_view() % vector2;
+		constexpr auto vec32 = 42 % vec1 % vec2.to_view() % vec2;
 
-		static_assert(vector32[0] == 42 % vector1[0] % vector2[0] % vector2[0]);
-		static_assert(vector32[1] == 42 % vector1[1] % vector2[1] % vector2[1]);
-		static_assert(vector32[2] == 42 % vector1[2] % vector2[2] % vector2[2]);
+		static_assert(vec32[0] == 42 % vec1[0] % vec2[0] % vec2[0]);
+		static_assert(vec32[1] == 42 % vec1[1] % vec2[1] % vec2[1]);
+		static_assert(vec32[2] == 42 % vec1[2] % vec2[2] % vec2[2]);
 	}
 }
 
 TEST(TestMathOperations, TestOperatorBitAnd)
 {
-	constexpr vector3<int> vector1{123, 456, 789};
-	constexpr vector3<int> vector2{987, 654, 321};
+	constexpr vector3<int> vec1{123, 456, 789};
+	constexpr vector3<int> vec2{987, 654, 321};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix & matrix & value & matrix
-		((matrix3 &= matrix2) &= 42) &= matrix1;
+		((mat3 &= mat2) &= 42) &= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] & matrix2[0] & 42 & matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] & matrix2[1] & 42 & matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] & matrix2[2] & 42 & matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] & matrix2[3] & 42 & matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] & matrix2[4] & 42 & matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] & matrix2[5] & 42 & matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] & mat2[0] & 42 & mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] & mat2[1] & 42 & mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] & mat2[2] & 42 & mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] & mat2[3] & 42 & mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] & mat2[4] & 42 & mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] & mat2[5] & 42 & mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector & vector & vector_view & vector & value & vector
-		(((vector3 &= vector2).to_view() &= vector2) &= 42) &= vector1;
+		(((vec3 &= vec2).to_view() &= vec2) &= 42) &= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] & vector2[0] & vector2[0] & 42 & vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] & vector2[1] & vector2[1] & 42 & vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] & vector2[2] & vector2[2] & 42 & vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] & vec2[0] & vec2[0] & 42 & vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] & vec2[1] & vec2[1] & 42 & vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] & vec2[2] & vec2[2] & 42 & vec1[2]);
 	}
 	{
 		// matrix & matrix & value & matrix
-		constexpr auto matrix31 = matrix1 & matrix2 & 1 & matrix1;
+		constexpr auto mat31 = mat1 & mat2 & 1 & mat1;
 
-		static_assert(matrix31[0] == (matrix1[0] & matrix2[0] & 1 & matrix1[0]));
-		static_assert(matrix31[1] == (matrix1[1] & matrix2[1] & 1 & matrix1[1]));
-		static_assert(matrix31[2] == (matrix1[2] & matrix2[2] & 1 & matrix1[2]));
-		static_assert(matrix31[3] == (matrix1[3] & matrix2[3] & 1 & matrix1[3]));
-		static_assert(matrix31[4] == (matrix1[4] & matrix2[4] & 1 & matrix1[4]));
-		static_assert(matrix31[5] == (matrix1[5] & matrix2[5] & 1 & matrix1[5]));
+		static_assert(mat31[0] == (mat1[0] & mat2[0] & 1 & mat1[0]));
+		static_assert(mat31[1] == (mat1[1] & mat2[1] & 1 & mat1[1]));
+		static_assert(mat31[2] == (mat1[2] & mat2[2] & 1 & mat1[2]));
+		static_assert(mat31[3] == (mat1[3] & mat2[3] & 1 & mat1[3]));
+		static_assert(mat31[4] == (mat1[4] & mat2[4] & 1 & mat1[4]));
+		static_assert(mat31[5] == (mat1[5] & mat2[5] & 1 & mat1[5]));
 
 		// value & matrix & value & matrix
-		constexpr auto matrix32 = 42 & matrix1 & 1 & matrix2;
+		constexpr auto mat32 = 42 & mat1 & 1 & mat2;
 
-		static_assert(matrix32[0] == (42 & matrix1[0] & 1 & matrix2[0]));
-		static_assert(matrix32[1] == (42 & matrix1[1] & 1 & matrix2[1]));
-		static_assert(matrix32[2] == (42 & matrix1[2] & 1 & matrix2[2]));
-		static_assert(matrix32[3] == (42 & matrix1[3] & 1 & matrix2[3]));
-		static_assert(matrix32[4] == (42 & matrix1[4] & 1 & matrix2[4]));
-		static_assert(matrix32[5] == (42 & matrix1[5] & 1 & matrix2[5]));
+		static_assert(mat32[0] == (42 & mat1[0] & 1 & mat2[0]));
+		static_assert(mat32[1] == (42 & mat1[1] & 1 & mat2[1]));
+		static_assert(mat32[2] == (42 & mat1[2] & 1 & mat2[2]));
+		static_assert(mat32[3] == (42 & mat1[3] & 1 & mat2[3]));
+		static_assert(mat32[4] == (42 & mat1[4] & 1 & mat2[4]));
+		static_assert(mat32[5] == (42 & mat1[5] & 1 & mat2[5]));
 
 		// vector & vector & value & vector_view & vector
-		constexpr auto vector3 = vector1 & vector2 & 42 & vector1.to_view() & vector2;
+		constexpr auto vec3 = vec1 & vec2 & 42 & vec1.to_view() & vec2;
 
-		static_assert(vector3[0] == (vector1[0] & vector2[0] & 42 & vector1[0] & vector2[0]));
-		static_assert(vector3[1] == (vector1[1] & vector2[1] & 42 & vector1[1] & vector2[1]));
-		static_assert(vector3[2] == (vector1[2] & vector2[2] & 42 & vector1[2] & vector2[2]));
+		static_assert(vec3[0] == (vec1[0] & vec2[0] & 42 & vec1[0] & vec2[0]));
+		static_assert(vec3[1] == (vec1[1] & vec2[1] & 42 & vec1[1] & vec2[1]));
+		static_assert(vec3[2] == (vec1[2] & vec2[2] & 42 & vec1[2] & vec2[2]));
 
 		// value & vector & vector_view & vector
-		constexpr auto vector32 = 42 & vector1 & vector2.to_view() & vector2;
+		constexpr auto vec32 = 42 & vec1 & vec2.to_view() & vec2;
 
-		static_assert(vector32[0] == (42 & vector1[0] & vector2[0] & vector2[0]));
-		static_assert(vector32[1] == (42 & vector1[1] & vector2[1] & vector2[1]));
-		static_assert(vector32[2] == (42 & vector1[2] & vector2[2] & vector2[2]));
+		static_assert(vec32[0] == (42 & vec1[0] & vec2[0] & vec2[0]));
+		static_assert(vec32[1] == (42 & vec1[1] & vec2[1] & vec2[1]));
+		static_assert(vec32[2] == (42 & vec1[2] & vec2[2] & vec2[2]));
 	}
 }
 
 TEST(TestMathOperations, TestOperatorBitOr)
 {
-	constexpr vector3<int> vector1{123, 456, 789};
-	constexpr vector3<int> vector2{987, 654, 321};
+	constexpr vector3<int> vec1{123, 456, 789};
+	constexpr vector3<int> vec2{987, 654, 321};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix | matrix | value | matrix
-		((matrix3 |= matrix2) |= 42) |= matrix1;
+		((mat3 |= mat2) |= 42) |= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] | matrix2[0] | 42 | matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] | matrix2[1] | 42 | matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] | matrix2[2] | 42 | matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] | matrix2[3] | 42 | matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] | matrix2[4] | 42 | matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] | matrix2[5] | 42 | matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] | mat2[0] | 42 | mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] | mat2[1] | 42 | mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] | mat2[2] | 42 | mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] | mat2[3] | 42 | mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] | mat2[4] | 42 | mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] | mat2[5] | 42 | mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector | vector | vector_view | vector | value | vector
-		(((vector3 |= vector2).to_view() |= vector2) |= 42) |= vector1;
+		(((vec3 |= vec2).to_view() |= vec2) |= 42) |= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] | vector2[0] | vector2[0] | 42 | vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] | vector2[1] | vector2[1] | 42 | vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] | vector2[2] | vector2[2] | 42 | vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] | vec2[0] | vec2[0] | 42 | vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] | vec2[1] | vec2[1] | 42 | vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] | vec2[2] | vec2[2] | 42 | vec1[2]);
 	}
 	{
 		// matrix | matrix | value | matrix
-		constexpr auto matrix31 = matrix1 | matrix2 | 1 | matrix1;
+		constexpr auto mat31 = mat1 | mat2 | 1 | mat1;
 
-		static_assert(matrix31[0] == (matrix1[0] | matrix2[0] | 1 | matrix1[0]));
-		static_assert(matrix31[1] == (matrix1[1] | matrix2[1] | 1 | matrix1[1]));
-		static_assert(matrix31[2] == (matrix1[2] | matrix2[2] | 1 | matrix1[2]));
-		static_assert(matrix31[3] == (matrix1[3] | matrix2[3] | 1 | matrix1[3]));
-		static_assert(matrix31[4] == (matrix1[4] | matrix2[4] | 1 | matrix1[4]));
-		static_assert(matrix31[5] == (matrix1[5] | matrix2[5] | 1 | matrix1[5]));
+		static_assert(mat31[0] == (mat1[0] | mat2[0] | 1 | mat1[0]));
+		static_assert(mat31[1] == (mat1[1] | mat2[1] | 1 | mat1[1]));
+		static_assert(mat31[2] == (mat1[2] | mat2[2] | 1 | mat1[2]));
+		static_assert(mat31[3] == (mat1[3] | mat2[3] | 1 | mat1[3]));
+		static_assert(mat31[4] == (mat1[4] | mat2[4] | 1 | mat1[4]));
+		static_assert(mat31[5] == (mat1[5] | mat2[5] | 1 | mat1[5]));
 
 		// value | matrix | value | matrix
-		constexpr auto matrix32 = 42 | matrix1 | 1 | matrix2;
+		constexpr auto mat32 = 42 | mat1 | 1 | mat2;
 
-		static_assert(matrix32[0] == (42 | matrix1[0] | 1 | matrix2[0]));
-		static_assert(matrix32[1] == (42 | matrix1[1] | 1 | matrix2[1]));
-		static_assert(matrix32[2] == (42 | matrix1[2] | 1 | matrix2[2]));
-		static_assert(matrix32[3] == (42 | matrix1[3] | 1 | matrix2[3]));
-		static_assert(matrix32[4] == (42 | matrix1[4] | 1 | matrix2[4]));
-		static_assert(matrix32[5] == (42 | matrix1[5] | 1 | matrix2[5]));
+		static_assert(mat32[0] == (42 | mat1[0] | 1 | mat2[0]));
+		static_assert(mat32[1] == (42 | mat1[1] | 1 | mat2[1]));
+		static_assert(mat32[2] == (42 | mat1[2] | 1 | mat2[2]));
+		static_assert(mat32[3] == (42 | mat1[3] | 1 | mat2[3]));
+		static_assert(mat32[4] == (42 | mat1[4] | 1 | mat2[4]));
+		static_assert(mat32[5] == (42 | mat1[5] | 1 | mat2[5]));
 
 		// vector | vector | value | vector_view | vector
-		constexpr auto vector3 = vector1 | vector2 | 42 | vector1.to_view() | vector2;
+		constexpr auto vec3 = vec1 | vec2 | 42 | vec1.to_view() | vec2;
 
-		static_assert(vector3[0] == (vector1[0] | vector2[0] | 42 | vector1[0] | vector2[0]));
-		static_assert(vector3[1] == (vector1[1] | vector2[1] | 42 | vector1[1] | vector2[1]));
-		static_assert(vector3[2] == (vector1[2] | vector2[2] | 42 | vector1[2] | vector2[2]));
+		static_assert(vec3[0] == (vec1[0] | vec2[0] | 42 | vec1[0] | vec2[0]));
+		static_assert(vec3[1] == (vec1[1] | vec2[1] | 42 | vec1[1] | vec2[1]));
+		static_assert(vec3[2] == (vec1[2] | vec2[2] | 42 | vec1[2] | vec2[2]));
 
 		// value | vector | vector_view | vector
-		constexpr auto vector32 = 42 | vector1 | vector2.to_view() | vector2;
+		constexpr auto vec32 = 42 | vec1 | vec2.to_view() | vec2;
 
-		static_assert(vector32[0] == (42 | vector1[0] | vector2[0] | vector2[0]));
-		static_assert(vector32[1] == (42 | vector1[1] | vector2[1] | vector2[1]));
-		static_assert(vector32[2] == (42 | vector1[2] | vector2[2] | vector2[2]));
+		static_assert(vec32[0] == (42 | vec1[0] | vec2[0] | vec2[0]));
+		static_assert(vec32[1] == (42 | vec1[1] | vec2[1] | vec2[1]));
+		static_assert(vec32[2] == (42 | vec1[2] | vec2[2] | vec2[2]));
 	}
 }
 
 TEST(TestMathOperations, TestOperatorBitXor)
 {
-	constexpr vector3<int> vector1{123, 456, 789};
-	constexpr vector3<int> vector2{987, 654, 321};
+	constexpr vector3<int> vec1{123, 456, 789};
+	constexpr vector3<int> vec2{987, 654, 321};
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix ^ matrix ^ value ^ matrix
-		((matrix3 ^= matrix2) ^= 42) ^= matrix1;
+		((mat3 ^= mat2) ^= 42) ^= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] ^ matrix2[0] ^ 42 ^ matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] ^ matrix2[1] ^ 42 ^ matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] ^ matrix2[2] ^ 42 ^ matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] ^ matrix2[3] ^ 42 ^ matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] ^ matrix2[4] ^ 42 ^ matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] ^ matrix2[5] ^ 42 ^ matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] ^ mat2[0] ^ 42 ^ mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] ^ mat2[1] ^ 42 ^ mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] ^ mat2[2] ^ 42 ^ mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] ^ mat2[3] ^ 42 ^ mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] ^ mat2[4] ^ 42 ^ mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] ^ mat2[5] ^ 42 ^ mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector ^ vector ^ vector_view ^ vector ^ value ^ vector
-		(((vector3 ^= vector2).to_view() ^= vector2) ^= 42) ^= vector1;
+		(((vec3 ^= vec2).to_view() ^= vec2) ^= 42) ^= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] ^ vector2[0] ^ vector2[0] ^ 42 ^ vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] ^ vector2[1] ^ vector2[1] ^ 42 ^ vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] ^ vector2[2] ^ vector2[2] ^ 42 ^ vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] ^ vec2[0] ^ vec2[0] ^ 42 ^ vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] ^ vec2[1] ^ vec2[1] ^ 42 ^ vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] ^ vec2[2] ^ vec2[2] ^ 42 ^ vec1[2]);
 	}
 	{
 		// matrix ^ matrix ^ value ^ matrix
-		constexpr auto matrix31 = matrix1 ^ matrix2 ^ 1 ^ matrix1;
+		constexpr auto mat31 = mat1 ^ mat2 ^ 1 ^ mat1;
 
-		static_assert(matrix31[0] == (matrix1[0] ^ matrix2[0] ^ 1 ^ matrix1[0]));
-		static_assert(matrix31[1] == (matrix1[1] ^ matrix2[1] ^ 1 ^ matrix1[1]));
-		static_assert(matrix31[2] == (matrix1[2] ^ matrix2[2] ^ 1 ^ matrix1[2]));
-		static_assert(matrix31[3] == (matrix1[3] ^ matrix2[3] ^ 1 ^ matrix1[3]));
-		static_assert(matrix31[4] == (matrix1[4] ^ matrix2[4] ^ 1 ^ matrix1[4]));
-		static_assert(matrix31[5] == (matrix1[5] ^ matrix2[5] ^ 1 ^ matrix1[5]));
+		static_assert(mat31[0] == (mat1[0] ^ mat2[0] ^ 1 ^ mat1[0]));
+		static_assert(mat31[1] == (mat1[1] ^ mat2[1] ^ 1 ^ mat1[1]));
+		static_assert(mat31[2] == (mat1[2] ^ mat2[2] ^ 1 ^ mat1[2]));
+		static_assert(mat31[3] == (mat1[3] ^ mat2[3] ^ 1 ^ mat1[3]));
+		static_assert(mat31[4] == (mat1[4] ^ mat2[4] ^ 1 ^ mat1[4]));
+		static_assert(mat31[5] == (mat1[5] ^ mat2[5] ^ 1 ^ mat1[5]));
 
 		// value ^ matrix ^ value ^ matrix
-		constexpr auto matrix32 = 42 ^ matrix1 ^ 1 ^ matrix2;
+		constexpr auto mat32 = 42 ^ mat1 ^ 1 ^ mat2;
 
-		static_assert(matrix32[0] == (42 ^ matrix1[0] ^ 1 ^ matrix2[0]));
-		static_assert(matrix32[1] == (42 ^ matrix1[1] ^ 1 ^ matrix2[1]));
-		static_assert(matrix32[2] == (42 ^ matrix1[2] ^ 1 ^ matrix2[2]));
-		static_assert(matrix32[3] == (42 ^ matrix1[3] ^ 1 ^ matrix2[3]));
-		static_assert(matrix32[4] == (42 ^ matrix1[4] ^ 1 ^ matrix2[4]));
-		static_assert(matrix32[5] == (42 ^ matrix1[5] ^ 1 ^ matrix2[5]));
+		static_assert(mat32[0] == (42 ^ mat1[0] ^ 1 ^ mat2[0]));
+		static_assert(mat32[1] == (42 ^ mat1[1] ^ 1 ^ mat2[1]));
+		static_assert(mat32[2] == (42 ^ mat1[2] ^ 1 ^ mat2[2]));
+		static_assert(mat32[3] == (42 ^ mat1[3] ^ 1 ^ mat2[3]));
+		static_assert(mat32[4] == (42 ^ mat1[4] ^ 1 ^ mat2[4]));
+		static_assert(mat32[5] == (42 ^ mat1[5] ^ 1 ^ mat2[5]));
 
 		// vector ^ vector ^ value ^ vector_view ^ vector
-		constexpr auto vector3 = vector1 ^ vector2 ^ 42 ^ vector1.to_view() ^ vector2;
+		constexpr auto vec3 = vec1 ^ vec2 ^ 42 ^ vec1.to_view() ^ vec2;
 
-		static_assert(vector3[0] == (vector1[0] ^ vector2[0] ^ 42 ^ vector1[0] ^ vector2[0]));
-		static_assert(vector3[1] == (vector1[1] ^ vector2[1] ^ 42 ^ vector1[1] ^ vector2[1]));
-		static_assert(vector3[2] == (vector1[2] ^ vector2[2] ^ 42 ^ vector1[2] ^ vector2[2]));
+		static_assert(vec3[0] == (vec1[0] ^ vec2[0] ^ 42 ^ vec1[0] ^ vec2[0]));
+		static_assert(vec3[1] == (vec1[1] ^ vec2[1] ^ 42 ^ vec1[1] ^ vec2[1]));
+		static_assert(vec3[2] == (vec1[2] ^ vec2[2] ^ 42 ^ vec1[2] ^ vec2[2]));
 
 		// value ^ vector ^ vector_view ^ vector
-		constexpr auto vector32 = 42 ^ vector1 ^ vector2.to_view() ^ vector2;
+		constexpr auto vec32 = 42 ^ vec1 ^ vec2.to_view() ^ vec2;
 
-		static_assert(vector32[0] == (42 ^ vector1[0] ^ vector2[0] ^ vector2[0]));
-		static_assert(vector32[1] == (42 ^ vector1[1] ^ vector2[1] ^ vector2[1]));
-		static_assert(vector32[2] == (42 ^ vector1[2] ^ vector2[2] ^ vector2[2]));
+		static_assert(vec32[0] == (42 ^ vec1[0] ^ vec2[0] ^ vec2[0]));
+		static_assert(vec32[1] == (42 ^ vec1[1] ^ vec2[1] ^ vec2[1]));
+		static_assert(vec32[2] == (42 ^ vec1[2] ^ vec2[2] ^ vec2[2]));
 	}
 }
 
 TEST(TestMathOperations, TestOperatorLeftShift)
 {
-	constexpr vector3<unsigned long long> vector1{7, 8, 9};
-	constexpr vector3<unsigned long long> vector2{9, 8, 7};
+	constexpr vector3<unsigned long long> vec1{7, 8, 9};
+	constexpr vector3<unsigned long long> vec2{9, 8, 7};
 
-	constexpr matrix2x3<unsigned long long> matrix1{vector1, vector2};
-	constexpr matrix2x3<unsigned long long> matrix2{vector2, vector1};
+	constexpr matrix2x3<unsigned long long> mat1{vec1, vec2};
+	constexpr matrix2x3<unsigned long long> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix << matrix << value << matrix
-		((matrix3 <<= matrix2) <<= 5) <<= matrix1;
+		((mat3 <<= mat2) <<= 5) <<= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] << matrix2[0] << 5 << matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] << matrix2[1] << 5 << matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] << matrix2[2] << 5 << matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] << matrix2[3] << 5 << matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] << matrix2[4] << 5 << matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] << matrix2[5] << 5 << matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] << mat2[0] << 5 << mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] << mat2[1] << 5 << mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] << mat2[2] << 5 << mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] << mat2[3] << 5 << mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] << mat2[4] << 5 << mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] << mat2[5] << 5 << mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector << vector << vector_view << vector << value << vector
-		(((vector3 <<= vector2).to_view() <<= vector2) <<= 5) <<= vector1;
+		(((vec3 <<= vec2).to_view() <<= vec2) <<= 5) <<= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] << vector2[0] << vector2[0] << 5 << vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] << vector2[1] << vector2[1] << 5 << vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] << vector2[2] << vector2[2] << 5 << vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] << vec2[0] << vec2[0] << 5 << vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] << vec2[1] << vec2[1] << 5 << vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] << vec2[2] << vec2[2] << 5 << vec1[2]);
 	}
 	{
 		// matrix << matrix << value << matrix
-		constexpr auto matrix31 = matrix1 << matrix2 << 1 << matrix1;
+		constexpr auto mat31 = mat1 << mat2 << 1 << mat1;
 
-		static_assert(matrix31[0] == matrix1[0] << matrix2[0] << 1 << matrix1[0]);
-		static_assert(matrix31[1] == matrix1[1] << matrix2[1] << 1 << matrix1[1]);
-		static_assert(matrix31[2] == matrix1[2] << matrix2[2] << 1 << matrix1[2]);
-		static_assert(matrix31[3] == matrix1[3] << matrix2[3] << 1 << matrix1[3]);
-		static_assert(matrix31[4] == matrix1[4] << matrix2[4] << 1 << matrix1[4]);
-		static_assert(matrix31[5] == matrix1[5] << matrix2[5] << 1 << matrix1[5]);
+		static_assert(mat31[0] == mat1[0] << mat2[0] << 1 << mat1[0]);
+		static_assert(mat31[1] == mat1[1] << mat2[1] << 1 << mat1[1]);
+		static_assert(mat31[2] == mat1[2] << mat2[2] << 1 << mat1[2]);
+		static_assert(mat31[3] == mat1[3] << mat2[3] << 1 << mat1[3]);
+		static_assert(mat31[4] == mat1[4] << mat2[4] << 1 << mat1[4]);
+		static_assert(mat31[5] == mat1[5] << mat2[5] << 1 << mat1[5]);
 
 		// value << matrix << value << matrix
-		constexpr auto matrix32 = 5ull << matrix1 << 1 << matrix2;
+		constexpr auto mat32 = 5ull << mat1 << 1 << mat2;
 
-		static_assert(matrix32[0] == 5ull << matrix1[0] << 1 << matrix2[0]);
-		static_assert(matrix32[1] == 5ull << matrix1[1] << 1 << matrix2[1]);
-		static_assert(matrix32[2] == 5ull << matrix1[2] << 1 << matrix2[2]);
-		static_assert(matrix32[3] == 5ull << matrix1[3] << 1 << matrix2[3]);
-		static_assert(matrix32[4] == 5ull << matrix1[4] << 1 << matrix2[4]);
-		static_assert(matrix32[5] == 5ull << matrix1[5] << 1 << matrix2[5]);
+		static_assert(mat32[0] == 5ull << mat1[0] << 1 << mat2[0]);
+		static_assert(mat32[1] == 5ull << mat1[1] << 1 << mat2[1]);
+		static_assert(mat32[2] == 5ull << mat1[2] << 1 << mat2[2]);
+		static_assert(mat32[3] == 5ull << mat1[3] << 1 << mat2[3]);
+		static_assert(mat32[4] == 5ull << mat1[4] << 1 << mat2[4]);
+		static_assert(mat32[5] == 5ull << mat1[5] << 1 << mat2[5]);
 
 		// vector << vector << value << vector_view << vector
-		constexpr auto vector3 = vector1 << vector2 << 5 << vector1.to_view() << vector2;
+		constexpr auto vec3 = vec1 << vec2 << 5 << vec1.to_view() << vec2;
 
-		static_assert(vector3[0] == vector1[0] << vector2[0] << 5 << vector1[0] << vector2[0]);
-		static_assert(vector3[1] == vector1[1] << vector2[1] << 5 << vector1[1] << vector2[1]);
-		static_assert(vector3[2] == vector1[2] << vector2[2] << 5 << vector1[2] << vector2[2]);
+		static_assert(vec3[0] == vec1[0] << vec2[0] << 5 << vec1[0] << vec2[0]);
+		static_assert(vec3[1] == vec1[1] << vec2[1] << 5 << vec1[1] << vec2[1]);
+		static_assert(vec3[2] == vec1[2] << vec2[2] << 5 << vec1[2] << vec2[2]);
 
 		// value << vector << vector_view << vector
-		constexpr auto vector32 = 5ull << vector1 << vector2.to_view() << vector2;
+		constexpr auto vec32 = 5ull << vec1 << vec2.to_view() << vec2;
 
-		static_assert(vector32[0] == 5ull << vector1[0] << vector2[0] << vector2[0]);
-		static_assert(vector32[1] == 5ull << vector1[1] << vector2[1] << vector2[1]);
-		static_assert(vector32[2] == 5ull << vector1[2] << vector2[2] << vector2[2]);
+		static_assert(vec32[0] == 5ull << vec1[0] << vec2[0] << vec2[0]);
+		static_assert(vec32[1] == 5ull << vec1[1] << vec2[1] << vec2[1]);
+		static_assert(vec32[2] == 5ull << vec1[2] << vec2[2] << vec2[2]);
 	}
 }
 
 TEST(TestMathOperations, TestOperatorRightShift)
 {
-	constexpr vector3<unsigned long long> vector1{7, 8, 9};
-	constexpr vector3<unsigned long long> vector2{9, 8, 7};
+	constexpr vector3<unsigned long long> vec1{7, 8, 9};
+	constexpr vector3<unsigned long long> vec2{9, 8, 7};
 
-	constexpr matrix2x3<unsigned long long> matrix1{vector1, vector2};
-	constexpr matrix2x3<unsigned long long> matrix2{vector2, vector1};
+	constexpr matrix2x3<unsigned long long> mat1{vec1, vec2};
+	constexpr matrix2x3<unsigned long long> mat2{vec2, vec1};
 
 	{
-		auto matrix3 = matrix1;
+		auto mat3 = mat1;
 
 		// matrix >> matrix >> value >> matrix
-		((matrix3 >>= matrix2) >>= 5) >>= matrix1;
+		((mat3 >>= mat2) >>= 5) >>= mat1;
 
-		ASSERT_EQ(matrix3[0], matrix1[0] >> matrix2[0] >> 5 >> matrix1[0]);
-		ASSERT_EQ(matrix3[1], matrix1[1] >> matrix2[1] >> 5 >> matrix1[1]);
-		ASSERT_EQ(matrix3[2], matrix1[2] >> matrix2[2] >> 5 >> matrix1[2]);
-		ASSERT_EQ(matrix3[3], matrix1[3] >> matrix2[3] >> 5 >> matrix1[3]);
-		ASSERT_EQ(matrix3[4], matrix1[4] >> matrix2[4] >> 5 >> matrix1[4]);
-		ASSERT_EQ(matrix3[5], matrix1[5] >> matrix2[5] >> 5 >> matrix1[5]);
+		ASSERT_EQ(mat3[0], mat1[0] >> mat2[0] >> 5 >> mat1[0]);
+		ASSERT_EQ(mat3[1], mat1[1] >> mat2[1] >> 5 >> mat1[1]);
+		ASSERT_EQ(mat3[2], mat1[2] >> mat2[2] >> 5 >> mat1[2]);
+		ASSERT_EQ(mat3[3], mat1[3] >> mat2[3] >> 5 >> mat1[3]);
+		ASSERT_EQ(mat3[4], mat1[4] >> mat2[4] >> 5 >> mat1[4]);
+		ASSERT_EQ(mat3[5], mat1[5] >> mat2[5] >> 5 >> mat1[5]);
 
-		auto vector3 = vector1;
+		auto vec3 = vec1;
 
 		// vector >> vector >> vector_view >> vector >> value >> vector
-		(((vector3 >>= vector2).to_view() >>= vector2) >>= 5) >>= vector1;
+		(((vec3 >>= vec2).to_view() >>= vec2) >>= 5) >>= vec1;
 
-		ASSERT_EQ(vector3[0], vector1[0] >> vector2[0] >> vector2[0] >> 5 >> vector1[0]);
-		ASSERT_EQ(vector3[1], vector1[1] >> vector2[1] >> vector2[1] >> 5 >> vector1[1]);
-		ASSERT_EQ(vector3[2], vector1[2] >> vector2[2] >> vector2[2] >> 5 >> vector1[2]);
+		ASSERT_EQ(vec3[0], vec1[0] >> vec2[0] >> vec2[0] >> 5 >> vec1[0]);
+		ASSERT_EQ(vec3[1], vec1[1] >> vec2[1] >> vec2[1] >> 5 >> vec1[1]);
+		ASSERT_EQ(vec3[2], vec1[2] >> vec2[2] >> vec2[2] >> 5 >> vec1[2]);
 	}
 	{
 		// matrix >> matrix >> value >> matrix
-		constexpr auto matrix31 = matrix1 >> matrix2 >> 1 >> matrix1;
+		constexpr auto mat31 = mat1 >> mat2 >> 1 >> mat1;
 
-		static_assert(matrix31[0] == matrix1[0] >> matrix2[0] >> 1 >> matrix1[0]);
-		static_assert(matrix31[1] == matrix1[1] >> matrix2[1] >> 1 >> matrix1[1]);
-		static_assert(matrix31[2] == matrix1[2] >> matrix2[2] >> 1 >> matrix1[2]);
-		static_assert(matrix31[3] == matrix1[3] >> matrix2[3] >> 1 >> matrix1[3]);
-		static_assert(matrix31[4] == matrix1[4] >> matrix2[4] >> 1 >> matrix1[4]);
-		static_assert(matrix31[5] == matrix1[5] >> matrix2[5] >> 1 >> matrix1[5]);
+		static_assert(mat31[0] == mat1[0] >> mat2[0] >> 1 >> mat1[0]);
+		static_assert(mat31[1] == mat1[1] >> mat2[1] >> 1 >> mat1[1]);
+		static_assert(mat31[2] == mat1[2] >> mat2[2] >> 1 >> mat1[2]);
+		static_assert(mat31[3] == mat1[3] >> mat2[3] >> 1 >> mat1[3]);
+		static_assert(mat31[4] == mat1[4] >> mat2[4] >> 1 >> mat1[4]);
+		static_assert(mat31[5] == mat1[5] >> mat2[5] >> 1 >> mat1[5]);
 
 		// value >> matrix >> value >> matrix
-		constexpr auto matrix32 = 999999999ull >> matrix1 >> 1 >> matrix2;
+		constexpr auto mat32 = 999999999ull >> mat1 >> 1 >> mat2;
 
-		static_assert(matrix32[0] == 999999999ull >> matrix1[0] >> 1 >> matrix2[0]);
-		static_assert(matrix32[1] == 999999999ull >> matrix1[1] >> 1 >> matrix2[1]);
-		static_assert(matrix32[2] == 999999999ull >> matrix1[2] >> 1 >> matrix2[2]);
-		static_assert(matrix32[3] == 999999999ull >> matrix1[3] >> 1 >> matrix2[3]);
-		static_assert(matrix32[4] == 999999999ull >> matrix1[4] >> 1 >> matrix2[4]);
-		static_assert(matrix32[5] == 999999999ull >> matrix1[5] >> 1 >> matrix2[5]);
+		static_assert(mat32[0] == 999999999ull >> mat1[0] >> 1 >> mat2[0]);
+		static_assert(mat32[1] == 999999999ull >> mat1[1] >> 1 >> mat2[1]);
+		static_assert(mat32[2] == 999999999ull >> mat1[2] >> 1 >> mat2[2]);
+		static_assert(mat32[3] == 999999999ull >> mat1[3] >> 1 >> mat2[3]);
+		static_assert(mat32[4] == 999999999ull >> mat1[4] >> 1 >> mat2[4]);
+		static_assert(mat32[5] == 999999999ull >> mat1[5] >> 1 >> mat2[5]);
 
 		// vector >> vector >> value >> vector_view >> vector
-		constexpr auto vector3 = vector1 >> vector2 >> 5 >> vector1.to_view() >> vector2;
+		constexpr auto vec3 = vec1 >> vec2 >> 5 >> vec1.to_view() >> vec2;
 
-		static_assert(vector3[0] == vector1[0] >> vector2[0] >> 5 >> vector1[0] >> vector2[0]);
-		static_assert(vector3[1] == vector1[1] >> vector2[1] >> 5 >> vector1[1] >> vector2[1]);
-		static_assert(vector3[2] == vector1[2] >> vector2[2] >> 5 >> vector1[2] >> vector2[2]);
+		static_assert(vec3[0] == vec1[0] >> vec2[0] >> 5 >> vec1[0] >> vec2[0]);
+		static_assert(vec3[1] == vec1[1] >> vec2[1] >> 5 >> vec1[1] >> vec2[1]);
+		static_assert(vec3[2] == vec1[2] >> vec2[2] >> 5 >> vec1[2] >> vec2[2]);
 
 		// value >> vector >> vector_view >> vector
-		constexpr auto vector32 = 999999999ull >> vector1 >> vector2.to_view() >> vector2;
+		constexpr auto vec32 = 999999999ull >> vec1 >> vec2.to_view() >> vec2;
 
-		static_assert(vector32[0] == 999999999ull >> vector1[0] >> vector2[0] >> vector2[0]);
-		static_assert(vector32[1] == 999999999ull >> vector1[1] >> vector2[1] >> vector2[1]);
-		static_assert(vector32[2] == 999999999ull >> vector1[2] >> vector2[2] >> vector2[2]);
+		static_assert(vec32[0] == 999999999ull >> vec1[0] >> vec2[0] >> vec2[0]);
+		static_assert(vec32[1] == 999999999ull >> vec1[1] >> vec2[1] >> vec2[1]);
+		static_assert(vec32[2] == 999999999ull >> vec1[2] >> vec2[2] >> vec2[2]);
 	}
 }
 
 TEST(TestMathOperations, TestOperatorAbs)
 {
-	constexpr vector3<int> vector1{ -123, -456, 789 };
-	constexpr auto vector2 = +vector1;
+	constexpr vector3<int> vec1{ -123, -456, 789 };
+	constexpr auto vector2 = +vec1;
 
-	constexpr matrix2x3<int> matrix1{ vector1, vector2 };
-	constexpr auto matrix2 = +matrix1;
+	constexpr matrix2x3<int> mat1{ vec1, vector2 };
+	constexpr auto mat2 = +mat1;
 
-	static_assert(vector1[0] == -123);
-	static_assert(vector1[1] == -456);
-	static_assert(vector1[2] == 789);
+	static_assert(vec1[0] == -123);
+	static_assert(vec1[1] == -456);
+	static_assert(vec1[2] == 789);
 
 	static_assert(vector2[0] == 123);
 	static_assert(vector2[1] == 456);
 	static_assert(vector2[2] == 789);
 
-	static_assert(matrix1[0] == -123);
-	static_assert(matrix1[1] == -456);
-	static_assert(matrix1[2] == 789);
-	static_assert(matrix1[3] == 123);
-	static_assert(matrix1[4] == 456);
-	static_assert(matrix1[5] == 789);
+	static_assert(mat1[0] == -123);
+	static_assert(mat1[1] == -456);
+	static_assert(mat1[2] == 789);
+	static_assert(mat1[3] == 123);
+	static_assert(mat1[4] == 456);
+	static_assert(mat1[5] == 789);
 
-	static_assert(matrix2[0] == 123);
-	static_assert(matrix2[1] == 456);
-	static_assert(matrix2[2] == 789);
-	static_assert(matrix2[3] == 123);
-	static_assert(matrix2[4] == 456);
-	static_assert(matrix2[5] == 789);
+	static_assert(mat2[0] == 123);
+	static_assert(mat2[1] == 456);
+	static_assert(mat2[2] == 789);
+	static_assert(mat2[3] == 123);
+	static_assert(mat2[4] == 456);
+	static_assert(mat2[5] == 789);
 }
 
 TEST(TestMathOperations, TestOperatorInvert)
 {
-	constexpr vector3<int> vector1{123, 456, 789};
-	constexpr auto         vector2 = -vector1;
+	constexpr vector3<int> vec1{123, 456, 789};
+	constexpr auto         vec2 = -vec1;
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr auto           matrix2 = -matrix1;
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr auto           mat2 = -mat1;
 
-	static_assert(vector2[0] == -vector1[0]);
-	static_assert(vector2[1] == -vector1[1]);
-	static_assert(vector2[2] == -vector1[2]);
+	static_assert(vec2[0] == -vec1[0]);
+	static_assert(vec2[1] == -vec1[1]);
+	static_assert(vec2[2] == -vec1[2]);
 
-	static_assert(matrix2[0] == -matrix1[0]);
-	static_assert(matrix2[1] == -matrix1[1]);
-	static_assert(matrix2[2] == -matrix1[2]);
-	static_assert(matrix2[3] == -matrix1[3]);
-	static_assert(matrix2[4] == -matrix1[4]);
-	static_assert(matrix2[5] == -matrix1[5]);
+	static_assert(mat2[0] == -mat1[0]);
+	static_assert(mat2[1] == -mat1[1]);
+	static_assert(mat2[2] == -mat1[2]);
+	static_assert(mat2[3] == -mat1[3]);
+	static_assert(mat2[4] == -mat1[4]);
+	static_assert(mat2[5] == -mat1[5]);
 
-	auto vector3 = vector1;
+	auto vec3 = vec1;
 	// the same reference
-	auto& vector4 = make_inverse(vector3);
+	auto& vec4 = make_inverse(vec3);
 
-	ASSERT_EQ(&vector3, &vector4);
+	ASSERT_EQ(&vec3, &vec4);
 
-	ASSERT_EQ(vector3[0], vector2[0]);
-	ASSERT_EQ(vector3[1], vector2[1]);
-	ASSERT_EQ(vector3[2], vector2[2]);
+	ASSERT_EQ(vec3[0], vec2[0]);
+	ASSERT_EQ(vec3[1], vec2[1]);
+	ASSERT_EQ(vec3[2], vec2[2]);
 
 	// not the same view
-	auto vector5 = make_inverse(vector3.to_view());
+	auto vec5 = make_inverse(vec3.to_view());
 
-	ASSERT_EQ(vector5[0], vector1[0]);
-	ASSERT_EQ(vector5[1], vector1[1]);
-	ASSERT_EQ(vector5[2], vector1[2]);
+	ASSERT_EQ(vec5[0], vec1[0]);
+	ASSERT_EQ(vec5[1], vec1[1]);
+	ASSERT_EQ(vec5[2], vec1[2]);
 
-	auto matrix3 = matrix1;
+	auto mat3 = mat1;
 	// the same reference
-	auto& matrix4 = make_inverse(matrix3);
+	auto& mat4 = make_inverse(mat3);
 
-	ASSERT_EQ(&matrix3, &matrix4);
+	ASSERT_EQ(&mat3, &mat4);
 
-	ASSERT_EQ(matrix3[0], matrix2[0]);
-	ASSERT_EQ(matrix3[1], matrix2[1]);
-	ASSERT_EQ(matrix3[2], matrix2[2]);
-	ASSERT_EQ(matrix3[3], matrix2[3]);
-	ASSERT_EQ(matrix3[4], matrix2[4]);
-	ASSERT_EQ(matrix3[5], matrix2[5]);
+	ASSERT_EQ(mat3[0], mat2[0]);
+	ASSERT_EQ(mat3[1], mat2[1]);
+	ASSERT_EQ(mat3[2], mat2[2]);
+	ASSERT_EQ(mat3[3], mat2[3]);
+	ASSERT_EQ(mat3[4], mat2[4]);
+	ASSERT_EQ(mat3[5], mat2[5]);
 }
 
 TEST(TestMathOperations, TestOperatorBitwiseNot)
 {
-	constexpr vector3<unsigned> vector1{123, 456, 789};
-	constexpr auto              vector2 = ~vector1;
+	constexpr vector3<unsigned> vec1{123, 456, 789};
+	constexpr auto              vec2 = ~vec1;
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr auto           matrix2 = ~matrix1;
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr auto           mat2 = ~mat1;
 
-	static_assert(vector2[0] == ~vector1[0]);
-	static_assert(vector2[1] == ~vector1[1]);
-	static_assert(vector2[2] == ~vector1[2]);
+	static_assert(vec2[0] == ~vec1[0]);
+	static_assert(vec2[1] == ~vec1[1]);
+	static_assert(vec2[2] == ~vec1[2]);
 
-	static_assert(matrix2[0] == ~matrix1[0]);
-	static_assert(matrix2[1] == ~matrix1[1]);
-	static_assert(matrix2[2] == ~matrix1[2]);
-	static_assert(matrix2[3] == ~matrix1[3]);
-	static_assert(matrix2[4] == ~matrix1[4]);
-	static_assert(matrix2[5] == ~matrix1[5]);
+	static_assert(mat2[0] == ~mat1[0]);
+	static_assert(mat2[1] == ~mat1[1]);
+	static_assert(mat2[2] == ~mat1[2]);
+	static_assert(mat2[3] == ~mat1[3]);
+	static_assert(mat2[4] == ~mat1[4]);
+	static_assert(mat2[5] == ~mat1[5]);
 
-	auto vector3 = vector1;
+	auto vec3 = vec1;
 	// the same reference
-	auto& vector4 = make_bitwise_not(vector3);
+	auto& vec4 = make_bitwise_not(vec3);
 
-	ASSERT_EQ(&vector3, &vector4);
+	ASSERT_EQ(&vec3, &vec4);
 
-	ASSERT_EQ(vector3[0], vector2[0]);
-	ASSERT_EQ(vector3[1], vector2[1]);
-	ASSERT_EQ(vector3[2], vector2[2]);
+	ASSERT_EQ(vec3[0], vec2[0]);
+	ASSERT_EQ(vec3[1], vec2[1]);
+	ASSERT_EQ(vec3[2], vec2[2]);
 
 	// not the same view
-	auto vector5 = make_bitwise_not(vector3.to_view());
+	auto vec5 = make_bitwise_not(vec3.to_view());
 
-	ASSERT_EQ(vector5[0], vector1[0]);
-	ASSERT_EQ(vector5[1], vector1[1]);
-	ASSERT_EQ(vector5[2], vector1[2]);
+	ASSERT_EQ(vec5[0], vec1[0]);
+	ASSERT_EQ(vec5[1], vec1[1]);
+	ASSERT_EQ(vec5[2], vec1[2]);
 
-	auto matrix3 = matrix1;
+	auto mat3 = mat1;
 	// the same reference
-	auto& matrix4 = make_bitwise_not(matrix3);
+	auto& mat4 = make_bitwise_not(mat3);
 
-	ASSERT_EQ(&matrix3, &matrix4);
+	ASSERT_EQ(&mat3, &mat4);
 
-	ASSERT_EQ(matrix3[0], matrix2[0]);
-	ASSERT_EQ(matrix3[1], matrix2[1]);
-	ASSERT_EQ(matrix3[2], matrix2[2]);
-	ASSERT_EQ(matrix3[3], matrix2[3]);
-	ASSERT_EQ(matrix3[4], matrix2[4]);
-	ASSERT_EQ(matrix3[5], matrix2[5]);
+	ASSERT_EQ(mat3[0], mat2[0]);
+	ASSERT_EQ(mat3[1], mat2[1]);
+	ASSERT_EQ(mat3[2], mat2[2]);
+	ASSERT_EQ(mat3[3], mat2[3]);
+	ASSERT_EQ(mat3[4], mat2[4]);
+	ASSERT_EQ(mat3[5], mat2[5]);
 }
 
 TEST(TestMathOperations, TestOperatorEqualAndNotEqual)
 {
-	constexpr vector3<unsigned> vector1{123, 456, 789};
-	constexpr vector3<unsigned> vector2{123, 123, 123};
+	constexpr vector3<unsigned> vec1{123, 456, 789};
+	constexpr vector3<unsigned> vec2{123, 123, 123};
 
-	constexpr auto vector31 = (vector1 == vector2);
-	constexpr auto vector32 = (vector1 == 456);
-	constexpr auto vector33 = (456 == vector1);
+	constexpr auto vec31 = (vec1 == vec2);
+	constexpr auto vec32 = (vec1 == 456);
+	constexpr auto vec33 = (456 == vec1);
 
-	static_assert(vector31[0]);
-	static_assert(!vector31[1]);
-	static_assert(!vector31[2]);
+	static_assert(vec31[0]);
+	static_assert(!vec31[1]);
+	static_assert(!vec31[2]);
 
-	static_assert(!vector32[0]);
-	static_assert(vector32[1]);
-	static_assert(!vector32[2]);
+	static_assert(!vec32[0]);
+	static_assert(vec32[1]);
+	static_assert(!vec32[2]);
 
-	static_assert(!vector33[0]);
-	static_assert(vector33[1]);
-	static_assert(!vector33[2]);
+	static_assert(!vec33[0]);
+	static_assert(vec33[1]);
+	static_assert(!vec33[2]);
 
-	constexpr auto vector41 = (vector1 != vector2);
-	constexpr auto vector42 = (vector1 != 456);
-	constexpr auto vector43 = (456 != vector1);
+	constexpr auto vec41 = (vec1 != vec2);
+	constexpr auto vec42 = (vec1 != 456);
+	constexpr auto vec43 = (456 != vec1);
 
-	static_assert(!vector41[0]);
-	static_assert(vector41[1]);
-	static_assert(vector41[2]);
+	static_assert(!vec41[0]);
+	static_assert(vec41[1]);
+	static_assert(vec41[2]);
 
-	static_assert(vector42[0]);
-	static_assert(!vector42[1]);
-	static_assert(vector42[2]);
+	static_assert(vec42[0]);
+	static_assert(!vec42[1]);
+	static_assert(vec42[2]);
 
-	static_assert(vector43[0]);
-	static_assert(!vector43[1]);
-	static_assert(vector43[2]);
+	static_assert(vec43[0]);
+	static_assert(!vec43[1]);
+	static_assert(vec43[2]);
 
-	constexpr matrix2x3<int> matrix1{vector1, vector2};
-	constexpr matrix2x3<int> matrix2{vector2, vector1};
+	constexpr matrix2x3<int> mat1{vec1, vec2};
+	constexpr matrix2x3<int> mat2{vec2, vec1};
 
-	constexpr auto matrix31 = (matrix1 == matrix2);
-	constexpr auto matrix32 = (matrix1 == 123);
-	constexpr auto matrix33 = (123 == matrix1);
+	constexpr auto mat31 = (mat1 == mat2);
+	constexpr auto mat32 = (mat1 == 123);
+	constexpr auto mat33 = (123 == mat1);
 
-	static_assert(matrix31[0]);
-	static_assert(!matrix31[1]);
-	static_assert(!matrix31[2]);
-	static_assert(matrix31[3]);
-	static_assert(!matrix31[4]);
-	static_assert(!matrix31[5]);
+	static_assert(mat31[0]);
+	static_assert(!mat31[1]);
+	static_assert(!mat31[2]);
+	static_assert(mat31[3]);
+	static_assert(!mat31[4]);
+	static_assert(!mat31[5]);
 
-	static_assert(matrix32[0]);
-	static_assert(!matrix32[1]);
-	static_assert(!matrix32[2]);
-	static_assert(matrix32[3]);
-	static_assert(matrix32[4]);
-	static_assert(matrix32[5]);
+	static_assert(mat32[0]);
+	static_assert(!mat32[1]);
+	static_assert(!mat32[2]);
+	static_assert(mat32[3]);
+	static_assert(mat32[4]);
+	static_assert(mat32[5]);
 
-	static_assert(matrix33[0]);
-	static_assert(!matrix33[1]);
-	static_assert(!matrix33[2]);
-	static_assert(matrix33[3]);
-	static_assert(matrix33[4]);
-	static_assert(matrix33[5]);
+	static_assert(mat33[0]);
+	static_assert(!mat33[1]);
+	static_assert(!mat33[2]);
+	static_assert(mat33[3]);
+	static_assert(mat33[4]);
+	static_assert(mat33[5]);
 
-	constexpr auto matrix41 = (matrix1 != matrix2);
-	constexpr auto matrix42 = (matrix1 != 123);
-	constexpr auto matrix43 = (123 != matrix1);
+	constexpr auto mat41 = (mat1 != mat2);
+	constexpr auto mat42 = (mat1 != 123);
+	constexpr auto mat43 = (123 != mat1);
 
-	static_assert(!matrix41[0]);
-	static_assert(matrix41[1]);
-	static_assert(matrix41[2]);
-	static_assert(!matrix41[3]);
-	static_assert(matrix41[4]);
-	static_assert(matrix41[5]);
+	static_assert(!mat41[0]);
+	static_assert(mat41[1]);
+	static_assert(mat41[2]);
+	static_assert(!mat41[3]);
+	static_assert(mat41[4]);
+	static_assert(mat41[5]);
 
-	static_assert(!matrix42[0]);
-	static_assert(matrix42[1]);
-	static_assert(matrix42[2]);
-	static_assert(!matrix42[3]);
-	static_assert(!matrix42[4]);
-	static_assert(!matrix42[5]);
+	static_assert(!mat42[0]);
+	static_assert(mat42[1]);
+	static_assert(mat42[2]);
+	static_assert(!mat42[3]);
+	static_assert(!mat42[4]);
+	static_assert(!mat42[5]);
 
-	static_assert(!matrix43[0]);
-	static_assert(matrix43[1]);
-	static_assert(matrix43[2]);
-	static_assert(!matrix43[3]);
-	static_assert(!matrix43[4]);
-	static_assert(!matrix43[5]);
+	static_assert(!mat43[0]);
+	static_assert(mat43[1]);
+	static_assert(mat43[2]);
+	static_assert(!mat43[3]);
+	static_assert(!mat43[4]);
+	static_assert(!mat43[5]);
 }
 
 TEST(TestMathOperations, TestOperatorEqualAndNotEqualFloatingPoint)
 {
 	// +1.0e-10
-	constexpr vector3<double> vector1{ 1.2300000001, 4.5600000001, 7.8900000001 };
-	constexpr vector3<double> vector2{ 1.2300000001, 1.2300000001, 1.2300000001 };
+	constexpr vector3<double> vec1{ 1.2300000001, 4.5600000001, 7.8900000001 };
+	constexpr vector3<double> vec2{ 1.2300000001, 1.2300000001, 1.2300000001 };
 
 	// epsilon = 1.0e-9
 	constexpr auto epsilon = 1.0e-9;
 	
-	constexpr auto vector31 = equal(vector1, vector2, epsilon);
-	constexpr auto vector32 = equal(vector1, 4.5600000001, epsilon);
-	constexpr auto vector33 = equal(4.5600000001, vector1, epsilon);
+	constexpr auto vec31 = equal(vec1, vec2, epsilon);
+	constexpr auto vec32 = equal(vec1, 4.5600000001, epsilon);
+	constexpr auto vec33 = equal(4.5600000001, vec1, epsilon);
 
-	static_assert(vector31[0]);
-	static_assert(!vector31[1]);
-	static_assert(!vector31[2]);
+	static_assert(vec31[0]);
+	static_assert(!vec31[1]);
+	static_assert(!vec31[2]);
 
-	static_assert(!vector32[0]);
-	static_assert(vector32[1]);
-	static_assert(!vector32[2]);
+	static_assert(!vec32[0]);
+	static_assert(vec32[1]);
+	static_assert(!vec32[2]);
 
-	static_assert(!vector33[0]);
-	static_assert(vector33[1]);
-	static_assert(!vector33[2]);
+	static_assert(!vec33[0]);
+	static_assert(vec33[1]);
+	static_assert(!vec33[2]);
 
-	constexpr auto vector41 = not_equal(vector1, vector2, epsilon);
-	constexpr auto vector42 = not_equal(vector1, 4.5600000001, epsilon);
-	constexpr auto vector43 = not_equal(4.5600000001, vector1, epsilon);
+	constexpr auto vec41 = not_equal(vec1, vec2, epsilon);
+	constexpr auto vec42 = not_equal(vec1, 4.5600000001, epsilon);
+	constexpr auto vec43 = not_equal(4.5600000001, vec1, epsilon);
 
-	static_assert(!vector41[0]);
-	static_assert(vector41[1]);
-	static_assert(vector41[2]);
+	static_assert(!vec41[0]);
+	static_assert(vec41[1]);
+	static_assert(vec41[2]);
 
-	static_assert(vector42[0]);
-	static_assert(!vector42[1]);
-	static_assert(vector42[2]);
+	static_assert(vec42[0]);
+	static_assert(!vec42[1]);
+	static_assert(vec42[2]);
 
-	static_assert(vector43[0]);
-	static_assert(!vector43[1]);
-	static_assert(vector43[2]);
+	static_assert(vec43[0]);
+	static_assert(!vec43[1]);
+	static_assert(vec43[2]);
 
-	constexpr matrix2x3<double> matrix1{ vector1, vector2 };
-	constexpr matrix2x3<double> matrix2{ vector2, vector1 };
+	constexpr matrix2x3<double> mat1{ vec1, vec2 };
+	constexpr matrix2x3<double> mat2{ vec2, vec1 };
 
-	constexpr auto matrix31 = equal(matrix1, matrix2, epsilon);
-	constexpr auto matrix32 = equal(matrix1, 1.2300000001, epsilon);
-	constexpr auto matrix33 = equal(1.2300000001, matrix1, epsilon);
+	constexpr auto mat31 = equal(mat1, mat2, epsilon);
+	constexpr auto mat32 = equal(mat1, 1.2300000001, epsilon);
+	constexpr auto mat33 = equal(1.2300000001, mat1, epsilon);
 
-	static_assert(matrix31[0]);
-	static_assert(!matrix31[1]);
-	static_assert(!matrix31[2]);
-	static_assert(matrix31[3]);
-	static_assert(!matrix31[4]);
-	static_assert(!matrix31[5]);
+	static_assert(mat31[0]);
+	static_assert(!mat31[1]);
+	static_assert(!mat31[2]);
+	static_assert(mat31[3]);
+	static_assert(!mat31[4]);
+	static_assert(!mat31[5]);
 
-	static_assert(matrix32[0]);
-	static_assert(!matrix32[1]);
-	static_assert(!matrix32[2]);
-	static_assert(matrix32[3]);
-	static_assert(matrix32[4]);
-	static_assert(matrix32[5]);
+	static_assert(mat32[0]);
+	static_assert(!mat32[1]);
+	static_assert(!mat32[2]);
+	static_assert(mat32[3]);
+	static_assert(mat32[4]);
+	static_assert(mat32[5]);
 
-	static_assert(matrix33[0]);
-	static_assert(!matrix33[1]);
-	static_assert(!matrix33[2]);
-	static_assert(matrix33[3]);
-	static_assert(matrix33[4]);
-	static_assert(matrix33[5]);
+	static_assert(mat33[0]);
+	static_assert(!mat33[1]);
+	static_assert(!mat33[2]);
+	static_assert(mat33[3]);
+	static_assert(mat33[4]);
+	static_assert(mat33[5]);
 
-	constexpr auto matrix41 = not_equal(matrix1, matrix2, epsilon);
-	constexpr auto matrix42 = not_equal(matrix1, 1.2300000001, epsilon);
-	constexpr auto matrix43 = not_equal(1.2300000001, matrix1, epsilon);
+	constexpr auto mat41 = not_equal(mat1, mat2, epsilon);
+	constexpr auto mat42 = not_equal(mat1, 1.2300000001, epsilon);
+	constexpr auto mat43 = not_equal(1.2300000001, mat1, epsilon);
 
-	static_assert(!matrix41[0]);
-	static_assert(matrix41[1]);
-	static_assert(matrix41[2]);
-	static_assert(!matrix41[3]);
-	static_assert(matrix41[4]);
-	static_assert(matrix41[5]);
+	static_assert(!mat41[0]);
+	static_assert(mat41[1]);
+	static_assert(mat41[2]);
+	static_assert(!mat41[3]);
+	static_assert(mat41[4]);
+	static_assert(mat41[5]);
 
-	static_assert(!matrix42[0]);
-	static_assert(matrix42[1]);
-	static_assert(matrix42[2]);
-	static_assert(!matrix42[3]);
-	static_assert(!matrix42[4]);
-	static_assert(!matrix42[5]);
+	static_assert(!mat42[0]);
+	static_assert(mat42[1]);
+	static_assert(mat42[2]);
+	static_assert(!mat42[3]);
+	static_assert(!mat42[4]);
+	static_assert(!mat42[5]);
 
-	static_assert(!matrix43[0]);
-	static_assert(matrix43[1]);
-	static_assert(matrix43[2]);
-	static_assert(!matrix43[3]);
-	static_assert(!matrix43[4]);
-	static_assert(!matrix43[5]);
+	static_assert(!mat43[0]);
+	static_assert(mat43[1]);
+	static_assert(mat43[2]);
+	static_assert(!mat43[3]);
+	static_assert(!mat43[4]);
+	static_assert(!mat43[5]);
 }
 
 TEST(TestMathOperations, TestOperatorGreaterAndLess)
 {
-	constexpr vector3<unsigned> vector1{ 123, 456, 789 };
-	constexpr vector3<unsigned> vector2{ 123, 123, 123 };
+	constexpr vector3<unsigned> vec1{ 123, 456, 789 };
+	constexpr vector3<unsigned> vec2{ 123, 123, 123 };
 
-	constexpr auto vector31 = vector1 > vector2;
-	constexpr auto vector32 = vector1 > 456;
-	constexpr auto vector33 = 456 > vector1;
+	constexpr auto vec31 = vec1 > vec2;
+	constexpr auto vec32 = vec1 > 456;
+	constexpr auto vec33 = 456 > vec1;
 
-	static_assert(!vector31[0]);
-	static_assert(vector31[1]);
-	static_assert(vector31[2]);
+	static_assert(!vec31[0]);
+	static_assert(vec31[1]);
+	static_assert(vec31[2]);
 
-	static_assert(!vector32[0]);
-	static_assert(!vector32[1]);
-	static_assert(vector32[2]);
+	static_assert(!vec32[0]);
+	static_assert(!vec32[1]);
+	static_assert(vec32[2]);
 
-	static_assert(vector33[0]);
-	static_assert(!vector33[1]);
-	static_assert(!vector33[2]);
+	static_assert(vec33[0]);
+	static_assert(!vec33[1]);
+	static_assert(!vec33[2]);
 
-	constexpr auto vector41 = vector1 >= vector2;
-	constexpr auto vector42 = vector1 >= 456;
-	constexpr auto vector43 = 456 >= vector1;
+	constexpr auto vec41 = vec1 >= vec2;
+	constexpr auto vec42 = vec1 >= 456;
+	constexpr auto vec43 = 456 >= vec1;
 
-	static_assert(vector41[0]);
-	static_assert(vector41[1]);
-	static_assert(vector41[2]);
+	static_assert(vec41[0]);
+	static_assert(vec41[1]);
+	static_assert(vec41[2]);
 
-	static_assert(!vector42[0]);
-	static_assert(vector42[1]);
-	static_assert(vector42[2]);
+	static_assert(!vec42[0]);
+	static_assert(vec42[1]);
+	static_assert(vec42[2]);
 
-	static_assert(vector43[0]);
-	static_assert(vector43[1]);
-	static_assert(!vector43[2]);
+	static_assert(vec43[0]);
+	static_assert(vec43[1]);
+	static_assert(!vec43[2]);
 
-	constexpr auto vector51 = vector1 < vector2;
-	constexpr auto vector52 = vector1 < 456;
-	constexpr auto vector53 = 456 < vector1;
+	constexpr auto vec51 = vec1 < vec2;
+	constexpr auto vec52 = vec1 < 456;
+	constexpr auto vec53 = 456 < vec1;
 	
-	static_assert(!vector51[0]);
-	static_assert(!vector51[1]);
-	static_assert(!vector51[2]);
+	static_assert(!vec51[0]);
+	static_assert(!vec51[1]);
+	static_assert(!vec51[2]);
 	
-	static_assert(vector52[0]);
-	static_assert(!vector52[1]);
-	static_assert(!vector52[2]);
+	static_assert(vec52[0]);
+	static_assert(!vec52[1]);
+	static_assert(!vec52[2]);
 	
-	static_assert(!vector53[0]);
-	static_assert(!vector53[1]);
-	static_assert(vector53[2]);
+	static_assert(!vec53[0]);
+	static_assert(!vec53[1]);
+	static_assert(vec53[2]);
 	
-	constexpr auto vector61 = vector1 <= vector2;
-	constexpr auto vector62 = vector1 <= 456;
-	constexpr auto vector63 = 456 <= vector1;
+	constexpr auto vec61 = vec1 <= vec2;
+	constexpr auto vec62 = vec1 <= 456;
+	constexpr auto vec63 = 456 <= vec1;
 	
-	static_assert(vector61[0]);
-	static_assert(!vector61[1]);
-	static_assert(!vector61[2]);
+	static_assert(vec61[0]);
+	static_assert(!vec61[1]);
+	static_assert(!vec61[2]);
 	
-	static_assert(vector62[0]);
-	static_assert(vector62[1]);
-	static_assert(!vector62[2]);
+	static_assert(vec62[0]);
+	static_assert(vec62[1]);
+	static_assert(!vec62[2]);
 	
-	static_assert(!vector63[0]);
-	static_assert(vector63[1]);
-	static_assert(vector63[2]);
+	static_assert(!vec63[0]);
+	static_assert(vec63[1]);
+	static_assert(vec63[2]);
 }
 
 TEST(TestMathOperations, TestRanges)
 {
-	constexpr vector3<unsigned> vector1{ 123, 456, 789 };
-	constexpr vector3<unsigned> vector2{ 123, 123, 123 };
+	constexpr vector3<unsigned> vec1{ 123, 456, 789 };
+	constexpr vector3<unsigned> vec2{ 123, 123, 123 };
 
-	constexpr matrix2x3<int> matrix1{ vector1, vector2 };
-	constexpr matrix2x3<int> matrix2{ vector2, vector1 };
+	constexpr matrix2x3<int> mat1{ vec1, vec2 };
+	constexpr matrix2x3<int> mat2{ vec2, vec1 };
 
-	static_assert(std::ranges::all_of(vector1, [](const int i) {return i > 100; }));
-	static_assert(std::ranges::any_of(vector1, [](const int i) {return i > 456; }));
-	static_assert(std::ranges::none_of(vector2, [](const int i) {return i > 123; }));
+	static_assert(std::ranges::all_of(vec1, [](const int i) {return i > 100; }));
+	static_assert(std::ranges::any_of(vec1, [](const int i) {return i > 456; }));
+	static_assert(std::ranges::none_of(vec2, [](const int i) {return i > 123; }));
 
-	static_assert(std::ranges::all_of(matrix1, [](const int i) {return i > 100; }));
-	static_assert(std::ranges::any_of(matrix1, [](const int i) {return i > 456; }));
-	static_assert(std::ranges::none_of(matrix2, [](const int i) {return i > 789; }));
+	static_assert(std::ranges::all_of(mat1, [](const int i) {return i > 100; }));
+	static_assert(std::ranges::any_of(mat1, [](const int i) {return i > 456; }));
+	static_assert(std::ranges::none_of(mat2, [](const int i) {return i > 789; }));
 }
