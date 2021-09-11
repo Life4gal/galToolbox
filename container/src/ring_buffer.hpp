@@ -34,9 +34,7 @@ namespace gal::toolbox::container
 		using pointer		   = value_type*;
 		using const_pointer	   = const value_type*;
 
-		constexpr ring_buffer() noexcept(
-				noexcept(allocator_trait_type::allocate(std::declval<allocator_type&>(), std::declval<size_type>())))
-			: buffer_(allocator_trait_type::allocate(allocator_, max_size)) {}
+		constexpr ring_buffer() noexcept : buffer_(allocator_trait_type::allocate(allocator_, max_size)) {}
 
 		template<std::size_t... I, typename... Args>
 		constexpr explicit ring_buffer(std::index_sequence<I...>, Args&&... args)
@@ -45,14 +43,17 @@ namespace gal::toolbox::container
 			(set_or_overwrite(I, std::forward<Args>(args)), ...);
 		}
 
-		constexpr ~ring_buffer() noexcept
+		constexpr ~ring_buffer() noexcept(std::is_nothrow_destructible_v<value_type>)
 		{
-			for (size_type i = 0; i < max_size; ++i)
+			if constexpr(not std::is_trivially_destructible_v<value_type>)
 			{
-				if (bit_checker_[i])
+				for (size_type i = 0; i < max_size; ++i)
 				{
-					// the elements of the current bit have been constructed
-					allocator_trait_type::destroy(allocator_, std::next(buffer_, i));
+					if (bit_checker_[i])
+					{
+						// the elements of the current bit have been constructed
+						allocator_trait_type::destroy(allocator_, buffer_ + i);
+					}
 				}
 			}
 
@@ -61,14 +62,14 @@ namespace gal::toolbox::container
 		}
 
 		template<std::convertible_to<value_type> U, size_type N, typename Allocator>
-		constexpr explicit ring_buffer(const ring_buffer<U, N, Allocator>& other) noexcept(noexcept(std::is_nothrow_convertible_v<U, value_type>))
+		constexpr explicit ring_buffer(const ring_buffer<U, N, Allocator>& other)
 			: buffer_(allocator_trait_type::allocate(allocator_, max_size))
 		{
 			paste(other);
 		}
 
 		template<std::convertible_to<value_type> U, size_type N, typename Allocator>
-		constexpr ring_buffer& operator=(const ring_buffer<U, N, Allocator>& other) noexcept(noexcept(std::is_nothrow_convertible_v<U, value_type>))
+		constexpr ring_buffer& operator=(const ring_buffer<U, N, Allocator>& other)
 		{
 			if constexpr (std::is_same_v<U, value_type>)
 			{
@@ -92,127 +93,6 @@ namespace gal::toolbox::container
 			buffer_		 = std::exchange(other.buffer_, nullptr);
 			bit_checker_ = std::exchange(other.bit_checker_, {});
 			return *this;
-		}
-
-		/**
-		 * @brief get an element's reference
-		 * @param index element's index
-		 * @return reference
-		 * @note if the element of the given index has not been constructed, the behavior is undefined
-		*/
-		constexpr reference operator[](size_type index) noexcept(noexcept(std::declval<pointer>()[0]))
-		{
-			return *std::next(buffer_, index bitand mask);
-		}
-
-		/**
-		 * @brief get an element's reference
-		 * @param index element's index
-		 * @return const_reference
-		 * @note if the element of the given index has not been constructed, the behavior is undefined
-		*/
-		constexpr const_reference operator[](size_type index) const
-				noexcept(noexcept(std::declval<pointer>()[0]))
-		{
-			return *std::next(buffer_, index bitand mask);
-		}
-
-		/**
-		 * @brief paste another ring_buffer's elements into this ring_buffer
-		*/
-		template<std::convertible_to<value_type> U, size_type N, typename Allocator>
-		constexpr void paste(const ring_buffer<U, N, Allocator>& other) noexcept(std::is_nothrow_convertible_v<U, value_type>)
-		{
-			// we only copy parts of the same length, other parts do not provide any guarantee
-			for (size_type i = 0; i < std::min(max_size, ring_buffer<U, N, Allocator>::max_size); ++i)
-			{
-				if (other.exist(i))
-				{
-					// the elements of the current bit have been constructed
-					set_or_overwrite(i, other[i]);
-				}
-			}
-		}
-
-		/**
-		 * @brief check the element of the give index has been constructed or not
-		 * @param index element's index
-		 * @return constructed or not
-		*/
-		constexpr bool exist(size_type index) const noexcept(noexcept(noexcept(std::declval<bit_checker_type>()[0])))
-		{
-			return bit_checker_[index];
-		}
-
-		/**
-		 * @brief get an element's reference by given index, if the element of the given index has not been constructed, construct it by args
-		 * @tparam Args args' type
-		 * @param index element's index
-		 * @param args args
-		 * @return reference
-		*/
-		template<std::constructible_from<value_type>... Args>
-		constexpr reference get(size_type index, Args&&... args) noexcept(
-				noexcept(std::declval<bit_checker_type>()[0]) and noexcept(std::declval<bit_checker_type>().set(0)) and noexcept(std::is_nothrow_constructible_v<value_type, Args...>))
-		{
-			const auto real_index = index bitand mask;
-			if (not bit_checker_[real_index])
-			{
-				// has not been constructed yet
-				bit_checker_.set(real_index);
-				allocator_trait_type::construct(allocator_,
-												std::next(buffer_, real_index),
-												std::forward<Args>(args)...);
-			}
-
-			return *std::next(buffer_, real_index);
-		}
-
-		/**
-		 * @brief set or overwrite an element by given index, if given args is empty, just destroy the element, else if the element of the given index has not been constructed, construct it by args(destruct first)
-		 * @tparam Args args' type
-		 * @param index element's index
-		 * @param args args
-		 * @return nothing
-		*/
-		template<std::constructible_from<value_type>... Args>
-		constexpr void set_or_overwrite(size_type index, Args&&... args) noexcept(
-				noexcept(std::declval<bit_checker_type>()[0]) and noexcept(std::declval<bit_checker_type>().set(0)) and noexcept(std::is_nothrow_constructible_v<value_type, Args...>))
-		{
-			if (const auto real_index = index bitand mask; not bit_checker_[real_index])
-			{
-				// has not been constructed yet
-				if constexpr (sizeof...(args) == 0)
-				{
-					// user just want to destroy it
-					return;
-				}
-				else
-				{
-					allocator_trait_type::construct(allocator_,
-													std::next(buffer_, real_index),
-													std::forward<Args>(args)...);
-					bit_checker_.set(real_index);
-				}
-			}
-			else
-			{
-				allocator_trait_type::destroy(allocator_, std::next(buffer_, real_index));
-				if constexpr (sizeof...(args) == 0)
-				{
-					// user just want to destroy it
-					bit_checker_.set(real_index, false);
-					return;
-				}
-				else
-				{
-					allocator_trait_type::construct(allocator_,
-													std::next(buffer_, real_index),
-													std::forward<Args>(args)...);
-					bit_checker_.set(real_index);
-					return;
-				}
-			}
 		}
 
 		[[nodiscard]] constexpr pointer begin() noexcept
@@ -255,7 +135,7 @@ namespace gal::toolbox::container
 		 * @param pos given pos
 		 * @return actually index
 		*/
-		[[nodiscard]] constexpr size_type index(size_type pos) const noexcept
+		[[nodiscard]] constexpr size_type index_of(size_type pos) const noexcept
 		{
 			return pos bitand mask;
 		}
@@ -267,17 +147,149 @@ namespace gal::toolbox::container
 		 * @param end given end
 		 * @return distance
 		*/
-		[[nodiscard]] constexpr size_type distance(size_type begin, size_type end) noexcept
+		[[nodiscard]] constexpr size_type distance(size_type begin, size_type end) const noexcept
 		{
-			begin and_eq mask;
-			end and_eq mask;
+			begin = index_of(begin);
+			end = index_of(end);
 
-			if (end >= begin)
+			if (end > begin)
 			{
 				return end - begin;
 			}
 			return max_size - (begin - end);
 		}
+
+		/**
+		 * @brief get an element's reference
+		 * @param index element's index
+		 * @return reference
+		 * @note if the element of the given index has not been constructed, the behavior is undefined
+		*/
+		constexpr reference operator[](size_type index) noexcept
+		{
+			return buffer_[index_of(index)];
+		}
+
+		/**
+		 * @brief get an element's reference
+		 * @param index element's index
+		 * @return const_reference
+		 * @note if the element of the given index has not been constructed, the behavior is undefined
+		*/
+		constexpr const_reference operator[](size_type index) const noexcept
+		{
+			return buffer_[index_of(index)];
+		}
+
+		/**
+		 * @brief check the element of the given index has been constructed or not
+		 * @param index element's index
+		 * @return constructed or not
+		*/
+		constexpr bool exist(size_type index) const noexcept
+		{
+			return bit_checker_[index_of(index)];
+		}
+
+		/**
+		 * @brief construct the element of the given index
+		 * @param index element's index
+		 * @note if the element of the given index has been constructed, the behavior is undefined
+		*/
+		template<typename... Args>
+		constexpr void set(size_type index, Args&&... args) noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
+		{
+			index = index_of(index);
+			allocator_trait_type::construct(allocator_,
+											buffer_ + index,
+											std::forward<Args>(args)...);
+			bit_checker_.set(index);
+		}
+
+		/**
+		 * @brief construct the element of the given index if it has not been constructed
+		 * @param index element's index
+		*/
+		template<typename... Args>
+		constexpr void set_if_not_exist(size_type index, Args&&... args) noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
+		{
+			if(not exist(index))
+			{
+				set(index, std::forward<Args>(args)...);
+			}
+		}
+
+		/**
+		 * @brief erase the element of the given index
+		 * @param index element's index
+		 * @note if the element of the given index has not been constructed, the behavior is undefined
+		*/
+		constexpr void erase(size_type index) noexcept
+		{
+			index = index_of(index);
+			allocator_trait_type::destroy(allocator_, buffer_ + index);
+			bit_checker_.set(index, false);
+		}
+
+		/**
+		 * @brief erase the element of the given index if it has been constructed
+		 * @param index element's index
+		*/
+		constexpr void erase_if_exist(size_type index) noexcept
+		{
+			if(exist(index))
+			{
+				erase(index);
+			}
+		}
+
+		/**
+		 * @brief get an element's reference by given index, if the element of the given index has not been constructed, construct it by args
+		 * @tparam Args args' type
+		 * @param index element's index_of
+		 * @param args args
+		 * @return reference
+		 * @note if you don't need to construct a element, use operator[] instead
+		*/
+		template<typename... Args>
+		constexpr reference get_or_set(size_type index, Args&&... args) noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
+		{
+			set_if_not_exist(index, std::forward<Args>(args)...);
+			return this->operator[](index);
+		}
+
+		/**
+		 * @brief set or overwrite an element by given index, if the element of the given index has not been constructed, construct it by args(destruct first)
+		 * @tparam Args args' type
+		 * @param index element's index_of
+		 * @param args args
+		*/
+		template<typename... Args>
+		constexpr reference set_or_overwrite(size_type index, Args&&... args) noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
+		{
+			erase_if_exist(index);
+			set(index, std::forward<Args>(args)...);
+			return this->operator[](index);
+		}
+
+		/**
+		 * @brief paste another ring_buffer's elements into this ring_buffer
+		*/
+		template<std::convertible_to<value_type> U, size_type N, typename Allocator>
+		constexpr void paste(const ring_buffer<U, N, Allocator>& other) noexcept(noexcept(set_or_overwrite(std::declval<size_type>(), std::declval<const_reference>())))
+		{
+			// we only copy parts of the same length, other parts do not provide any guarantee
+			for (size_type i = 0; i < std::min(max_size, ring_buffer<U, N, Allocator>::max_size); ++i)
+			{
+				if (other.exist(i))
+				{
+					// the elements of the current bit have been constructed
+					set_or_overwrite(i, other[i]);
+				}
+			}
+		}
+
+
 
 	private:
 		pointer								 buffer_;

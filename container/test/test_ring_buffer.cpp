@@ -22,44 +22,39 @@ TEST(TestRingBuffer, TestSetOrOverwrite)
 	ASSERT_EQ(buffer_i162[2], 42);
 	ASSERT_EQ(buffer_i162[4], 42);
 
-	// this will destroy the element at index 2, but since int is a trivial type, we can expect that the value here will not change (but there is no guarantee)
-	buffer_i162.set_or_overwrite(2);
-	EXPECT_EQ(buffer_i162[2], 42);
-	ASSERT_EQ(buffer_i162.size(), 2);
-
 	buffer_i162.set_or_overwrite(4, 123);
 	ASSERT_EQ(buffer_i162[4], 123);
-	ASSERT_EQ(buffer_i162.size(), 2);
+	ASSERT_EQ(buffer_i162.size(), 3);
 }
 
-TEST(TestRingBuffer, TestGetAndOperator)
+TEST(TestRingBuffer, TestGetOrSet)
 {
 	ring_buffer<double, 8> buffer_d8{};
 
-	ASSERT_DOUBLE_EQ(buffer_d8.get(0, 3.14), 3.14);
-	ASSERT_DOUBLE_EQ(buffer_d8.get(2, 3.14), 3.14);
-	ASSERT_DOUBLE_EQ(buffer_d8.get(4, 3.14), 3.14);
+	ASSERT_DOUBLE_EQ(buffer_d8.get_or_set(0, 3.14), 3.14);
+	ASSERT_DOUBLE_EQ(buffer_d8.get_or_set(2, 3.14), 3.14);
+	ASSERT_DOUBLE_EQ(buffer_d8.get_or_set(4, 3.14), 3.14);
 
 	ASSERT_DOUBLE_EQ(buffer_d8[0], 3.14);
 	ASSERT_DOUBLE_EQ(buffer_d8[2], 3.14);
 	ASSERT_DOUBLE_EQ(buffer_d8[4], 3.14);
 	ASSERT_EQ(buffer_d8.size(), 3);
 
-	// if the element of the given index has not been constructed, the behavior is undefined,
+	// if the element of the given index_of has not been constructed, the behavior is undefined,
 	// and it will not change the size of buffer
 	// EXPECT_DOUBLE_EQ(buffer_d8[1], 0.0);
 	// ASSERT_EQ(buffer_d8.size(), 3);
 }
 
-TEST(TestRingBuffer, TestIndexAndDistance)
+TEST(TestRingBuffer, TestIndexOfAndDistance)
 {
 	ring_buffer<char, 32>                 buffer_c10{};
-	const decltype(buffer_c10)::size_type mask = 32 - 1;
+	constexpr decltype(buffer_c10)::size_type mask = 32 - 1;
 
-	ASSERT_EQ(buffer_c10.index(1), 1 bitand mask);
-	ASSERT_EQ(buffer_c10.index(10), 10 bitand mask);
-	ASSERT_EQ(buffer_c10.index(100), 100 bitand mask);
-	ASSERT_EQ(buffer_c10.index(1000), 1000 bitand mask);
+	ASSERT_EQ(buffer_c10.index_of(1), 1 bitand mask);
+	ASSERT_EQ(buffer_c10.index_of(10), 10 bitand mask);
+	ASSERT_EQ(buffer_c10.index_of(100), 100 bitand mask);
+	ASSERT_EQ(buffer_c10.index_of(1000), 1000 bitand mask);
 
 	ASSERT_EQ(buffer_c10.distance(1, 10), (10 bitand mask) - (1 bitand mask));
 	ASSERT_EQ(buffer_c10.distance(1, 100), (100 bitand mask) - (1 bitand mask));
@@ -234,6 +229,6 @@ TEST(TestRingBuffer, TestEqual)
 	ASSERT_EQ(buffer_l16_2[2], 42);
 	ASSERT_EQ(buffer_l16_2[4], 42);
 
-	EXPECT_EQ(buffer_i16_1, buffer_l16_1);
-	EXPECT_NE(buffer_l16_1, buffer_l16_2);
+	ASSERT_EQ(buffer_i16_1, buffer_l16_1);
+	ASSERT_NE(buffer_l16_1, buffer_l16_2);
 }

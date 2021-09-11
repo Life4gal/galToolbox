@@ -3,12 +3,12 @@ project(container)
 set(
 		SOURCE
 		src/ring_buffer.hpp
-)
+		src/fifo.hpp)
 
 set(
 		TEST_SOURCE
 		test/test_ring_buffer.cpp
-)
+		test/test_fifo.cpp)
 
 add_executable(
 		${PROJECT_NAME}
