@@ -14,7 +14,7 @@ environment:
   GTEST_VERSION: 1.11.0
   CMAKE_GENERATOR: Visual Studio 16 2019
 
-before_build:
+#before_build:
     #- rm -r %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib
     #- mkdir %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib
 
