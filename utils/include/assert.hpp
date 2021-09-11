@@ -7,10 +7,10 @@
 
 namespace gal::toolbox::utils
 {
-	constexpr void assert(
+	constexpr void gal_assert(
 			bool cond,
-			std::string_view message = {"no detail"}
-			const std::source_location bitand location = std::source_location::current()
+			std::string_view message = {"no detail"},
+			const std::source_location& location = std::source_location::current()
 			) noexcept
 	{
 #ifndef NDEBUG
@@ -24,7 +24,7 @@ namespace gal::toolbox::utils
 		}
 
 		// the user wants to assert to be executed at runtime
-		if(not cond and g_open_assert_on_debug)
+		if(not cond)
 		{
 			// todo: output to other places, or you can specify the output location
 			std::cerr << std::format("[FILE: {} -> FUNCTION: {} -> LINE: {}] assert failed:  {}\n", location.file_name(), location.function_name(), location.line(), message);
@@ -33,4 +33,3 @@ namespace gal::toolbox::utils
 #endif
 	}
 }
-

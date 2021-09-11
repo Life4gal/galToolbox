@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "../src/ring_buffer.hpp"
+#include <ring_buffer.hpp>
 
 using namespace gal::toolbox::container;
 
