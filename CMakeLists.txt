@@ -7,3 +7,5 @@ project(
 )
 
 set(CMAKE_3RDPARTY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party")
+
+add_subdirectory(utils)
