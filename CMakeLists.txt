@@ -8,4 +8,7 @@ project(
 
 set(CMAKE_3RDPARTY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party")
 
+include(${CMAKE_3RDPARTY_PATH}/googletest/cmake/google-test.cmake)
+
 add_subdirectory(utils)
+add_subdirectory(container)

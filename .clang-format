@@ -20,11 +20,11 @@ AlwaysBreakBeforeMultilineStrings: true
 AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
-BreakBeforeBraces: Attach
+BreakBeforeBraces: Allman
 BraceWrapping:
-  AfterCaseLabel: false
+  AfterCaseLabel: true
   AfterClass: false
-  AfterControlStatement: Never
+  AfterControlStatement: Always
   AfterEnum: false
   AfterFunction: false
   AfterNamespace: false
