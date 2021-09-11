@@ -9,10 +9,8 @@
 
 ## Modern CPP first step: don't use macros
 
-## CMAKE not supported module yet, so we have to use MSVC now
-
 ### requirement:
-> linux: gcc version: gcc version 11.0.1 (experimental) (GCC) 
+> linux: gcc version: gcc version 11 (experimental)
 
 > windows: MSVC 19
 

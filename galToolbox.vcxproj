@@ -19,48 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\container\dynamic_bitset.ixx" />
-    <ClCompile Include="src\iterator\stride_iterator.ixx" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\container\fifo.ixx" />
-    <ClCompile Include="src\container\ring_buffer.ixx" />
-    <ClCompile Include="src\math\basic_operations.ixx" />
-    <ClCompile Include="src\math\basic_type_alias.ixx" />
-    <ClCompile Include="src\math\basic_type_concept.ixx" />
-    <ClCompile Include="src\math\basic_operations_math_apply.ixx" />
-    <ClCompile Include="src\math\basic_type.ixx" />
-    <ClCompile Include="src\math\basic_type_matrix.ixx" />
-    <ClCompile Include="src\math\basic_type_vector.ixx" />
-    <ClCompile Include="src\math\constants.ixx" />
-    <ClCompile Include="src\string\compile_time_matcher.ixx" />
-    <ClCompile Include="src\utils\assert.ixx" />
-    <ClCompile Include="src\utils\crtp.ixx" />
-    <ClCompile Include="src\utils\random.ixx" />
-    <ClCompile Include="src\utils\sequence_invoker.ixx" />
-    <ClCompile Include="src\utils\tuple_maker.ixx" />
-    <ClCompile Include="test\test_compile_time_matcher.cpp" />
-    <ClCompile Include="test\test_dynamic_bitset.cpp" />
-    <ClCompile Include="test\test_fifo.cpp" />
-    <ClCompile Include="test\test_basic_operations.cpp" />
-    <ClCompile Include="test\test_random.cpp" />
-    <ClCompile Include="test\test_ring_buffer.cpp" />
-    <ClCompile Include="test\test_sequence_invoker.cpp" />
-    <ClCompile Include="test\test_stride_iterator.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include=".gitignore" />
     <None Include="appveyor.yml" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\iterator\stride_iterator.hpp" />
-    <ClInclude Include="src\utils\sequence_invoker.hpp" />
-    <ClInclude Include="src\utils\tuple_maker.hpp" />
-    <ClInclude Include="src\string\compile_time_matcher.hpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="3rd-party\googletest\LICENSE.txt" />
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

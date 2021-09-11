@@ -9,51 +9,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\container\ring_buffer.ixx">
-      <Filter>queue</Filter>
-    </ClCompile>
-    <ClCompile Include="src\container\fifo.ixx">
-      <Filter>queue</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\assert.ixx" />
-    <ClCompile Include="src\utils\crtp.ixx" />
-    <ClCompile Include="test\test_ring_buffer.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="test\test_fifo.cpp" />
-    <ClCompile Include="src\utils\random.ixx" />
-    <ClCompile Include="test\test_dynamic_bitset.cpp" />
-    <ClCompile Include="src\container\dynamic_bitset.ixx" />
-    <ClCompile Include="test\test_compile_time_matcher.cpp" />
-    <ClCompile Include="src\string\compile_time_matcher.ixx" />
-    <ClCompile Include="test\test_random.cpp" />
-    <ClCompile Include="test\test_stride_iterator.cpp" />
-    <ClCompile Include="test\test_sequence_invoker.cpp" />
-    <ClCompile Include="test\test_basic_operations.cpp" />
-    <ClCompile Include="src\math\basic_type_vector.ixx" />
-    <ClCompile Include="src\iterator\stride_iterator.ixx" />
-    <ClCompile Include="src\utils\tuple_maker.ixx" />
-    <ClCompile Include="src\utils\sequence_invoker.ixx" />
-    <ClCompile Include="src\math\basic_type.ixx" />
-    <ClCompile Include="src\math\basic_type_matrix.ixx" />
-    <ClCompile Include="src\math\basic_operations.ixx" />
-    <ClCompile Include="src\math\basic_operations_math_apply.ixx" />
-    <ClCompile Include="src\math\basic_type_alias.ixx" />
-    <ClCompile Include="src\math\basic_type_concept.ixx" />
-    <ClCompile Include="src\math\constants.ixx" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include=".gitignore" />
     <None Include="ReadMe.md" />
     <None Include="UNLICENSE" />
     <None Include="appveyor.yml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\string\compile_time_matcher.hpp" />
-    <ClInclude Include="src\utils\tuple_maker.hpp" />
-    <ClInclude Include="src\iterator\stride_iterator.hpp" />
-    <ClInclude Include="src\utils\sequence_invoker.hpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="3rd-party\googletest\LICENSE.txt" />
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>
