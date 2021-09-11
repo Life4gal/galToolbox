@@ -4,7 +4,7 @@ import <type_traits>;
 
 import gal.toolbox.utils.sequence_invoker;
 
-import gal.toolbox.math.basic_type;
+export import gal.toolbox.math.basic_type;
 
 namespace gal::toolbox::math
 {

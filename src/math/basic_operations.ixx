@@ -6,9 +6,7 @@ import <utility>;
 
 import gal.toolbox.utils.tuple_maker;
 
-export import gal.toolbox.math.basic_type;
-
-import :math_apply;
+export import :math_apply;
 
 namespace gal::toolbox::math
 {
