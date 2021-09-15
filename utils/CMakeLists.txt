@@ -1,14 +1,14 @@
 project(utils)
 
 set(
-		CONTAINER_INCLUDE_DIR
+		INCLUDE_DIR
 		${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 set(
 		SOURCE
-		${CONTAINER_INCLUDE_DIR}/${TOOLBOX_PREFIX}/assert.hpp
-		${CONTAINER_INCLUDE_DIR}/${TOOLBOX_PREFIX}/random.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/assert.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/random.hpp
 )
 
 add_library(
@@ -18,7 +18,7 @@ add_library(
 target_include_directories(
 		${PROJECT_NAME} INTERFACE
 		${SOURCE}
-		$<BUILD_INTERFACE:${CONTAINER_INCLUDE_DIR}>
+		$<BUILD_INTERFACE:${INCLUDE_DIR}>
 		$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${PROJECT_NAME}-${PROJECT_VERSION}>
 )
 

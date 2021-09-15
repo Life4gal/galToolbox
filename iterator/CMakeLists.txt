@@ -1,4 +1,4 @@
-project(container)
+project(iterator)
 
 set(
 		INCLUDE_DIR
@@ -7,9 +7,8 @@ set(
 
 set(
 		SOURCE
-		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/ring_buffer.hpp
-		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/fifo.hpp
-		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/dynamic_bitset.hpp)
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/stride_iterator.hpp
+)
 
 add_library(
 		${PROJECT_NAME} INTERFACE
@@ -25,4 +24,9 @@ target_include_directories(
 target_compile_features(
 		${PROJECT_NAME} INTERFACE
 		cxx_std_20
+)
+
+target_link_libraries(
+		${PROJECT_NAME} INTERFACE
+		utils
 )
