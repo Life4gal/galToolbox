@@ -5,7 +5,7 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "ring_buffer.hpp"
+#include <gal/ring_buffer.hpp>
 
 namespace gal::toolbox::container
 {
@@ -144,7 +144,8 @@ namespace gal::toolbox::container
 		 * for more detail, see `pop` with two arguments
 		 * @return pop success or not
 		*/
-		bool pop(time_type wait_milliseconds_time = 0) requires std::is_default_constructible_v<value_tye>
+		bool pop(time_type wait_milliseconds_time = 0)
+				requires std::is_default_constructible_v<value_tye>
 		{
 			static value_tye dummy{};
 			return pop(dummy, wait_milliseconds_time);

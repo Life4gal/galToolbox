@@ -6,6 +6,8 @@
 #include <ranges>
 #include <type_traits>
 
+#include <gal/assert.hpp>
+
 namespace gal::toolbox::container
 {
 	/**
@@ -37,6 +39,7 @@ namespace gal::toolbox::container
 		constexpr ring_buffer() noexcept : buffer_(allocator_trait_type::allocate(allocator_, max_size)) {}
 
 		template<std::size_t... I, typename... Args>
+		requires (sizeof...(I) <= max_size)
 		constexpr explicit ring_buffer(std::index_sequence<I...>, Args&&... args)
 			: ring_buffer()
 		{
@@ -167,6 +170,7 @@ namespace gal::toolbox::container
 		*/
 		constexpr reference operator[](size_type index) noexcept
 		{
+			utils::gal_assert(exist(index), "dereference a element which has not been constructed is undefined behavior")
 			return buffer_[index_of(index)];
 		}
 
@@ -178,6 +182,7 @@ namespace gal::toolbox::container
 		*/
 		constexpr const_reference operator[](size_type index) const noexcept
 		{
+			utils::gal_assert(exist(index), "dereference a element which has not been constructed is undefined behavior")
 			return buffer_[index_of(index)];
 		}
 
