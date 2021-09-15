@@ -9,6 +9,8 @@ set(
 		SOURCE
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/assert.hpp
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/random.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/sequence_invoker.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/tuple_maker.hpp
 )
 
 add_library(

@@ -170,7 +170,7 @@ namespace gal::toolbox::container
 		*/
 		constexpr reference operator[](size_type index) noexcept
 		{
-			utils::gal_assert(exist(index), "dereference a element which has not been constructed is undefined behavior")
+			utils::gal_assert(exist(index), "dereference a element which has not been constructed is undefined behavior");
 			return buffer_[index_of(index)];
 		}
 
@@ -182,7 +182,7 @@ namespace gal::toolbox::container
 		*/
 		constexpr const_reference operator[](size_type index) const noexcept
 		{
-			utils::gal_assert(exist(index), "dereference a element which has not been constructed is undefined behavior")
+			utils::gal_assert(exist(index), "dereference a element which has not been constructed is undefined behavior");
 			return buffer_[index_of(index)];
 		}
 
