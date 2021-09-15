@@ -1,4 +1,4 @@
-project(string)
+project(math)
 
 set(
 		INCLUDE_DIR
@@ -7,7 +7,11 @@ set(
 
 set(
 		SOURCE
-		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/compile_time_matcher.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/math_fwd.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/vector.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/matrix.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/math_apply.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/basic_operations.hpp
 )
 
 add_library(
@@ -24,4 +28,9 @@ target_include_directories(
 target_compile_features(
 		${PROJECT_NAME} INTERFACE
 		cxx_std_20
+)
+
+target_link_libraries(
+		${PROJECT_NAME} INTERFACE
+		utils
 )
