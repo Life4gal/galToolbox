@@ -6,7 +6,7 @@ set(
 		src/test_fifo.cpp
 		src/test_random.cpp
 		src/test_dynamic_bitset.cpp
-		src/test_stride_iterator.cpp src/test_sequence_invoker.cpp)
+		src/test_stride_iterator.cpp src/test_sequence_invoker.cpp src/test_compile_time_matcher.cpp)
 
 add_executable(
 		${PROJECT_NAME}
@@ -27,4 +27,5 @@ target_link_libraries(
 		container
 		utils
 		iterator
+		string
 )
