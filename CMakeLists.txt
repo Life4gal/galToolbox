@@ -6,12 +6,18 @@ project(
 		LANGUAGES CXX
 )
 
-set(CMAKE_3RDPARTY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rd-party")
-
+set(CMAKE_3RDPARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
 include(${CMAKE_3RDPARTY_PATH}/googletest/cmake/google-test.cmake)
+
+set(
+		TOOLBOX_PREFIX
+		gal
+)
 
 add_subdirectory(utils)
 add_subdirectory(container)
+
+add_subdirectory(test)
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 	message(

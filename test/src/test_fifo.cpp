@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <fifo.hpp>
+#include <gal/fifo.hpp>
 
 using namespace gal::toolbox::container;
 

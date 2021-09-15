@@ -2,7 +2,7 @@ version: '{build}-{branch}'
 
 branches:
   only:
-  - master
+    - master
 
 image: Visual Studio 2019
 
@@ -11,28 +11,15 @@ configuration: Release
 platform: x64
 
 environment:
-  GTEST_VERSION: 1.11.0
   CMAKE_GENERATOR: Visual Studio 16 2019
+  BUILD_FOLDER: build
 
-#before_build:
-    #- rm -r %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib
-    #- mkdir %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib
-
-    #- curl -fsSL -o release-%GTEST_VERSION%.zip https://github.com/google/googletest/archive/release-%GTEST_VERSION%.zip
-    #- unzip -q release-%GTEST_VERSION%.zip
-    #- cd googletest-release-%GTEST_VERSION%
-
-    #- mkdir build
-    #- cd build
-
-    #- cmake -G "%CMAKE_GENERATOR%" ..
-    #- cmake --build . --config Release -- /m
-
-    #- copy lib\Release\gtest.lib %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib\
-    #- copy lib\Release\gtest_main.lib %APPVEYOR_BUILD_FOLDER%\3rd-party\googletest\lib\
-    #- cd %APPVEYOR_BUILD_FOLDER%
-
+before_build:
+  - mkdir %BUILD_FOLDER%
+  - cd %BUILD_FOLDER%
+  - cmake -G "%CMAKE_GENERATOR%" ..
+  
 build:
-  project: galToolbox.sln
+  project: %BUILD_FOLDER%/galToolbox.sln
   parallel: true
   verbosity: normal

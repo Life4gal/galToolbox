@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <dynamic_bitset.hpp>
+#include <gal/dynamic_bitset.hpp>
 #include <bitset>
 
 using namespace gal::toolbox::container;

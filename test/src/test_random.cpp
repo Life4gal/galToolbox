@@ -4,7 +4,7 @@
 #include <iostream>
 #include <random>
 
-#include "../src/random.hpp"
+#include <gal/random.hpp>
 
 TEST(TestRandom, TestAllEngine)
 {
