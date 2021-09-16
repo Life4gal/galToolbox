@@ -1,8 +1,8 @@
 version: '{build}-{branch}'
 
 branches:
-  only:
-    - master
+    only:
+        - master
 
 image: Visual Studio 2019
 
@@ -11,16 +11,15 @@ configuration: Release
 platform: x64
 
 environment:
-  CMAKE_GENERATOR: Visual Studio 16 2019
-  BUILD_FOLDER: build
+    CMAKE_GENERATOR: Visual Studio 16 2019
+    BUILD_FOLDER: build
 
 before_build:
-  - mkdir %BUILD_FOLDER%
-  - cd %BUILD_FOLDER%
-  - cmake -G "%CMAKE_GENERATOR%" ..
-  - cd ..
+    - mkdir %BUILD_FOLDER%
+    - cd %BUILD_FOLDER%
+    - cmake -G "%CMAKE_GENERATOR%" ..
 
 build:
-  project: %BUILD_FOLDER%/galToolbox.sln
-  parallel: true
-  verbosity: normal
+    project: galToolbox.sln
+    parallel: true
+    verbosity: normal
