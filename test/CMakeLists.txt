@@ -9,7 +9,8 @@ set(
 		src/test_stride_iterator.cpp
 		src/test_sequence_invoker.cpp
 		src/test_compile_time_matcher.cpp
-		src/test_basic_operations.cpp)
+		src/test_basic_operations.cpp
+		src/test_trigonometric_operations.cpp)
 
 add_executable(
 		${PROJECT_NAME}

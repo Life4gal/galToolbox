@@ -12,6 +12,8 @@ set(
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/matrix.hpp
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/math_apply.hpp
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/basic_operations.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/constants.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/trigonometric_operations.hpp
 )
 
 add_library(
