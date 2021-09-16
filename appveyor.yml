@@ -22,4 +22,4 @@ before_build:
 build:
     project: build/galToolbox.sln # cannot use %BUILD_FOLDER%/galToolbox.sln
     parallel: true
-    verbosity: normal
+    verbosity: minimal
