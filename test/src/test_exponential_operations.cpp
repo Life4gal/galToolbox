@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include <gal/constants.hpp>
 #include <gal/basic_operations.hpp>
-#include <gal/numeric_and_algorithm.hpp>
+#include <gal/constants.hpp>
 #include <gal/exponential_operations.hpp>
+#include <gal/numeric_and_algorithm.hpp>
 
 using namespace gal::toolbox::math;
 

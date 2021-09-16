@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include <gal/basic_operations.hpp>
-#include <ranges>
 
 using namespace gal::toolbox::math;
 
@@ -1068,25 +1069,25 @@ TEST(TestMathOperations, TestOperatorGreaterAndLess)
 	static_assert(vec63[2]);
 }
 
-//TEST(TestMathOperations, TestRanges)
-//{
-//	constexpr vector3<unsigned> vec1{123, 456, 789};
-//	constexpr vector3<unsigned> vec2{123, 123, 123};
-//
-//	constexpr matrix2x3<int>	mat1{vec1, vec2};
-//	constexpr matrix2x3<int>	mat2{vec2, vec1};
-//
-//	static_assert(std::ranges::all_of(vec1, [](const int i)
-//									  { return i > 100; }));
-//	static_assert(std::ranges::any_of(vec1, [](const int i)
-//									  { return i > 456; }));
-//	static_assert(std::ranges::none_of(vec2, [](const int i)
-//									   { return i > 123; }));
-//
-//	static_assert(std::ranges::all_of(mat1, [](const int i)
-//									  { return i > 100; }));
-//	static_assert(std::ranges::any_of(mat1, [](const int i)
-//									  { return i > 456; }));
-//	static_assert(std::ranges::none_of(mat2, [](const int i)
-//									   { return i > 789; }));
-//}
+TEST(TestMathOperations, TestRanges)
+{
+	constexpr vector3<unsigned> vec1{123, 456, 789};
+	constexpr vector3<unsigned> vec2{123, 123, 123};
+
+	constexpr matrix2x3<int>	mat1{vec1, vec2};
+	constexpr matrix2x3<int>	mat2{vec2, vec1};
+
+	static_assert(std::ranges::all_of(vec1, [](const int i)
+									  { return i > 100; }));
+	static_assert(std::ranges::any_of(vec1, [](const int i)
+									  { return i > 456; }));
+	static_assert(std::ranges::none_of(vec2, [](const int i)
+									   { return i > 123; }));
+
+	static_assert(std::ranges::all_of(mat1, [](const int i)
+									  { return i > 100; }));
+	static_assert(std::ranges::any_of(mat1, [](const int i)
+									  { return i > 456; }));
+	static_assert(std::ranges::none_of(mat2, [](const int i)
+									   { return i > 789; }));
+}

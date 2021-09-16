@@ -18,7 +18,8 @@ before_build:
   - mkdir %BUILD_FOLDER%
   - cd %BUILD_FOLDER%
   - cmake -G "%CMAKE_GENERATOR%" ..
-  
+  - cd ..
+
 build:
   project: %BUILD_FOLDER%/galToolbox.sln
   parallel: true
