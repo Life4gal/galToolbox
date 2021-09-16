@@ -16,6 +16,7 @@ set(
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/trigonometric_operations.hpp
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/numeric_and_algorithm.hpp
 		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/exponential_operations.hpp
+		${INCLUDE_DIR}/${TOOLBOX_PREFIX}/geometric_operations.hpp
 )
 
 add_library(
