@@ -21,6 +21,19 @@ add_executable(
 		main.cpp
 )
 
+# todo: https://github.com/microsoft/STL/issues/1814
+# it seems that the generated sln does not set <LanguageStandard>
+# and <format> and <ranges> requires /std:latest
+if(MSVC)
+#	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129)
+#		set(CMAKE_CXX20_STANDARD_COMPILE_OPTION "-std:c++20")
+#		set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std:c++20")
+#	elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.12.25835)
+		set(CMAKE_CXX20_STANDARD_COMPILE_OPTION "-std:c++latest")
+#		set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std:c++latest")
+#	endif(CMAKE_CXX_COMPILER_VERSION)
+endif(MSVC)
+
 set_target_properties(
 		${PROJECT_NAME}
 		PROPERTIES CXX_STANDARD 20
