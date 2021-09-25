@@ -1,6 +1,5 @@
 # A toolbox base on cxx20
 
-![Build status](https://img.shields.io/appveyor/build/Life4gal/galToolbox?label=AppVeyor-Build&style=for-the-badge)
 ![Code Size](https://img.shields.io/github/languages/code-size/life4gal/galToolbox?style=for-the-badge)
 ![Watchers](https://img.shields.io/github/watchers/life4gal/galToolbox?style=for-the-badge)
 
