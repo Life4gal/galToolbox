@@ -1,63 +1,114 @@
-project(test)
+project(galToolboxTest)
 
+# global set, locally set use no CMAKE_ version
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# TEST
 set(
-		SOURCE
+		TEST_CONTAINER_SOURCE
 		src/test_ring_buffer.cpp
 		src/test_fifo.cpp
-		src/test_random.cpp
 		src/test_dynamic_bitset.cpp
-		src/test_stride_iterator.cpp
-		src/test_sequence_invoker.cpp
-		src/test_compile_time_matcher.cpp
-		src/test_basic_operations.cpp
-		src/test_trigonometric_operations.cpp
-		src/test_exponential_operations.cpp
-		src/test_geometric_operations.cpp
 )
+
+set(
+		TEST_UTILS_SOURCE
+		src/test_random.cpp
+		src/test_sequence_invoker.cpp
+)
+
+set(
+		TEST_STRING_SOURCE
+		src/test_compile_time_matcher.cpp
+)
+
+set(
+		TEST_ITERATOR_SOURCE
+		src/test_stride_iterator.cpp
+)
+
+# todo: pending test -> too many warnings (become errors)
+#set(
+#		TEST_MATH_SOURCE
+#		src/test_basic_operations.cpp
+#		src/test_trigonometric_operations.cpp
+#		src/test_exponential_operations.cpp
+#		src/test_geometric_operations.cpp
+#)
 
 add_executable(
 		${PROJECT_NAME}
-		${SOURCE}
-		main.cpp
+		${TEST_CONTAINER_SOURCE}
+		${TEST_UTILS_SOURCE}
+		${TEST_STRING_SOURCE}
+		${TEST_ITERATOR_SOURCE}
+#		${TEST_MATH_SOURCE}
 )
 
-## todo: https://github.com/microsoft/STL/issues/1814
-## it seems that the generated sln does not set <LanguageStandard>
-## and <format> and <ranges> requires /std:latest
-#if(MSVC)
-##	if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129)
-##		set(CMAKE_CXX20_STANDARD_COMPILE_OPTION "-std:c++20")
-##		set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std:c++20")
-##	elseif(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.12.25835)
-#		set(CMAKE_CXX20_STANDARD_COMPILE_OPTION "-std:c++latest")
-##		set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std:c++latest")
-##	endif(CMAKE_CXX_COMPILER_VERSION)
-#endif(MSVC)
+set(CMAKE_CXX_STANDARD 20)
 
-# it seems that using this will solve the problem
-#if (MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND CMAKE_VERSION VERSION_GREATER 3.20.3)
-	# this change happened in CMake 3.20.4
-#	set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-#	message("Using MSVC with CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}, CMAKE_VERSION: ${CMAKE_VERSION} and CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
-#else ()
-#	set(CMAKE_CXX_STANDARD 20) # /std:c++latest for msvc and -std=c++20 for everyone else.
-#	message("Using MSVC with CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}, CMAKE_VERSION: ${CMAKE_VERSION} and CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
-#endif (MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND CMAKE_VERSION VERSION_GREATER 3.20.3)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+	message("Setting build type to 'RelWithDebInfo' as none was specified.")
+	set(
+			CMAKE_BUILD_TYPE RelWithDebInfo
+			CACHE STRING "Choose the type of build." FORCE
+	)
+	set_property(
+			CMAKE_BUILD_TYPE
+			PROPERTY CACHE
+			STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo"
+	)
+else()
+	message("Current build type is: ${CMAKE_BUILD_TYPE}")
+endif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 
-set_target_properties(
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	target_compile_options(
+			${PROJECT_NAME}
+			PRIVATE
+			$<$<CXX_COMPILER_ID:MSVC>:/MDd /Zi /Ob0 /Od /RTC1 /W4 /WX>
+			$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O0 -g -Wall -Wextra -Wpedantic -Werror>
+	)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+	target_compile_options(
+			${PROJECT_NAME}
+			PRIVATE
+			$<$<CXX_COMPILER_ID:MSVC>:/MD /O2 /Ob2 /DNDEBUG /W4 /WX>
+			$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O3 -DNDEBUG -Wall -Wextra -Wpedantic -Werror>
+	)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+	target_compile_options(
+			${PROJECT_NAME}
+			PRIVATE
+			$<$<CXX_COMPILER_ID:MSVC>:/MD /O1 /Ob1 /DNDEBUG /W4 /WX>
+			$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Os -DNDEBUG -Wall -Wextra -Wpedantic -Werror>
+	)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	target_compile_options(
+			${PROJECT_NAME}
+			PRIVATE
+			$<$<CXX_COMPILER_ID:MSVC>:/MD /Zi /O2 /Ob1 /DNDEBUG /W4 /WX>
+			$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O2 -g -DNDEBUG -Wall -Wextra -Wpedantic -Werror>
+	)
+else()
+	message(FATAL_ERROR "Unsupported build type")
+endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+
+add_dependencies(
 		${PROJECT_NAME}
-		PROPERTIES
-		CXX_STANDARD 20
-		OUTPUT_NAME ${PROJECT_NAME}
+		galToolbox
+		gtest_main
 )
 
 target_link_libraries(
 		${PROJECT_NAME}
 		PRIVATE
+		galToolbox
 		gtest_main
-		container
-		utils
-		iterator
-		string
-		math
 )
+
+# for gtest_discover_tests
+include(GoogleTest)
+gtest_discover_tests(${PROJECT_NAME})

@@ -2,10 +2,10 @@
 
 #include <array>
 
-#include <gal/tuple_maker.hpp>
-#include <gal/stride_iterator.hpp>
+#include <utils/tuple_maker.hpp>
+#include <iterator/stride_iterator.hpp>
 
-#include <gal/math_fwd.hpp>
+#include <math/math_fwd.hpp>
 
 namespace gal::toolbox::utils
 {

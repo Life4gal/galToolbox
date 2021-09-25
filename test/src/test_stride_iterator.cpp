@@ -2,7 +2,7 @@
 
 #include <ranges>
 #include <array>
-#include <gal/stride_iterator.hpp>
+#include <iterator/stride_iterator.hpp>
 
 using namespace gal::toolbox::iterator;
 

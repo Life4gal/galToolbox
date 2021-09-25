@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <gal/geometric_operations.hpp>
+#include <math/geometric_operations.hpp>
 
 using namespace gal::toolbox::math;
 

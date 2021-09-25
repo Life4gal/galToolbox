@@ -2,7 +2,8 @@
 
 #include <algorithm>
 
-#include <gal/basic_operations.hpp>
+#include <math/math_fwd.hpp>
+#include <math/basic_operations.hpp>
 
 using namespace gal::toolbox::math;
 

@@ -1,30 +1,60 @@
 cmake_minimum_required(VERSION 3.13...3.20)
 
+set(
+		GALTOOLBOX_MAJOR_VERSION
+		0
+)
+
+set(
+		GALTOOLBOX_MINOR_VERSION
+		0
+)
+
+set(
+		GALTOOLBOX_PATCH_VERSION
+		6
+)
+
+set(
+		GALTOOLBOX_VERSION
+		${GALTOOLBOX_MAJOR_VERSION}.${GALTOOLBOX_MINOR_VERSION}.${GALTOOLBOX_PATCH_VERSION}
+)
+
 project(
 		galToolbox
-		VERSION 0.0.5
+		VERSION ${GALTOOLBOX_VERSION}
 		LANGUAGES CXX
 )
 
-set(CMAKE_3RDPARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/3rd-party)
-include(${CMAKE_3RDPARTY_PATH}/googletest/cmake/google-test.cmake)
+set(GALTOOLBOX_GLOBAL_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(GALTOOLBOX_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(
-		TOOLBOX_PREFIX
-		gal
+add_library(${PROJECT_NAME} INTERFACE)
+
+target_include_directories(
+		${PROJECT_NAME}
+		INTERFACE
+		${PROJECT_SOURCE_DIR}/include
 )
 
-add_subdirectory(utils)
-add_subdirectory(container)
-add_subdirectory(iterator)
-add_subdirectory(string)
-add_subdirectory(math)
+target_compile_options(
+		${PROJECT_NAME}
+		INTERFACE
+		$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest /W4 /WX>
+		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-std=c++20 -Wall -Wextra -Wpedantic -Werror>
+)
 
-add_subdirectory(test)
+option(
+		GALTOOLBOX_NEED_BUILD_TEST
+		"build galToolbox test cases"
+		ON
+)
 
-if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
-	message(
-			FATAL_ERROR
-			"In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
-	)
-endif()
+if(${GALTOOLBOX_NEED_BUILD_TEST})
+	include(${GALTOOLBOX_MODULE_PATH}/prepare-3rd-party.cmake)
+	# enable test
+	enable_testing()
+	# Include google test
+	include(${GOOGLE_TEST_PATH}/google-test.cmake)
+	add_subdirectory(test)
+endif(${GALTOOLBOX_NEED_BUILD_TEST})

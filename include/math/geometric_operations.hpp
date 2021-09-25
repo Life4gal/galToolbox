@@ -1,12 +1,12 @@
 #pragma once
 
-#include <gal/basic_operations.hpp>
-#include <gal/exponential_operations.hpp>
-#include <gal/math_apply.hpp>
-#include <gal/math_fwd.hpp>
-#include <gal/matrix.hpp>
-#include <gal/numeric_and_algorithm.hpp>
-#include <gal/vector.hpp>
+#include <math/basic_operations.hpp>
+#include <math/exponential_operations.hpp>
+#include <math/math_apply.hpp>
+#include <math/math_fwd.hpp>
+#include <math/matrix.hpp>
+#include <math/numeric_and_algorithm.hpp>
+#include <math/vector.hpp>
 
 namespace gal::toolbox::math
 {

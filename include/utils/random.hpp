@@ -74,12 +74,12 @@ namespace gal::toolbox::utils
 
 		constexpr result_type operator()() noexcept
 		{
-			seed_ += 0x9e3779b97f4a7c15; // 1001111000110111011110011011100101111111010010101000000000000000
+			seed_ += static_cast<result_type>(0x9e3779b97f4a7c15); // 1001111000110111011110011011100101111111010010101000000000000000
 
 			auto z = seed_;
-			z      = (z xor (z >> 30)) * 0xbf58476d1ce4e5b9;
+			z      = static_cast<result_type>((z xor (z >> 30)) * 0xbf58476d1ce4e5b9);
 			// 1011111101011000010001110110110100011100111001001110100000000000
-			z = (z xor (z >> 27)) * 0x94d049bb133111eb;
+			z = static_cast<result_type>((z xor (z >> 27)) * 0x94d049bb133111eb);
 			// 1001010011010000010010011011101100010011001100010001000000000000
 			return z xor (z >> 31);
 		}

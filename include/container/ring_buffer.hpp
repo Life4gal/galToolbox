@@ -6,7 +6,7 @@
 #include <ranges>
 #include <type_traits>
 
-#include <gal/assert.hpp>
+#include <utils/assert.hpp>
 
 namespace gal::toolbox::container
 {
@@ -204,10 +204,24 @@ namespace gal::toolbox::container
 		template<typename... Args>
 		constexpr void set(size_type index, Args&&... args) noexcept(std::is_nothrow_constructible_v<value_type, Args...>)
 		{
+//			index = index_of(index);
+//			allocator_trait_type::construct(allocator_,
+//											buffer_ + index,
+//											std::forward<Args>(args)...);
+//
+//			bit_checker_.set(index);
+			value_type v{std::forward<Args>(args)...};
+			this->set(index, std::move(v));
+		}
+
+		template<std::convertible_to<value_type> F>
+		constexpr void set(size_type index, F&& f) noexcept(std::is_nothrow_convertible_v<T, value_type>)
+		{
 			index = index_of(index);
 			allocator_trait_type::construct(allocator_,
 											buffer_ + index,
-											std::forward<Args>(args)...);
+											static_cast<value_type>(std::forward<F>(f)));
+
 			bit_checker_.set(index);
 		}
 

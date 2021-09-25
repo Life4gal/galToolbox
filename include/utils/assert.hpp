@@ -27,7 +27,11 @@ namespace gal::toolbox::utils
 		if(not cond)
 		{
 			// todo: output to other places, or you can specify the output location
-			std::cerr << std::format("[FILE: {} -> FUNCTION: {} -> LINE: {}] assert failed:  {}\n", location.file_name(), location.function_name(), location.line(), message);
+			std::cerr << std::format("[FILE: {} -> FUNCTION: {} -> LINE: {}] assert failed: {}\n", location.file_name(), location.function_name(), location.line(), message);
+//			std::cerr << "[FILE: " << location.file_name() <<
+//					" -> FUNCTION: " << location.function_name() <<
+//					" -> LINE: " << location.line() <<
+//					"] assert failed: " << message << std::endl;
 			std::exit(-1);
 		}
 #endif

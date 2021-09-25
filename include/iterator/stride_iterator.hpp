@@ -1,6 +1,6 @@
 #pragma once
 
-#include <gal/assert.hpp>
+#include <utils/assert.hpp>
 
 namespace gal::toolbox::iterator
 {

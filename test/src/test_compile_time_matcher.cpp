@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <gal/compile_time_matcher.hpp>
+#include <string/compile_time_matcher.hpp>
 
 using namespace gal::toolbox::string;
 using namespace gal::toolbox::string::literals;

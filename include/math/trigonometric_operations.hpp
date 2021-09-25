@@ -2,10 +2,10 @@
 
 #include<cmath>
 
-#include <gal/math_fwd.hpp>
-#include <gal/vector.hpp>
-#include <gal/matrix.hpp>
-#include <gal/math_apply.hpp>
+#include <math/math_fwd.hpp>
+#include <math/vector.hpp>
+#include <math/matrix.hpp>
+#include <math/math_apply.hpp>
 
 namespace gal::toolbox::math
 {

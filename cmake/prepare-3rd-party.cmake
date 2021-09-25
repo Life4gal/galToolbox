@@ -1,0 +1,9 @@
+set(
+		GALTOOLBOX_3RDPARTY_PATH
+		${GALTOOLBOX_GLOBAL_SOURCE_PATH}/3rd-party
+)
+
+set(
+		GOOGLE_TEST_PATH
+		${GALTOOLBOX_3RDPARTY_PATH}/googletest/cmake
+)

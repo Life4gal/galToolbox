@@ -2,10 +2,10 @@
 
 #include <array>
 
-#include <gal/tuple_maker.hpp>
+#include <utils/tuple_maker.hpp>
 
-#include <gal/math_fwd.hpp>
-#include <gal/vector.hpp>
+#include <math/math_fwd.hpp>
+#include <math/vector.hpp>
 
 namespace gal::toolbox::utils
 {

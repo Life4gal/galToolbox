@@ -1,10 +1,10 @@
 #pragma once
 
-#include <gal/sequence_invoker.hpp>
+#include <utils/sequence_invoker.hpp>
 
-#include <gal/math_fwd.hpp>
-#include <gal/vector.hpp>
-#include <gal/matrix.hpp>
+#include <math/math_fwd.hpp>
+#include <math/vector.hpp>
+#include <math/matrix.hpp>
 
 namespace gal::toolbox::math
 {

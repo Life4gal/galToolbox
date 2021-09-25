@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <gal/constants.hpp>
-#include <gal/trigonometric_operations.hpp>
+#include <math/constants.hpp>
+#include <math/trigonometric_operations.hpp>
 
 using namespace gal::toolbox::math;
 

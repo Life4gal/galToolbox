@@ -2,9 +2,9 @@
 
 #include <cfloat>
 
-#include <gal/tuple_maker.hpp>
+#include <utils/tuple_maker.hpp>
 
-#include <gal/math_apply.hpp>
+#include <math/math_apply.hpp>
 
 namespace gal::toolbox::math
 {

@@ -5,7 +5,7 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <gal/ring_buffer.hpp>
+#include <container/ring_buffer.hpp>
 
 namespace gal::toolbox::container
 {
