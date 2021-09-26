@@ -29,22 +29,12 @@ set(
 		src/test_stride_iterator.cpp
 )
 
-# todo: pending test -> too many warnings (become errors)
-#set(
-#		TEST_MATH_SOURCE
-#		src/test_basic_operations.cpp
-#		src/test_trigonometric_operations.cpp
-#		src/test_exponential_operations.cpp
-#		src/test_geometric_operations.cpp
-#)
-
 add_executable(
 		${PROJECT_NAME}
 		${TEST_CONTAINER_SOURCE}
 		${TEST_UTILS_SOURCE}
 		${TEST_STRING_SOURCE}
 		${TEST_ITERATOR_SOURCE}
-#		${TEST_MATH_SOURCE}
 )
 
 set(CMAKE_CXX_STANDARD 20)
