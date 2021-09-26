@@ -22,6 +22,7 @@ set(
 set(
 		TEST_STRING_SOURCE
 		src/test_compile_time_matcher.cpp
+		src/test_string_pool.cpp
 )
 
 set(
