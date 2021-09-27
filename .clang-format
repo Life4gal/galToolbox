@@ -23,19 +23,19 @@ BinPackParameters: false
 BreakBeforeBraces: Allman
 BraceWrapping:
   AfterCaseLabel: true
-  AfterClass: false
+  AfterClass: true
   AfterControlStatement: Always
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
   AfterStruct: true
-  AfterUnion: false
-  BeforeCatch: false
-  BeforeElse: false
-  IndentBraces: false
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: true
   SplitEmptyFunction: false
-  SplitEmptyNamespace: true
-  SplitEmptyRecord: true
+  SplitEmptyNamespace: false
+  SplitEmptyRecord: false
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon

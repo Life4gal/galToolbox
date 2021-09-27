@@ -30,12 +30,18 @@ set(
 		src/test_stride_iterator.cpp
 )
 
+set(
+		TEST_MATH_SOURCE
+		src/test_math.cpp
+)
+
 add_executable(
 		${PROJECT_NAME}
 		${TEST_CONTAINER_SOURCE}
 		${TEST_UTILS_SOURCE}
 		${TEST_STRING_SOURCE}
 		${TEST_ITERATOR_SOURCE}
+		${TEST_MATH_SOURCE}
 )
 
 set(CMAKE_CXX_STANDARD 20)
