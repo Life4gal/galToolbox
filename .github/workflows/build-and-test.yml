@@ -15,8 +15,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                #os: [ubuntu-latest, windows-latest, macos-latest]
-                os: [windows-latest] # only msvc support all cxx20 feature we need now!
+                os: [ubuntu-latest, windows-latest, macos-latest]
+#                os: [windows-latest] # only msvc support all cxx20 feature we need now!
                 configuration:
                     - Debug
                     - Release

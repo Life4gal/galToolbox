@@ -1,8 +1,24 @@
 #pragma once
 
+#if !__has_include(<emmintrin.h>) ||   \
+	!__has_include(<xmmintrin.h>) ||   \
+	!__has_include(<pmmintrin.h>) ||   \
+	!__has_include(<smmintrin.h>) ||   \
+	!__has_include(<immintrin.h>)
+#define GALTOOLBOX_MATH_NOT_SUPPOTED
+#endif
+
+#ifndef GALTOOLBOX_MATH_NOT_SUPPOTED
+
 // SSE
 #include <emmintrin.h>
 #include <xmmintrin.h>
+// SSE3
+#include <pmmintrin.h>
+// SSE4
+#include <smmintrin.h>
+// AVX
+#include <immintrin.h>
 
 #include <cfloat>
 #include <cmath>
@@ -18,48 +34,76 @@ namespace gal::toolbox::math
 		// for operations
 		//=======================================================
 		using vector = __m128;
+
+		static_assert(std::alignment_of_v<vector> == 16);
+		constexpr static std::size_t math_type_alignment = std::alignment_of_v<vector>;
+
 		template<typename T>
-		struct alignas(16) generic_vector;
+		struct alignas(math_type_alignment) generic_vector;
 		using f32_vector = generic_vector<float>;
 		using i32_vector = generic_vector<std::int32_t>;
 		using u8_vector	 = generic_vector<std::uint8_t>;
 		using u32_vector = generic_vector<std::uint32_t>;
-		struct alignas(16) matrix;
+		struct alignas(math_type_alignment) matrix;
 
 		//=======================================================
 		// for storage
 		//=======================================================
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
+
 		template<typename T, std::size_t Size>
 		struct generic_one_tier_container;
 		using float2 = generic_one_tier_container<float, 2>;
-		struct alignas(16) float2a;
+		struct alignas(math_type_alignment) float2a;
 		using float3 = generic_one_tier_container<float, 3>;
-		struct alignas(16) float3a;
+		struct alignas(math_type_alignment) float3a;
 		using float4 = generic_one_tier_container<float, 4>;
-		struct alignas(16) float4a;
+		struct alignas(math_type_alignment) float4a;
 		using int2 = generic_one_tier_container<std::int32_t, 2>;
-		struct alignas(16) int2a;
+		struct alignas(math_type_alignment) int2a;
 		using int3 = generic_one_tier_container<std::int32_t, 3>;
-		struct alignas(16) int3a;
+		struct alignas(math_type_alignment) int3a;
 		using int4 = generic_one_tier_container<std::int32_t, 4>;
-		struct alignas(16) int4a;
+		struct alignas(math_type_alignment) int4a;
 		using uint2 = generic_one_tier_container<std::uint32_t, 2>;
-		struct alignas(16) uint2a;
+		struct alignas(math_type_alignment) uint2a;
 		using uint3 = generic_one_tier_container<std::uint32_t, 3>;
-		struct alignas(16) uint3a;
+		struct alignas(math_type_alignment) uint3a;
 		using uint4 = generic_one_tier_container<std::uint32_t, 4>;
-		struct alignas(16) uint4a;
+		struct alignas(math_type_alignment) uint4a;
 
 		template<typename T, std::size_t FirstTier, std::size_t SecondTier>
 		struct generic_two_tier_container;
 		using float3x3 = generic_two_tier_container<float, 3, 3>;
-		struct alignas(16) float3x3a;
+		struct alignas(math_type_alignment) float3x3a;
 		using float3x4 = generic_two_tier_container<float, 3, 4>;
-		struct alignas(16) float3x4a;
+		struct alignas(math_type_alignment) float3x4a;
 		using float4x3 = generic_two_tier_container<float, 4, 3>;
-		struct alignas(16) float4x3a;
+		struct alignas(math_type_alignment) float4x3a;
 		using float4x4 = generic_two_tier_container<float, 4, 4>;
-		struct alignas(16) float4x4a;
+		struct alignas(math_type_alignment) float4x4a;
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 		template<typename T>
 		struct is_vector : std::false_type
@@ -255,16 +299,16 @@ namespace gal::toolbox::math
 	inline namespace data_types
 	{
 		template<typename T>
-		struct alignas(16) generic_vector
+		struct alignas(math_type_alignment) generic_vector
 		{
-			// the size of the required type is a factor of 16
-			static_assert(16 % sizeof(T) == 0);
-			static_assert(sizeof(T) <= 16);
+			// the size of the required type is a factor of math_type_alignment
+			static_assert(math_type_alignment % sizeof(T) == 0);
+			static_assert(sizeof(T) <= math_type_alignment);
 
 			using value_type				= T;
 			using size_type					= std::size_t;
 
-			constexpr static size_type size = 16 / sizeof(value_type);
+			constexpr static size_type size = math_type_alignment / sizeof(value_type);
 
 			union
 			{
@@ -285,10 +329,10 @@ namespace gal::toolbox::math
 
 		static_assert(f32_vector::size == 4);
 		static_assert(i32_vector::size == 4);
-		static_assert(u8_vector::size == 16);
+		static_assert(u8_vector::size == math_type_alignment);
 		static_assert(u32_vector::size == 4);
 
-		struct alignas(16) matrix
+		struct alignas(math_type_alignment) matrix
 		{
 			vector data[4];
 
@@ -322,7 +366,7 @@ namespace gal::toolbox::math
 					float f32,
 					float f33) noexcept;
 
-			constexpr explicit matrix(std::span<float, 16> s) noexcept;
+			constexpr explicit matrix(std::span<float, math_type_alignment> s) noexcept;
 		};
 
 		template<typename T, std::size_t Size>
@@ -333,6 +377,7 @@ namespace gal::toolbox::math
 
 			constexpr static size_type size		  = Size;
 
+			// HARD CODE, DO NOT CHANGE IT!
 			constexpr static size_type index_of_x = 0;
 			constexpr static size_type index_of_y = 1;
 			constexpr static size_type index_of_z = 2;
@@ -494,44 +539,67 @@ namespace gal::toolbox::math
 			}
 		};
 
-		struct alignas(16) float2a : public float2
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
+
+		struct alignas(math_type_alignment) float2a : public float2
 		{
 			using float2::float2;
 		};
-		struct alignas(16) float3a : public float3
+		struct alignas(math_type_alignment) float3a : public float3
 		{
 			using float3::float3;
 		};
-		struct alignas(16) float4a : public float4
+		struct alignas(math_type_alignment) float4a : public float4
 		{
 			using float4::float4;
 		};
 
-		struct alignas(16) int2a : public int2
+		struct alignas(math_type_alignment) int2a : public int2
 		{
 			using int2::int2;
 		};
-		struct alignas(16) int3a : public int3
+		struct alignas(math_type_alignment) int3a : public int3
 		{
 			using int3::int3;
 		};
-		struct alignas(16) int4a : public int4
+		struct alignas(math_type_alignment) int4a : public int4
 		{
 			using int4::int4;
 		};
 
-		struct alignas(16) uint2a : public uint2
+		struct alignas(math_type_alignment) uint2a : public uint2
 		{
 			using uint2::uint2;
 		};
-		struct alignas(16) uint3a : public uint3
+		struct alignas(math_type_alignment) uint3a : public uint3
 		{
 			using uint3::uint3;
 		};
-		struct alignas(16) uint4a : public uint4
+		struct alignas(math_type_alignment) uint4a : public uint4
 		{
 			using uint4::uint4;
 		};
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 		template<typename T, std::size_t FirstTier, std::size_t SecondTier>
 		struct generic_two_tier_container
@@ -565,22 +633,45 @@ namespace gal::toolbox::math
 			}
 		};
 
-		struct alignas(16) float3x3a : public float3x3
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
+
+		struct alignas(math_type_alignment) float3x3a : public float3x3
 		{
 			using float3x3::float3x3;
 		};
-		struct alignas(16) float3x4a : public float3x4
+		struct alignas(math_type_alignment) float3x4a : public float3x4
 		{
 			using float3x4::float3x4;
 		};
-		struct alignas(16) float4x3a : public float4x3
+		struct alignas(math_type_alignment) float4x3a : public float4x3
 		{
 			using float4x3::float4x3;
 		};
-		struct alignas(16) float4x4a : public float4x4
+		struct alignas(math_type_alignment) float4x4a : public float4x4
 		{
 			using float4x4::float4x4;
 		};
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 	}// namespace data_types
 
 	inline namespace constants
@@ -588,7 +679,7 @@ namespace gal::toolbox::math
 		// pi / 4
 		constexpr static float		   quarter_pi	   = 0.785'398'163f;
 		// pi / 2
-		constexpr static float		   half_pi		   = 1.570'796'326;
+		constexpr static float		   half_pi		   = 1.570'796'326f;
 		// pi
 		constexpr static float		   pi			   = 3.141'592'653f;
 		// 2 * pi
@@ -791,8 +882,10 @@ namespace gal::toolbox::math
 		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept;
 		[[nodiscard]] constexpr vector vector_f2ui(const vector& v, std::uint32_t mul_exponent) noexcept;
 
-		template<one_tier_container_t T>
-		constexpr vector vector_load(std::span<const float, T::size> source) noexcept;
+		constexpr vector			   vector_load(const float* source) noexcept;
+		constexpr vector			   vector_load(const std::uint32_t* source) noexcept;
+		template<std::size_t Size>
+		constexpr vector vector_load(std::span<const std::uint32_t, Size> source) noexcept;
 		template<one_tier_container_t T>
 		constexpr vector vector_load(const T& source) noexcept;
 
@@ -814,3 +907,5 @@ namespace gal::toolbox::math
 }// namespace gal::toolbox::math
 
 #include <math/details/math_utils.inl>
+
+#endif

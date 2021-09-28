@@ -1,14 +1,5 @@
 #pragma once
 
-#include <utils/assert.hpp>
-
-// SSE3
-#include <pmmintrin.h>
-// SSE4
-#include <smmintrin.h>
-// AVX
-#include <immintrin.h>
-
 namespace gal::toolbox::math
 {
 	inline namespace utils
@@ -16,6 +7,19 @@ namespace gal::toolbox::math
 		[[nodiscard]] constexpr vector vector_i2f(const vector& v, std::uint32_t div_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(div_exponent < 32);
+
+			if (std::is_constant_evaluated())
+			{
+				auto   scalar = 1.f / static_cast<float>(static_cast<std::uint32_t>(1) << div_exponent);
+
+				vector ret{};
+				for (std::uint32_t index = 0; index < 4; ++index)
+				{
+					auto i				= static_cast<std::int32_t>(v.m128_u32[index]);
+					ret.m128_f32[index] = static_cast<float>(i) * scalar;
+				}
+				return ret;
+			}
 
 			// Convert to floats
 			auto		  ret	  = _mm_cvtepi32_ps(_mm_castps_si128(v));
@@ -30,6 +34,31 @@ namespace gal::toolbox::math
 		[[nodiscard]] constexpr vector vector_f2i(const vector& v, std::uint32_t mul_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(mul_exponent < 32);
+
+			if (std::is_constant_evaluated())
+			{
+				auto   scalar = static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent);
+
+				vector ret{};
+				for (std::uint32_t index = 0; index < 4; ++index)
+				{
+					std::int32_t result;
+					if (auto f = v.m128_f32[index] * scalar; f <= -(65536.0f * 32768.0f))
+					{
+						result = (-0x7FFFFFFF) - 1;
+					}
+					else if (f > (65536.0f * 32768.0f) - 128.0f)
+					{
+						result = 0x7FFFFFFF;
+					}
+					else
+					{
+						result = static_cast<std::int32_t>(f);
+					}
+					ret.m128_u32[index] = static_cast<std::uint32_t>(result);
+				}
+				return ret;
+			}
 
 			auto ret	  = _mm_set_ps1(static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent));
 			ret			  = _mm_mul_ps(ret, v);
@@ -47,6 +76,18 @@ namespace gal::toolbox::math
 		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(div_exponent < 32);
+
+			if (std::is_constant_evaluated())
+			{
+				auto   scalar = 1.f / static_cast<float>(static_cast<std::uint32_t>(1) << div_exponent);
+
+				vector ret;
+				for (std::uint32_t index = 0; index < 4; ++index)
+				{
+					ret.m128_f32[index] = static_cast<float>(v.m128_u32[index]) * scalar;
+				}
+				return ret;
+			}
 
 			// For the values that are higher than 0x7FFFFFFF, a fixup is needed
 			// Determine which ones need the fix.
@@ -72,6 +113,31 @@ namespace gal::toolbox::math
 		{
 			gal::toolbox::utils::gal_assert(mul_exponent < 32);
 
+			if (std::is_constant_evaluated())
+			{
+				auto   scalar = static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent);
+
+				vector ret;
+				for (std::uint32_t index = 0; index < 4; ++index)
+				{
+					std::uint32_t result;
+					if (auto f = v.m128_f32[index] * scalar; f <= 0.0f)
+					{
+						result = 0;
+					}
+					else if (f >= (65536.0f * 65536.0f))
+					{
+						result = 0xFFFFFFFFU;
+					}
+					else
+					{
+						result = static_cast<std::uint32_t>(f);
+					}
+					ret.m128_u32[index] = result;
+				}
+				return ret;
+			}
+
 			auto ret										   = _mm_set_ps1(static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent));
 			ret												   = _mm_mul_ps(ret, v);
 			// Clamp to >=0
@@ -94,21 +160,91 @@ namespace gal::toolbox::math
 			return ret;
 		}
 
-		template<one_tier_container_t T>
-		constexpr vector vector_load(std::span<const float, T::size> source) noexcept
+		constexpr vector vector_load(const float* source) noexcept
 		{
-			static_assert(T::size >= 2 && T::size <= 4);
+			if (std::is_constant_evaluated())
+			{
+				vector ret{};
+				auto& [a, b, c, d] = ret.m128_f32;
+				a				   = *source;
+				b				   = 0.f;
+				c				   = 0.f;
+				d				   = 0.f;
+				return ret;
+			}
+
+			return _mm_load_ss(source);
+		}
+
+		constexpr vector vector_load(const std::uint32_t* source) noexcept
+		{
+			if (std::is_constant_evaluated())
+			{
+				vector ret{};
+				auto& [a, b, c, d] = ret.m128_u32;
+				a				   = *source;
+				b				   = 0;
+				c				   = 0;
+				d				   = 0;
+				return ret;
+			}
+
+			return _mm_load_ss(reinterpret_cast<const float*>(source));
+		}
+
+		template<std::size_t Size>
+		constexpr vector vector_load(std::span<const std::uint32_t, Size> source) noexcept
+		{
+			static_assert(Size >= 2 && Size <= 4);
+
+			static_assert(uint4::index_of_x == 0);
+			static_assert(uint4::index_of_y == 1);
+			static_assert(uint4::index_of_z == 2);
+			static_assert(uint4::index_of_w == 3);
+			static_assert(uint4a::index_of_x == 0);
+			static_assert(uint4a::index_of_y == 1);
+			static_assert(uint4a::index_of_z == 2);
+			static_assert(uint4a::index_of_w == 3);
 
 			gal::toolbox::utils::gal_assert(source.data(), "invalid source pointer");
 
-			if constexpr (T::size == 2)
+			if (std::is_constant_evaluated())
+			{
+				vector ret{};
+				auto& [a, b, c, d] = ret.m128_u32;
+
+				if constexpr (Size >= 2)
+				{
+					a = source[0];
+					b = source[1];
+				}
+				if constexpr (Size >= 3)
+				{
+					c = source[2];
+				}
+				else
+				{
+					c = 0;
+				}
+				if constexpr (Size >= 4)
+				{
+					d = source[3];
+				}
+				else
+				{
+					d = 0;
+				}
+				return ret;
+			}
+
+			if constexpr (Size == 2)
 			{
 				return _mm_castpd_ps(_mm_load_sd(static_cast<const double*>(source.data())));
 			}
-			else if constexpr (T::size == 3)
+			else if constexpr (Size == 3)
 			{
 				auto xy = _mm_castpd_ps(_mm_load_sd(static_cast<const double*>(source.data())));
-				auto z	= _mm_load_ss(static_cast<const float*>(source.data() + T::index_of_z));
+				auto z	= _mm_load_ss(static_cast<const float*>(source.data() + uint3::index_of_z));
 				return _mm_movelh_ps(xy, z);
 			}
 			else
@@ -122,6 +258,15 @@ namespace gal::toolbox::math
 		{
 			static_assert(T::size >= 2 && T::size <= 4);
 
+			static_assert(uint4::index_of_x == 0);
+			static_assert(uint4::index_of_y == 1);
+			static_assert(uint4::index_of_z == 2);
+			static_assert(uint4::index_of_w == 3);
+			static_assert(uint4a::index_of_x == 0);
+			static_assert(uint4a::index_of_y == 1);
+			static_assert(uint4a::index_of_z == 2);
+			static_assert(uint4a::index_of_w == 3);
+
 			gal::toolbox::utils::gal_assert(source.data(), "invalid source pointer");
 
 			if constexpr (is_aligned_one_tier_container_v<T>)
@@ -132,6 +277,35 @@ namespace gal::toolbox::math
 			}
 
 			using value_type = typename T::value_type;
+
+			if (std::is_constant_evaluated())
+			{
+				vector ret{};
+				auto& [a, b, c, d] = ret.m128_u32;
+
+				if constexpr (T::size == 2 >= 2)
+				{
+					a = source[0];
+					b = source[1];
+				}
+				if constexpr (T::size == 2 >= 3)
+				{
+					c = source[2];
+				}
+				else
+				{
+					c = 0;
+				}
+				if constexpr (T::size == 2 >= 4)
+				{
+					d = source[3];
+				}
+				else
+				{
+					d = 0;
+				}
+				return ret;
+			}
 
 			vector v{};
 
