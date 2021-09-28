@@ -15,8 +15,8 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-latest, windows-latest, macos-latest]
-#                os: [windows-latest] # only msvc support all cxx20 feature we need now! (<format> and <ranges>)
+#                os: [ubuntu-latest, windows-latest, macos-latest]
+                os: [windows-latest] # only msvc support all cxx20 feature we need now! (<format> and <ranges>)
                 configuration:
                     - Debug
 #                    - Release # cl : command line error D8016: '/O2' and '/RTC1' command-line options are incompatible
