@@ -4,9 +4,11 @@
 #include <container/dynamic_bitset.hpp>
 #include <fstream>
 
+#ifndef GALTOOLBOX_DYNAMIC_BITSET_NOT_SUPPORTED
+
 using namespace gal::toolbox::container;
 
-TEST(TestDynamicBitset, TestConstructAntOutput)
+TEST(TestDynamicBitset, TestConstructAndOutput)
 {
 	using size_type = basic_dynamic_bitset::size_type;
 
@@ -147,3 +149,5 @@ TEST(TestDynamicBitset, TestConstructAntOutput)
 
 	std::cout << "cast to unsigned long: " << bits1.cast_to<unsigned long>() << "\ncast to string: " << bits1.to_string() << "\n\n";
 }
+
+#endif

@@ -32,7 +32,7 @@ set(
 
 set(
 		TEST_MATH_SOURCE
-		src/test_math.cpp
+#		src/test_math.cpp
 )
 
 add_executable(

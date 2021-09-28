@@ -1,5 +1,12 @@
 #pragma once
 
+#ifndef _MSC_VER
+// gcc/clang not support 'constexpr vector' yet
+#define GALTOOLBOX_DYNAMIC_BITSET_NOT_SUPPORTED
+#endif
+
+#ifndef GALTOOLBOX_DYNAMIC_BITSET_NOT_SUPPORTED
+
 #include <array>
 #include <iosfwd>
 #include <locale>
@@ -2206,3 +2213,5 @@ namespace std
 	{
 	};
 }// namespace std
+
+#endif
