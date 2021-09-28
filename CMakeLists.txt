@@ -41,7 +41,7 @@ target_compile_options(
 		${PROJECT_NAME}
 		INTERFACE
 		$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest /W4 /WX>
-		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-std=c++20 -Wall -Wextra -Wpedantic -Werror>
+		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-std=c++2a -Wall -Wextra -Wpedantic -Werror>
 )
 
 option(
