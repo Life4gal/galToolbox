@@ -296,6 +296,100 @@ namespace gal::toolbox::math
 		concept two_tier_container_t = is_two_tier_container_v<T>;
 	}// namespace data_types
 
+	inline namespace operations
+	{
+		using vector = data_types::vector;
+		using matrix = data_types::matrix;
+
+		[[nodiscard]] constexpr vector operator+(const vector& v) noexcept;
+		[[nodiscard]] constexpr vector operator-(const vector& v) noexcept;
+
+		constexpr vector&			   operator+=(vector& v1, const vector& v2) noexcept;
+		constexpr vector&			   operator-=(vector& v1, const vector& v2) noexcept;
+		constexpr vector&			   operator*=(vector& v1, const vector& v2) noexcept;
+		constexpr vector&			   operator/=(vector& v1, const vector& v2) noexcept;
+
+		constexpr vector&			   operator+=(vector& v, float scalar) noexcept;
+		constexpr vector&			   operator-=(vector& v, float scalar) noexcept;
+		constexpr vector&			   operator*=(vector& v, float scalar) noexcept;
+		constexpr vector&			   operator/=(vector& v, float scalar) noexcept;
+
+		[[nodiscard]] constexpr vector operator+(const vector& v1, const vector& v2) noexcept;
+		[[nodiscard]] constexpr vector operator-(const vector& v1, const vector& v2) noexcept;
+		[[nodiscard]] constexpr vector operator*(const vector& v1, const vector& v2) noexcept;
+		[[nodiscard]] constexpr vector operator/(const vector& v1, const vector& v2) noexcept;
+
+		[[nodiscard]] constexpr vector operator+(const vector& v, float scalar) noexcept;
+		[[nodiscard]] constexpr vector operator-(const vector& v, float scalar) noexcept;
+		[[nodiscard]] constexpr vector operator*(const vector& v, float scalar) noexcept;
+		[[nodiscard]] constexpr vector operator/(const vector& v, float scalar) noexcept;
+
+		[[nodiscard]] constexpr vector operator+(float scalar, const vector& v) noexcept;
+		[[nodiscard]] constexpr vector operator-(float scalar, const vector& v) noexcept;
+		[[nodiscard]] constexpr vector operator*(float scalar, const vector& v) noexcept;
+		[[nodiscard]] constexpr vector operator/(float scalar, const vector& v) noexcept;
+
+		[[nodiscard]] constexpr matrix operator+(const matrix& m) noexcept;
+		[[nodiscard]] constexpr matrix operator-(const matrix& m) noexcept;
+
+		constexpr matrix&			   operator+=(matrix& m1, const matrix& m2) noexcept;
+		constexpr matrix&			   operator-=(matrix& m1, const matrix& m2) noexcept;
+		constexpr matrix&			   operator*=(matrix& m1, const matrix& m2) noexcept;
+		constexpr matrix&			   operator/=(matrix& m1, const matrix& m2) noexcept;
+
+		constexpr matrix&			   operator+=(matrix& m, float scalar) noexcept;
+		constexpr matrix&			   operator-=(matrix& m, float scalar) noexcept;
+		constexpr matrix&			   operator*=(matrix& m, float scalar) noexcept;
+		constexpr matrix&			   operator/=(matrix& m, float scalar) noexcept;
+
+		[[nodiscard]] constexpr matrix operator+(const matrix& m1, const matrix& m2) noexcept;
+		[[nodiscard]] constexpr matrix operator-(const matrix& m1, const matrix& m2) noexcept;
+		[[nodiscard]] constexpr matrix operator*(const matrix& m1, const matrix& m2) noexcept;
+		[[nodiscard]] constexpr matrix operator/(const matrix& m1, const matrix& m2) noexcept;
+
+		[[nodiscard]] constexpr matrix operator+(const matrix& m, float scalar) noexcept;
+		[[nodiscard]] constexpr matrix operator-(const matrix& m, float scalar) noexcept;
+		[[nodiscard]] constexpr matrix operator*(const matrix& m, float scalar) noexcept;
+		[[nodiscard]] constexpr matrix operator/(const matrix& m, float scalar) noexcept;
+
+		[[nodiscard]] constexpr matrix operator+(float scalar, const matrix& m) noexcept;
+		[[nodiscard]] constexpr matrix operator-(float scalar, const matrix& m) noexcept;
+		[[nodiscard]] constexpr matrix operator*(float scalar, const matrix& m) noexcept;
+		[[nodiscard]] constexpr matrix operator/(float scalar, const matrix& m) noexcept;
+	}// namespace operations
+
+	inline namespace utils
+	{
+		constexpr float				   degrees2radians(float degrees) noexcept;
+
+		constexpr float				   radians2degrees(float radians) noexcept;
+
+		[[nodiscard]] constexpr vector vector_i2f(const vector& v, std::uint32_t div_exponent) noexcept;
+		[[nodiscard]] constexpr vector vector_f2i(const vector& v, std::uint32_t mul_exponent) noexcept;
+		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept;
+		[[nodiscard]] constexpr vector vector_f2ui(const vector& v, std::uint32_t mul_exponent) noexcept;
+
+		template<std::size_t Size>
+		constexpr vector vector_load(const std::uint32_t* source) noexcept;
+		template<std::size_t Size>
+		constexpr vector vector_load(std::span<const std::uint32_t, Size> source) noexcept;
+		template<one_tier_container_t T>
+		constexpr vector vector_load(const T& source) noexcept;
+
+		template<two_tier_container_t T>
+		constexpr matrix matrix_load(const T& source) noexcept;
+
+		template<one_tier_container_t T>
+		constexpr void vector_store(std::span<float, T::size> dest, const vector& source) noexcept;
+		template<one_tier_container_t T>
+		constexpr void vector_store(T& dest, const vector& source) noexcept;
+
+		template<two_tier_container_t T>
+		constexpr void matrix_store(std::span<float, T::size> dest, const matrix& source) noexcept;
+		template<two_tier_container_t T>
+		constexpr void matrix_store(T& dest, const matrix& source) noexcept;
+	}// namespace utils
+
 	inline namespace data_types
 	{
 		template<typename T>
@@ -325,12 +419,40 @@ namespace gal::toolbox::math
 			{
 				return data.v2;
 			}
+
+			inline explicit operator __m128i() const noexcept
+			{
+				return _mm_castps_si128(data.v2);
+			}
+
+			inline explicit operator __m128d() const noexcept
+			{
+				return _mm_castps_pd(data.v2);
+			}
 		};
 
 		static_assert(f32_vector::size == 4);
 		static_assert(i32_vector::size == 4);
 		static_assert(u8_vector::size == math_type_alignment);
 		static_assert(u32_vector::size == 4);
+
+		template<vector_t Vec, typename Tuple, typename Vec::size_type... I>
+		requires(sizeof...(I) <= Vec::size) constexpr Vec make_vector(Tuple&& tuple, std::index_sequence<I...>) noexcept
+		{
+			return {static_cast<typename Vec::value_type>(std::get<I>(std::forward<Tuple>(tuple)))...};
+		}
+
+		template<vector_t Vec, typename... Args>
+		requires(sizeof...(Args) <= Vec::size) constexpr Vec make_vector(Args... args) noexcept
+		{
+			return make_vector<Vec>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Vec::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
+		}
+
+		template<vector_t Vec, typename Vec::size_type Size>
+		requires(Size <= Vec::size) constexpr Vec make_vector(std::span<const std::uint32_t*, Size> source) noexcept
+		{
+			return {vector_load(source)};
+		}
 
 		struct alignas(math_type_alignment) matrix
 		{
@@ -389,10 +511,17 @@ namespace gal::toolbox::math
 
 			constexpr generic_one_tier_container() noexcept = default;
 
-			template<typename... Args>
-			requires(sizeof...(Args) == size) constexpr generic_one_tier_container(Args&&... args) noexcept;
+			template<typename Tuple, size_type... I>
+			requires(sizeof...(I) <= size) constexpr explicit generic_one_tier_container(Tuple&& tuple, std::index_sequence<I...>) noexcept
+				: data({static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))...}) {}
 
-			constexpr explicit generic_one_tier_container(std::span<float, size> s) noexcept;
+
+			template<typename... Args>
+			requires(sizeof...(Args) == size) constexpr explicit generic_one_tier_container(Args&&... args) noexcept
+				: generic_one_tier_container(
+						  std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...),
+						  std::make_index_sequence<std::min(size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{}) {}
+
 
 			[[nodiscard]] constexpr reference x() noexcept
 					requires(size >= index_of_x + 1)
@@ -601,6 +730,17 @@ namespace gal::toolbox::math
 #pragma clang diagnostic pop
 #endif
 
+		/**
+		 * @note:
+		 *
+		 * |||||||| -> SecondTier == 8
+		 * |
+		 * |
+		 * |
+		 * ^ FirstTier == 4
+		 * FirstTier == how many rows
+		 * SecondTier == how many columns
+		 */
 		template<typename T, std::size_t FirstTier, std::size_t SecondTier>
 		struct generic_two_tier_container
 		{
@@ -802,108 +942,6 @@ namespace gal::toolbox::math
 
 
 	}// namespace constants
-
-	inline namespace operations
-	{
-		using vector = data_types::vector;
-		using matrix = data_types::matrix;
-
-		[[nodiscard]] constexpr vector operator+(const vector& v) noexcept;
-		[[nodiscard]] constexpr vector operator-(const vector& v) noexcept;
-
-		constexpr vector&			   operator+=(vector& v1, const vector& v2) noexcept;
-		constexpr vector&			   operator-=(vector& v1, const vector& v2) noexcept;
-		constexpr vector&			   operator*=(vector& v1, const vector& v2) noexcept;
-		constexpr vector&			   operator/=(vector& v1, const vector& v2) noexcept;
-
-		constexpr vector&			   operator+=(vector& v, float scalar) noexcept;
-		constexpr vector&			   operator-=(vector& v, float scalar) noexcept;
-		constexpr vector&			   operator*=(vector& v, float scalar) noexcept;
-		constexpr vector&			   operator/=(vector& v, float scalar) noexcept;
-
-		[[nodiscard]] constexpr vector operator+(const vector& v1, const vector& v2) noexcept;
-		[[nodiscard]] constexpr vector operator-(const vector& v1, const vector& v2) noexcept;
-		[[nodiscard]] constexpr vector operator*(const vector& v1, const vector& v2) noexcept;
-		[[nodiscard]] constexpr vector operator/(const vector& v1, const vector& v2) noexcept;
-
-		[[nodiscard]] constexpr vector operator+(const vector& v, float scalar) noexcept;
-		[[nodiscard]] constexpr vector operator-(const vector& v, float scalar) noexcept;
-		[[nodiscard]] constexpr vector operator*(const vector& v, float scalar) noexcept;
-		[[nodiscard]] constexpr vector operator/(const vector& v, float scalar) noexcept;
-
-		[[nodiscard]] constexpr vector operator+(float scalar, const vector& v) noexcept;
-		[[nodiscard]] constexpr vector operator-(float scalar, const vector& v) noexcept;
-		[[nodiscard]] constexpr vector operator*(float scalar, const vector& v) noexcept;
-		[[nodiscard]] constexpr vector operator/(float scalar, const vector& v) noexcept;
-
-		[[nodiscard]] constexpr matrix operator+(const matrix& m) noexcept;
-		[[nodiscard]] constexpr matrix operator-(const matrix& m) noexcept;
-
-		constexpr matrix&			   operator+=(matrix& m1, const matrix& m2) noexcept;
-		constexpr matrix&			   operator-=(matrix& m1, const matrix& m2) noexcept;
-		constexpr matrix&			   operator*=(matrix& m1, const matrix& m2) noexcept;
-		constexpr matrix&			   operator/=(matrix& m1, const matrix& m2) noexcept;
-
-		constexpr matrix&			   operator+=(matrix& m, float scalar) noexcept;
-		constexpr matrix&			   operator-=(matrix& m, float scalar) noexcept;
-		constexpr matrix&			   operator*=(matrix& m, float scalar) noexcept;
-		constexpr matrix&			   operator/=(matrix& m, float scalar) noexcept;
-
-		[[nodiscard]] constexpr matrix operator+(const matrix& m1, const matrix& m2) noexcept;
-		[[nodiscard]] constexpr matrix operator-(const matrix& m1, const matrix& m2) noexcept;
-		[[nodiscard]] constexpr matrix operator*(const matrix& m1, const matrix& m2) noexcept;
-		[[nodiscard]] constexpr matrix operator/(const matrix& m1, const matrix& m2) noexcept;
-
-		[[nodiscard]] constexpr matrix operator+(const matrix& m, float scalar) noexcept;
-		[[nodiscard]] constexpr matrix operator-(const matrix& m, float scalar) noexcept;
-		[[nodiscard]] constexpr matrix operator*(const matrix& m, float scalar) noexcept;
-		[[nodiscard]] constexpr matrix operator/(const matrix& m, float scalar) noexcept;
-
-		[[nodiscard]] constexpr matrix operator+(float scalar, const matrix& m) noexcept;
-		[[nodiscard]] constexpr matrix operator-(float scalar, const matrix& m) noexcept;
-		[[nodiscard]] constexpr matrix operator*(float scalar, const matrix& m) noexcept;
-		[[nodiscard]] constexpr matrix operator/(float scalar, const matrix& m) noexcept;
-	}// namespace operations
-
-	inline namespace utils
-	{
-		constexpr float degrees2radians(float degrees) noexcept
-		{
-			return degrees * (constants::pi / 180.f);
-		}
-
-		constexpr float radians2degrees(float radians) noexcept
-		{
-			return radians * (180.f / constants::pi);
-		}
-
-		[[nodiscard]] constexpr vector vector_i2f(const vector& v, std::uint32_t div_exponent) noexcept;
-		[[nodiscard]] constexpr vector vector_f2i(const vector& v, std::uint32_t mul_exponent) noexcept;
-		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept;
-		[[nodiscard]] constexpr vector vector_f2ui(const vector& v, std::uint32_t mul_exponent) noexcept;
-
-		constexpr vector			   vector_load(const float* source) noexcept;
-		constexpr vector			   vector_load(const std::uint32_t* source) noexcept;
-		template<std::size_t Size>
-		constexpr vector vector_load(std::span<const std::uint32_t, Size> source) noexcept;
-		template<one_tier_container_t T>
-		constexpr vector vector_load(const T& source) noexcept;
-
-		template<two_tier_container_t T>
-		constexpr matrix matrix_load(std::span<const float, T::size> source) noexcept;
-		template<two_tier_container_t T>
-		constexpr matrix matrix_load(const T& source) noexcept;
-
-		template<one_tier_container_t T>
-		constexpr void vector_store(std::span<float, T::size> dest, const vector& source) noexcept;
-		template<one_tier_container_t T>
-		constexpr void vector_store(T& dest, const vector& source) noexcept;
-
-		template<two_tier_container_t T>
-		constexpr void matrix_store(std::span<float, T::size> dest, const matrix& source) noexcept;
-		template<two_tier_container_t T>
-		constexpr void matrix_store(T& dest, const matrix& source) noexcept;
-	}// namespace utils
 }// namespace gal::toolbox::math
 
 #include <math/details/math_utils.inl>
