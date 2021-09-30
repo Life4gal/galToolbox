@@ -12,7 +12,7 @@ set(
 
 set(
 		GALTOOLBOX_PATCH_VERSION
-		6
+		7
 )
 
 set(
@@ -40,7 +40,7 @@ target_include_directories(
 target_compile_options(
 		${PROJECT_NAME}
 		INTERFACE
-		$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest /W4 /WX>
+		$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest /W4 /WX /Wall>
 		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-std=c++2a -Wall -Wextra -Wpedantic -Werror>
 )
 
