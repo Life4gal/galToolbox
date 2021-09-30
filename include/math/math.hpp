@@ -5,26 +5,26 @@
 	!__has_include(<pmmintrin.h>) ||   \
 	!__has_include(<smmintrin.h>) ||   \
 	!__has_include(<immintrin.h>)
-#define GALTOOLBOX_MATH_NOT_SUPPOTED
+	#define GALTOOLBOX_MATH_NOT_SUPPOTED
 #endif
 
 #ifndef GALTOOLBOX_MATH_NOT_SUPPOTED
 
-// SSE
-#include <emmintrin.h>
-#include <xmmintrin.h>
-// SSE3
-#include <pmmintrin.h>
-// SSE4
-#include <smmintrin.h>
-// AVX
-#include <immintrin.h>
+	// SSE
+	#include <emmintrin.h>
+	#include <xmmintrin.h>
+	// SSE3
+	#include <pmmintrin.h>
+	// SSE4
+	#include <smmintrin.h>
+	// AVX
+	#include <immintrin.h>
 
-#include <cfloat>
-#include <cmath>
-#include <span>
-#include <utils/assert.hpp>
-#include <utils/tuple_maker.hpp>
+	#include <cfloat>
+	#include <cmath>
+	#include <span>
+	#include <utils/assert.hpp>
+	#include <utils/tuple_maker.hpp>
 
 namespace gal::toolbox::math
 {
@@ -50,18 +50,18 @@ namespace gal::toolbox::math
 		// for storage
 		//=======================================================
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
-#endif
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
+	#endif
+	#ifdef __GNUC__
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpadded"
+	#endif
+	#ifdef __clang__
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wpadded"
+	#endif
 
 		template<typename T, std::size_t Size>
 		struct generic_one_tier_container;
@@ -95,15 +95,15 @@ namespace gal::toolbox::math
 		using float4x4 = generic_two_tier_container<float, 4, 4>;
 		struct alignas(math_type_alignment) float4x4a;
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(pop)
+	#endif
+	#ifdef __GNUC__
+		#pragma GCC diagnostic pop
+	#endif
+	#ifdef __clang__
+		#pragma clang diagnostic pop
+	#endif
 
 		template<typename T>
 		struct is_vector : std::false_type
@@ -360,6 +360,11 @@ namespace gal::toolbox::math
 
 	inline namespace utils
 	{
+		//		template<typename T, typename... Ts>
+		//		concept any_of_t = (std::same_as<T, Ts> || ...);
+		template<typename T, typename... Ts>
+		concept any_of_t = std::disjunction_v<std::is_same<T, Ts>...>;
+
 		constexpr float				   degrees2radians(float degrees) noexcept;
 
 		constexpr float				   radians2degrees(float radians) noexcept;
@@ -369,11 +374,39 @@ namespace gal::toolbox::math
 		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept;
 		[[nodiscard]] constexpr vector vector_f2ui(const vector& v, std::uint32_t mul_exponent) noexcept;
 
-		template<std::size_t Size>
-		constexpr vector vector_load(const std::uint32_t* source) noexcept;
-		template<std::size_t Size>
-		constexpr vector vector_load(std::span<const std::uint32_t, Size> source) noexcept;
+		/**
+		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
+		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
+		 * and it is only guaranteed that the obtained vector is of the correct type when read with the given type.
+		 * @tparam Size data size
+		 * @tparam T data type
+		 * @param source source pointer
+		 * @return vector
+		 */
+		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		constexpr vector vector_load(const T* source) noexcept;
+		/**
+		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
+		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
+		 * and it is only guaranteed that the obtained vector is of the correct type when read with the given type.
+		 * @tparam Size data size
+		 * @tparam T data type
+		 * @param source source span
+		 * @return vector
+		 */
+		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		constexpr vector vector_load(std::span<const T, Size> source) noexcept;
+		/**
+		 * @brief Read `Size` data from a one_tier_container of value_type float/std::int32_t/std::uint32_t to initialize the vector.
+		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
+		 * and it is only guaranteed that the obtained vector is of the correct type when read with the float.
+		 * @note it is only guaranteed that the obtained vector is of the correct type when read with the float.
+		 * @tparam T one_tier_container type
+		 * @param source one_tier_container source
+		 * @return vector
+		 */
 		template<one_tier_container_t T>
+		requires any_of_t<typename T::value_type, float, std::int32_t, std::uint32_t>
 		constexpr vector vector_load(const T& source) noexcept;
 
 		template<two_tier_container_t T>
@@ -448,10 +481,16 @@ namespace gal::toolbox::math
 			return make_vector<Vec>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Vec::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
 		}
 
-		template<vector_t Vec, typename Vec::size_type Size>
-		requires(Size <= Vec::size) constexpr Vec make_vector(std::span<const std::uint32_t*, Size> source) noexcept
+		template<vector_t Vec, typename Vec::size_type Size, any_of_t<float, std::uint32_t> T>
+		requires(Size <= Vec::size) constexpr Vec make_vector(const T* source) noexcept
 		{
-			return {vector_load(source)};
+			return {vector_load<Size, T>(source)};
+		}
+
+		template<vector_t Vec, typename Vec::size_type Size, any_of_t<float, std::uint32_t> T>
+		requires(Size <= Vec::size) constexpr Vec make_vector(std::span<const T, Size> source) noexcept
+		{
+			return {vector_load<Size, T>(source)};
 		}
 
 		struct alignas(math_type_alignment) matrix
@@ -507,21 +546,21 @@ namespace gal::toolbox::math
 
 			using reference						  = value_type&;
 
-			value_type data[size];
+			value_type						  data[size];
 
-			constexpr generic_one_tier_container() noexcept = default;
+			[[nodiscard]] constexpr reference operator[](size_type index) noexcept
+			{
+				gal::toolbox::utils::gal_assert(index < size, "index out of bound");
 
-			template<typename Tuple, size_type... I>
-			requires(sizeof...(I) <= size) constexpr explicit generic_one_tier_container(Tuple&& tuple, std::index_sequence<I...>) noexcept
-				: data({static_cast<value_type>(std::get<I>(std::forward<Tuple>(tuple)))...}) {}
+				return data[index];
+			}
 
+			[[nodiscard]] constexpr value_type operator[](size_type index) const noexcept
+			{
+				gal::toolbox::utils::gal_assert(index < size, "index out of bound");
 
-			template<typename... Args>
-			requires(sizeof...(Args) == size) constexpr explicit generic_one_tier_container(Args&&... args) noexcept
-				: generic_one_tier_container(
-						  std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...),
-						  std::make_index_sequence<std::min(size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{}) {}
-
+				return data[index];
+			}
 
 			[[nodiscard]] constexpr reference x() noexcept
 					requires(size >= index_of_x + 1)
@@ -668,67 +707,70 @@ namespace gal::toolbox::math
 			}
 		};
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
-#endif
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
+	#endif
+	#ifdef __GNUC__
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpadded"
+	#endif
+	#ifdef __clang__
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wpadded"
+	#endif
 
 		struct alignas(math_type_alignment) float2a : public float2
 		{
-			using float2::float2;
 		};
 		struct alignas(math_type_alignment) float3a : public float3
 		{
-			using float3::float3;
 		};
 		struct alignas(math_type_alignment) float4a : public float4
 		{
-			using float4::float4;
 		};
 
 		struct alignas(math_type_alignment) int2a : public int2
 		{
-			using int2::int2;
 		};
 		struct alignas(math_type_alignment) int3a : public int3
 		{
-			using int3::int3;
 		};
 		struct alignas(math_type_alignment) int4a : public int4
 		{
-			using int4::int4;
 		};
 
 		struct alignas(math_type_alignment) uint2a : public uint2
 		{
-			using uint2::uint2;
 		};
 		struct alignas(math_type_alignment) uint3a : public uint3
 		{
-			using uint3::uint3;
 		};
 		struct alignas(math_type_alignment) uint4a : public uint4
 		{
-			using uint4::uint4;
 		};
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(pop)
+	#endif
+	#ifdef __GNUC__
+		#pragma GCC diagnostic pop
+	#endif
+	#ifdef __clang__
+		#pragma clang diagnostic pop
+	#endif
+
+		template<one_tier_container_t Container, typename Tuple, typename Container::size_type... I>
+		requires(sizeof...(I) <= Container::size) constexpr Container make_one_tier_container(Tuple&& tuple, std::index_sequence<I...>) noexcept
+		{
+			return {static_cast<typename Container::value_type>(std::get<I>(std::forward<Tuple>(tuple)))...};
+		}
+
+		template<one_tier_container_t Container, typename... Args>
+		requires(sizeof...(Args) <= Container::size) constexpr Container make_one_tier_container(Args... args) noexcept
+		{
+			return make_one_tier_container<Container>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Container::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
+		}
 
 		/**
 		 * @note:
@@ -773,18 +815,18 @@ namespace gal::toolbox::math
 			}
 		};
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
-#endif
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpadded"
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(push)
+		#pragma warning(disable : 4324 4820)// C4324/4820: padding warnings
+	#endif
+	#ifdef __GNUC__
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpadded"
+	#endif
+	#ifdef __clang__
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wpadded"
+	#endif
 
 		struct alignas(math_type_alignment) float3x3a : public float3x3
 		{
@@ -803,15 +845,15 @@ namespace gal::toolbox::math
 			using float4x4::float4x4;
 		};
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+	#ifdef _MSC_VER
+		#pragma warning(pop)
+	#endif
+	#ifdef __GNUC__
+		#pragma GCC diagnostic pop
+	#endif
+	#ifdef __clang__
+		#pragma clang diagnostic pop
+	#endif
 	}// namespace data_types
 
 	inline namespace constants
@@ -944,6 +986,6 @@ namespace gal::toolbox::math
 	}// namespace constants
 }// namespace gal::toolbox::math
 
-#include <math/details/math_utils.inl>
+	#include <math/details/math_utils.inl>
 
 #endif

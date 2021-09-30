@@ -4,12 +4,12 @@ namespace gal::toolbox::math
 	{
 		constexpr float degrees2radians(float degrees) noexcept
 		{
-			return degrees * (constants::pi / 180.f);
+			return degrees * (pi / 180.f);
 		}
 
 		constexpr float radians2degrees(float radians) noexcept
 		{
-			return radians * (180.f / constants::pi);
+			return radians * (180.f / pi);
 		}
 
 		[[nodiscard]] constexpr vector vector_i2f(const vector& v, std::uint32_t div_exponent) noexcept
@@ -71,11 +71,11 @@ namespace gal::toolbox::math
 			auto ret	  = _mm_set_ps1(static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent));
 			ret			  = _mm_mul_ps(ret, v);
 			// In case of positive overflow, detect it
-			auto overflow = _mm_cmpgt_ps(ret, constants::g_vector_max_int.operator vector());
+			auto overflow = _mm_cmpgt_ps(ret, g_vector_max_int.operator vector());
 			// Float to int conversion
 			auto result	  = _mm_cvttps_epi32(ret);
 			// If there was positive overflow, set to 0x7FFFFFFF
-			ret			  = _mm_and_ps(overflow, constants::g_vector_abs_mask.operator vector());
+			ret			  = _mm_and_ps(overflow, g_vector_abs_mask.operator vector());
 			overflow	  = _mm_andnot_ps(overflow, _mm_castsi128_ps(result));
 			overflow	  = _mm_or_ps(overflow, ret);
 			return overflow;
@@ -99,7 +99,7 @@ namespace gal::toolbox::math
 
 			// For the values that are higher than 0x7FFFFFFF, a fixup is needed
 			// Determine which ones need the fix.
-			auto mask			 = _mm_and_ps(v, constants::g_vector_neg_zero.operator vector());
+			auto mask			 = _mm_and_ps(v, g_vector_neg_zero.operator vector());
 			// Force all values positive
 			auto ret			 = _mm_xor_ps(v, mask);
 			// Convert to floats
@@ -107,7 +107,7 @@ namespace gal::toolbox::math
 			// Convert 0x80000000 -> 0xFFFFFFFF
 			auto i				 = _mm_srai_epi32(_mm_castps_si128(mask), 31);
 			// For only the ones that are too big, add the fixup
-			mask				 = _mm_and_ps(_mm_castsi128_ps(i), constants::g_vector_fix_unsigned.operator vector());
+			mask				 = _mm_and_ps(_mm_castsi128_ps(i), g_vector_fix_unsigned.operator vector());
 			ret					 = _mm_add_ps(ret, mask);
 			// Convert div_exponent into 1.0f / (1 << div_exponent)
 			std::uint32_t scalar = 0x3F800000U - (div_exponent << 23);
@@ -146,36 +146,86 @@ namespace gal::toolbox::math
 				return ret;
 			}
 
-			auto ret										   = _mm_set_ps1(static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent));
-			ret												   = _mm_mul_ps(ret, v);
+			auto ret								= _mm_set_ps1(static_cast<float>(static_cast<std::uint32_t>(1) << mul_exponent));
+			ret										= _mm_mul_ps(ret, v);
 			// Clamp to >=0
-			ret												   = _mm_max_ps(ret, constants::g_vector_zero.operator vector());
+			ret										= _mm_max_ps(ret, g_vector_zero.operator vector());
 			// Any numbers that are too big, set to 0xFFFFFFFFU
-			auto overflow									   = _mm_cmpgt_ps(ret, constants::g_vector_max_uint.operator vector());
-			auto value										   = constants::g_vector_unsigned_fix.operator vector();
+			auto overflow							= _mm_cmpgt_ps(ret, g_vector_max_uint.operator vector());
+			auto value								= g_vector_unsigned_fix.operator vector();
 			// Too large for a signed integer?
-			auto										  mask = _mm_cmpge_ps(ret, value);
+			auto							   mask = _mm_cmpge_ps(ret, value);
 			// Zero for number's lower than 0x80000000, 32768.0f*65536.0f otherwise
-			value											   = _mm_and_ps(value, mask);
+			value									= _mm_and_ps(value, mask);
 			// Perform fixup only on numbers too large (Keeps low bit precision)
-			ret												   = _mm_sub_ps(ret, value);
-			auto result										   = _mm_cvttps_epi32(ret);
+			ret										= _mm_sub_ps(ret, value);
+			auto result								= _mm_cvttps_epi32(ret);
 			// Convert from signed to unsigned if greater than 0x80000000
-			mask											   = _mm_and_ps(mask, constants::g_vector_neg_zero.operator vector());
-			ret												   = _mm_xor_ps(_mm_castsi128_ps(result), mask);
+			mask									= _mm_and_ps(mask, g_vector_neg_zero.operator vector());
+			ret										= _mm_xor_ps(_mm_castsi128_ps(result), mask);
 			// On those that are too large, set to 0xFFFFFFFF
-			ret												   = _mm_or_ps(ret, overflow);
+			ret										= _mm_or_ps(ret, overflow);
 			return ret;
 		}
 
-		template<std::size_t Size>
-		constexpr vector vector_load(const std::uint32_t* source) noexcept
+		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> ValueType, typename T>
+		constexpr vector consteval_vector_load(T source) noexcept
 		{
-			return vector_load<Size>(std::span<const std::uint32_t, Size>{source, Size});
+			vector	   ret{};
+
+			ValueType* data;
+
+			if constexpr (std::is_same_v<float, ValueType>)
+			{
+				data = ret.m128_f32;
+			}
+			else if constexpr (std::is_same_v<std::int32_t, ValueType>)
+			{
+				data = ret.m128_i32;
+			}
+			else
+			{
+				data = ret.m128_u32;
+			}
+
+			data[0] = source[0];
+
+			if constexpr (Size >= 2)
+			{
+				data[1] = source[1];
+			}
+			else
+			{
+				data[1] = ValueType{0};
+			}
+			if constexpr (Size >= 3)
+			{
+				data[2] = source[2];
+			}
+			else
+			{
+				data[2] = ValueType{0};
+			}
+			if constexpr (Size >= 4)
+			{
+				data[3] = source[3];
+			}
+			else
+			{
+				data[3] = ValueType{0};
+			}
+			return ret;
 		}
 
-		template<std::size_t Size>
-		constexpr vector vector_load(std::span<const std::uint32_t, Size> source) noexcept
+
+		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		constexpr vector vector_load(const T* source) noexcept
+		{
+			return vector_load<Size, T>(std::span<const T, Size>{source, Size});
+		}
+
+		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		constexpr vector vector_load(std::span<const T, Size> source) noexcept
 		{
 			static_assert(Size >= 1 && Size <= 4);
 
@@ -188,36 +238,7 @@ namespace gal::toolbox::math
 
 			if (std::is_constant_evaluated())
 			{
-				vector ret{};
-				auto& [a, b, c, d] = ret.m128_u32;
-
-				a				   = source[0];
-
-				if constexpr (Size >= 2)
-				{
-					b				   = source[1];
-				}
-				else
-				{
-					b = 0;
-				}
-				if constexpr (Size >= 3)
-				{
-					c = source[2];
-				}
-				else
-				{
-					c = 0;
-				}
-				if constexpr (Size >= 4)
-				{
-					d = source[3];
-				}
-				else
-				{
-					d = 0;
-				}
-				return ret;
+				return consteval_vector_load<Size, T, std::span<const T, Size>>(source);
 			}
 
 			if constexpr (Size == 1)
@@ -226,12 +247,12 @@ namespace gal::toolbox::math
 			}
 			if constexpr (Size == 2)
 			{
-				return _mm_castpd_ps(_mm_load_sd(static_cast<const double*>(source.data())));
+				return _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data())));
 			}
 			else if constexpr (Size == 3)
 			{
-				auto xy = _mm_castpd_ps(_mm_load_sd(static_cast<const double*>(source.data())));
-				auto z	= _mm_load_ss(static_cast<const float*>(source.data() + uint3::index_of_z));
+				auto xy = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data())));
+				auto z	= _mm_load_ss(reinterpret_cast<const float*>(source.data() + uint3::index_of_z));
 				return _mm_movelh_ps(xy, z);
 			}
 			else
@@ -241,9 +262,11 @@ namespace gal::toolbox::math
 		}
 
 		template<one_tier_container_t T>
+		requires any_of_t<typename T::value_type, float, std::int32_t, std::uint32_t>
 		constexpr vector vector_load(const T& source) noexcept
 		{
-			using T::size;
+			constexpr auto size = T::size;
+			using value_type	= typename T::value_type;
 			static_assert(size >= 2 && size <= 4);
 
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
@@ -253,47 +276,25 @@ namespace gal::toolbox::math
 
 			if constexpr (is_aligned_one_tier_container_v<T>)
 			{
-				gal::toolbox::utils::gal_assert(
-						(reinterpret_cast<std::uintptr_t>(&source) & 0xF) == 0,
-						"invalid source data");
+				if (!std::is_constant_evaluated())
+				{
+					// we cannot use reinterpret_cast in consteval
+					gal::toolbox::utils::gal_assert(
+							(reinterpret_cast<std::uintptr_t>(&source) & 0xF) == 0,
+							"invalid source data");
+				}
 			}
-
-			using value_type = typename T::value_type;
 
 			if (std::is_constant_evaluated())
 			{
-				vector ret{};
-				auto& [a, b, c, d] = ret.m128_u32;
-
-				if constexpr (T::size >= 2)
-				{
-					a = source[0];
-					b = source[1];
-				}
-				if constexpr (T::size >= 3)
-				{
-					c = source[2];
-				}
-				else
-				{
-					c = 0;
-				}
-				if constexpr (T::size >= 4)
-				{
-					d = source[3];
-				}
-				else
-				{
-					d = 0;
-				}
-				return ret;
+				return consteval_vector_load<size, value_type, const T&>(source);
 			}
 
 			vector v{};
 
 			if constexpr (size == 2)
 			{
-				v = _mm_castpd_ps(_mm_load_sd(static_cast<const double*>(source.data)));
+				v = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data)));
 				if constexpr (std::is_floating_point_v<value_type>)
 				{
 					return v;
@@ -308,12 +309,12 @@ namespace gal::toolbox::math
 				if constexpr (std::is_floating_point_v<value_type> && is_aligned_one_tier_container_v<T>)
 				{
 					// Reads an extra float which is zeroed
-					return _mm_and_ps(_mm_load_ps(static_cast<const float*>(source.data)), g_vector_mask_xyz.operator vector());
+					return _mm_and_ps(_mm_load_ps(reinterpret_cast<const float*>(source.data)), g_vector_mask_xyz.operator vector());
 				}
 				else
 				{
-					auto xy = _mm_castpd_ps(_mm_load_sd(static_cast<const double*>(source.data)));
-					auto z	= _mm_load_ss(static_cast<const float*>(source.data + T::index_of_z));
+					auto xy = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data)));
+					auto z	= _mm_load_ss(reinterpret_cast<const float*>(source.data + T::index_of_z));
 					if constexpr (std::is_floating_point_v<value_type>)
 					{
 						return _mm_movelh_ps(xy, z);
@@ -332,7 +333,7 @@ namespace gal::toolbox::math
 			{
 				if constexpr (std::is_floating_point_v<value_type>)
 				{
-					return _mm_loadu_ps(static_cast<const float*>(source.data));
+					return _mm_loadu_ps(reinterpret_cast<const float*>(source.data));
 				}
 				else
 				{
@@ -349,20 +350,28 @@ namespace gal::toolbox::math
 			}
 
 			// If value_type is unsigned
+			if constexpr (std::is_unsigned_v<value_type>)
+			{
+				/**
+				 * note:
+				 *  The `if constexpr` here is necessary, otherwise if the value_type is not unsigned (even if they have been returned in the above branch),
+				 *  the following code still exists (even if they are not reachable), and the warning generated by this will be regarded as an error.
+				 */
 
-			// For the values that are higher than 0x7FFFFFFF, a fixup is needed
-			// Determine which ones need the fix.
-			auto mask = _mm_and_ps(v, constants::g_vector_neg_zero.operator vector());
-			// Force all values positive
-			auto ret  = _mm_xor_ps(v, mask);
-			// Convert to floats
-			ret		  = _mm_cvtepi32_ps(_mm_castps_si128(ret));
-			// Convert 0x80000000 -> 0xFFFFFFFF
-			auto i	  = _mm_srai_epi32(_mm_castps_si128(mask), 31);
-			// For only the ones that are too big, add the fixup
-			mask	  = _mm_and_ps(_mm_castsi128_ps(i), constants::g_vector_fix_unsigned.operator vector());
-			ret		  = _mm_add_ps(ret, mask);
-			return ret;
+				// For the values that are higher than 0x7FFFFFFF, a fixup is needed
+				// Determine which ones need the fix.
+				auto mask = _mm_and_ps(v, g_vector_neg_zero.operator vector());
+				// Force all values positive
+				auto ret  = _mm_xor_ps(v, mask);
+				// Convert to floats
+				ret		  = _mm_cvtepi32_ps(_mm_castps_si128(ret));
+				// Convert 0x80000000 -> 0xFFFFFFFF
+				auto i	  = _mm_srai_epi32(_mm_castps_si128(mask), 31);
+				// For only the ones that are too big, add the fixup
+				mask	  = _mm_and_ps(_mm_castsi128_ps(i), g_vector_fix_unsigned.operator vector());
+				ret		  = _mm_add_ps(ret, mask);
+				return ret;
+			}
 		}
 
 		template<two_tier_container_t T>
