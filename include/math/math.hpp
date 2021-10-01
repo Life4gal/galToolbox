@@ -25,15 +25,19 @@
 	#include <span>
 	#include <utils/assert.hpp>
 	#include <utils/tuple_maker.hpp>
+	#include <utils/concepts.hpp>
 
 namespace gal::toolbox::math
 {
 	inline namespace data_types
 	{
+		template<typename T>
+		concept basic_math_type_t = gal::toolbox::utils::any_type_of_t<T, float, std::int32_t, std::uint32_t>;
+
 		//=======================================================
 		// for operations
 		//=======================================================
-		using vector = __m128;
+		using vector			  = __m128;
 
 		static_assert(std::alignment_of_v<vector> == 16);
 		constexpr static std::size_t math_type_alignment = std::alignment_of_v<vector>;
@@ -131,6 +135,20 @@ namespace gal::toolbox::math
 		concept vector_t = is_vector_v<T>;
 
 		template<typename T>
+		struct is_matrix : std::is_same<matrix, T>
+		{
+		};
+		template<typename T>
+		constexpr static bool is_matrix_v = is_matrix<T>::value;
+		template<typename T>
+		concept matrix_t = is_matrix_v<T>;
+
+		template<typename T>
+		constexpr static bool is_vector_or_matrix = is_vector_v<T> || is_matrix_v<T>;
+		template<typename T>
+		concept vector_or_matrix_t = vector_t<T> || matrix_t<T>;
+
+		template<typename T>
 		struct is_one_tier_container : std::false_type
 		{
 		};
@@ -139,15 +157,7 @@ namespace gal::toolbox::math
 		{
 		};
 		template<>
-		struct is_one_tier_container<float2a> : std::true_type
-		{
-		};
-		template<>
 		struct is_one_tier_container<float3> : std::true_type
-		{
-		};
-		template<>
-		struct is_one_tier_container<float3a> : std::true_type
 		{
 		};
 		template<>
@@ -155,15 +165,7 @@ namespace gal::toolbox::math
 		{
 		};
 		template<>
-		struct is_one_tier_container<float4a> : std::true_type
-		{
-		};
-		template<>
 		struct is_one_tier_container<int2> : std::true_type
-		{
-		};
-		template<>
-		struct is_one_tier_container<int2a> : std::true_type
 		{
 		};
 		template<>
@@ -171,15 +173,7 @@ namespace gal::toolbox::math
 		{
 		};
 		template<>
-		struct is_one_tier_container<int3a> : std::true_type
-		{
-		};
-		template<>
 		struct is_one_tier_container<int4> : std::true_type
-		{
-		};
-		template<>
-		struct is_one_tier_container<int4a> : std::true_type
 		{
 		};
 		template<>
@@ -187,29 +181,18 @@ namespace gal::toolbox::math
 		{
 		};
 		template<>
-		struct is_one_tier_container<uint2a> : std::true_type
-		{
-		};
-		template<>
 		struct is_one_tier_container<uint3> : std::true_type
-		{
-		};
-		template<>
-		struct is_one_tier_container<uint3a> : std::true_type
 		{
 		};
 		template<>
 		struct is_one_tier_container<uint4> : std::true_type
 		{
 		};
-		template<>
-		struct is_one_tier_container<uint4a> : std::true_type
-		{
-		};
 		template<typename T>
 		constexpr static bool is_one_tier_container_v = is_one_tier_container<T>::value;
 		template<typename T>
 		concept one_tier_container_t = is_one_tier_container_v<T>;
+
 		template<typename T>
 		struct is_aligned_one_tier_container : std::false_type
 		{
@@ -254,6 +237,12 @@ namespace gal::toolbox::math
 		constexpr static bool is_aligned_one_tier_container_v = is_aligned_one_tier_container<T>::value;
 		template<typename T>
 		concept aligned_one_tier_container_t = is_aligned_one_tier_container_v<T>;
+
+		template<typename T>
+		constexpr static bool is_one_tier_container_ignore_aligned_v = is_one_tier_container_v<T> || is_aligned_one_tier_container_v<T>;
+		template<typename T>
+		concept one_tier_container_ignore_aligned_t = is_one_tier_container_ignore_aligned_v<T>;
+
 		template<typename T>
 		struct is_two_tier_container : std::false_type
 		{
@@ -263,15 +252,7 @@ namespace gal::toolbox::math
 		{
 		};
 		template<>
-		struct is_two_tier_container<float3x3a> : std::true_type
-		{
-		};
-		template<>
 		struct is_two_tier_container<float3x4> : std::true_type
-		{
-		};
-		template<>
-		struct is_two_tier_container<float3x4a> : std::true_type
 		{
 		};
 		template<>
@@ -279,28 +260,60 @@ namespace gal::toolbox::math
 		{
 		};
 		template<>
-		struct is_two_tier_container<float4x3a> : std::true_type
-		{
-		};
-		template<>
 		struct is_two_tier_container<float4x4> : std::true_type
-		{
-		};
-		template<>
-		struct is_two_tier_container<float4x4a> : std::true_type
 		{
 		};
 		template<typename T>
 		constexpr static bool is_two_tier_container_v = is_two_tier_container<T>::value;
 		template<typename T>
 		concept two_tier_container_t = is_two_tier_container_v<T>;
+
+		template<typename T>
+		struct is_aligned_two_tier_container : std::false_type
+		{
+		};
+		template<>
+		struct is_aligned_two_tier_container<float3x3a> : std::true_type
+		{
+		};
+		template<>
+		struct is_aligned_two_tier_container<float3x4a> : std::true_type
+		{
+		};
+		template<>
+		struct is_aligned_two_tier_container<float4x3a> : std::true_type
+		{
+		};
+		template<>
+		struct is_aligned_two_tier_container<float4x4a> : std::true_type
+		{
+		};
+		template<typename T>
+		constexpr static bool is_aligned_two_tier_container_v = is_aligned_two_tier_container<T>::value;
+		template<typename T>
+		concept aligned_two_tier_container_t = is_aligned_two_tier_container_v<T>;
+
+		template<typename T>
+		constexpr static bool is_two_tier_container_ignore_aligned_v = is_two_tier_container_v<T> || is_aligned_two_tier_container_v<T>;
+		template<typename T>
+		concept two_tier_container_ignore_aligned_t = is_two_tier_container_ignore_aligned_v<T>;
+
+		template<typename T>
+		constexpr static bool is_one_or_two_tier_container_v = is_one_tier_container_v<T> || is_two_tier_container_v<T>;
+		template<typename T>
+		constexpr static bool is_aligned_one_or_two_tier_container_v = is_aligned_one_tier_container_v<T> || is_aligned_two_tier_container_v<T>;
+		template<typename T>
+		constexpr static bool is_one_or_two_tier_container_ignore_aligned_v = is_one_tier_container_ignore_aligned_v<T> || is_two_tier_container_ignore_aligned_v<T>;
+		template<typename T>
+		concept one_or_two_tier_container_t = is_one_or_two_tier_container_v<T>;
+		template<typename T>
+		concept aligned_one_or_two_tier_container_t = is_aligned_one_or_two_tier_container_v<T>;
+		template<typename T>
+		concept one_or_two_tier_container_ignore_aligned_t = is_one_or_two_tier_container_ignore_aligned_v<T>;
 	}// namespace data_types
 
 	inline namespace operations
 	{
-		using vector = data_types::vector;
-		using matrix = data_types::matrix;
-
 		[[nodiscard]] constexpr vector operator+(const vector& v) noexcept;
 		[[nodiscard]] constexpr vector operator-(const vector& v) noexcept;
 
@@ -360,14 +373,9 @@ namespace gal::toolbox::math
 
 	inline namespace utils
 	{
-		//		template<typename T, typename... Ts>
-		//		concept any_of_t = (std::same_as<T, Ts> || ...);
-		template<typename T, typename... Ts>
-		concept any_of_t = std::disjunction_v<std::is_same<T, Ts>...>;
+		[[nodiscard]] constexpr float  degrees2radians(float degrees) noexcept;
 
-		constexpr float				   degrees2radians(float degrees) noexcept;
-
-		constexpr float				   radians2degrees(float radians) noexcept;
+		[[nodiscard]] constexpr float  radians2degrees(float radians) noexcept;
 
 		[[nodiscard]] constexpr vector vector_i2f(const vector& v, std::uint32_t div_exponent) noexcept;
 		[[nodiscard]] constexpr vector vector_f2i(const vector& v, std::uint32_t mul_exponent) noexcept;
@@ -383,7 +391,7 @@ namespace gal::toolbox::math
 		 * @param source source pointer
 		 * @return vector
 		 */
-		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		template<std::size_t Size, basic_math_type_t T>
 		constexpr vector vector_load(const T* source) noexcept;
 		/**
 		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
@@ -394,7 +402,7 @@ namespace gal::toolbox::math
 		 * @param source source span
 		 * @return vector
 		 */
-		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		template<std::size_t Size, basic_math_type_t T>
 		constexpr vector vector_load(std::span<const T, Size> source) noexcept;
 		/**
 		 * @brief Read `Size` data from a one_tier_container of value_type float/std::int32_t/std::uint32_t to initialize the vector.
@@ -405,21 +413,30 @@ namespace gal::toolbox::math
 		 * @param source one_tier_container source
 		 * @return vector
 		 */
-		template<one_tier_container_t T>
-		requires any_of_t<typename T::value_type, float, std::int32_t, std::uint32_t>
+		template<one_tier_container_ignore_aligned_t T>
+		requires basic_math_type_t<typename T::value_type>
 		constexpr vector vector_load(const T& source) noexcept;
 
-		template<two_tier_container_t T>
+		/**
+		 * @brief Read `Size` data from a two_tier_container of value_type float to initialize the matrix.
+		 * It must be guaranteed that 3 <= FirstTier <= 4 and 3 <= SecondTier,
+		 * and it is only guaranteed that the obtained vector is of the correct type when read with the float.
+		 * @note need to be transposed before use if source type is float3x4
+		 * @tparam T two_tier_container type
+		 * @param source two_tier_container source
+		 * @return matrix
+		 */
+		template<two_tier_container_ignore_aligned_t T>
 		constexpr matrix matrix_load(const T& source) noexcept;
 
-		template<one_tier_container_t T>
+		template<one_tier_container_ignore_aligned_t T>
 		constexpr void vector_store(std::span<float, T::size> dest, const vector& source) noexcept;
-		template<one_tier_container_t T>
+		template<one_tier_container_ignore_aligned_t T>
 		constexpr void vector_store(T& dest, const vector& source) noexcept;
 
-		template<two_tier_container_t T>
+		template<two_tier_container_ignore_aligned_t T>
 		constexpr void matrix_store(std::span<float, T::size> dest, const matrix& source) noexcept;
-		template<two_tier_container_t T>
+		template<two_tier_container_ignore_aligned_t T>
 		constexpr void matrix_store(T& dest, const matrix& source) noexcept;
 	}// namespace utils
 
@@ -466,68 +483,35 @@ namespace gal::toolbox::math
 
 		static_assert(f32_vector::size == 4);
 		static_assert(i32_vector::size == 4);
-		static_assert(u8_vector::size == math_type_alignment);
+		static_assert(u8_vector::size == 16);
 		static_assert(u32_vector::size == 4);
-
-		template<vector_t Vec, typename Tuple, typename Vec::size_type... I>
-		requires(sizeof...(I) <= Vec::size) constexpr Vec make_vector(Tuple&& tuple, std::index_sequence<I...>) noexcept
-		{
-			return {static_cast<typename Vec::value_type>(std::get<I>(std::forward<Tuple>(tuple)))...};
-		}
-
-		template<vector_t Vec, typename... Args>
-		requires(sizeof...(Args) <= Vec::size) constexpr Vec make_vector(Args... args) noexcept
-		{
-			return make_vector<Vec>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Vec::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
-		}
-
-		template<vector_t Vec, typename Vec::size_type Size, any_of_t<float, std::uint32_t> T>
-		requires(Size <= Vec::size) constexpr Vec make_vector(const T* source) noexcept
-		{
-			return {vector_load<Size, T>(source)};
-		}
-
-		template<vector_t Vec, typename Vec::size_type Size, any_of_t<float, std::uint32_t> T>
-		requires(Size <= Vec::size) constexpr Vec make_vector(std::span<const T, Size> source) noexcept
-		{
-			return {vector_load<Size, T>(source)};
-		}
 
 		struct alignas(math_type_alignment) matrix
 		{
-			vector data[4];
+			using value_type					   = float;
+			using size_type						   = std::size_t;
+			using vector_type					   = vector;
 
-			constexpr matrix() noexcept = default;
+			constexpr static size_type extent_size = 4;
+			constexpr static size_type size		   = extent_size * 4;
 
-			constexpr matrix(
-					const vector& v1,
-					const vector& v2,
-					const vector& v3,
-					const vector& v4) noexcept
-				: data{v1, v2, v3, v4} {}
+			using reference						   = vector_type&;
 
-			constexpr matrix(
-					float f00,
-					float f01,
-					float f02,
-					float f03,
+			vector_type						  data[4];
 
-					float f10,
-					float f11,
-					float f12,
-					float f13,
+			[[nodiscard]] constexpr reference operator[](size_type index) noexcept
+			{
+				gal::toolbox::utils::gal_assert(index < extent_size, "index out of bound");
 
-					float f20,
-					float f21,
-					float f22,
-					float f23,
+				return data[index];
+			}
 
-					float f30,
-					float f31,
-					float f32,
-					float f33) noexcept;
+			[[nodiscard]] constexpr vector_type operator[](size_type index) const noexcept
+			{
+				gal::toolbox::utils::gal_assert(index < extent_size, "index out of bound");
 
-			constexpr explicit matrix(std::span<float, math_type_alignment> s) noexcept;
+				return data[index];
+			}
 		};
 
 		template<typename T, std::size_t Size>
@@ -760,18 +744,6 @@ namespace gal::toolbox::math
 		#pragma clang diagnostic pop
 	#endif
 
-		template<one_tier_container_t Container, typename Tuple, typename Container::size_type... I>
-		requires(sizeof...(I) <= Container::size) constexpr Container make_one_tier_container(Tuple&& tuple, std::index_sequence<I...>) noexcept
-		{
-			return {static_cast<typename Container::value_type>(std::get<I>(std::forward<Tuple>(tuple)))...};
-		}
-
-		template<one_tier_container_t Container, typename... Args>
-		requires(sizeof...(Args) <= Container::size) constexpr Container make_one_tier_container(Args... args) noexcept
-		{
-			return make_one_tier_container<Container>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Container::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
-		}
-
 		/**
 		 * @note:
 		 *
@@ -795,22 +767,21 @@ namespace gal::toolbox::math
 
 			using reference						   = value_type&;
 
-			value_type data[first_size][second_size];
-
-			constexpr generic_two_tier_container() noexcept = default;
-
-			template<typename... Args>
-			requires(sizeof...(Args) == size) constexpr generic_two_tier_container(Args&&... args) noexcept;
-
-			constexpr explicit generic_two_tier_container(std::span<float, size> s) noexcept;
+			value_type			data[first_size][second_size];
 
 			constexpr reference operator()(size_type row, size_type column) noexcept
 			{
+				gal::toolbox::utils::gal_assert(row < first_size, "row out of bound");
+				gal::toolbox::utils::gal_assert(column < second_size, "row out of bound");
+
 				return data[row][column];
 			}
 
 			constexpr value_type operator()(size_type row, size_type column) const noexcept
 			{
+				gal::toolbox::utils::gal_assert(row < first_size, "row out of bound");
+				gal::toolbox::utils::gal_assert(column < second_size, "row out of bound");
+
 				return data[row][column];
 			}
 		};
@@ -830,19 +801,15 @@ namespace gal::toolbox::math
 
 		struct alignas(math_type_alignment) float3x3a : public float3x3
 		{
-			using float3x3::float3x3;
 		};
 		struct alignas(math_type_alignment) float3x4a : public float3x4
 		{
-			using float3x4::float3x4;
 		};
 		struct alignas(math_type_alignment) float4x3a : public float4x3
 		{
-			using float4x3::float4x3;
 		};
 		struct alignas(math_type_alignment) float4x4a : public float4x4
 		{
-			using float4x4::float4x4;
 		};
 
 	#ifdef _MSC_VER
@@ -854,6 +821,18 @@ namespace gal::toolbox::math
 	#ifdef __clang__
 		#pragma clang diagnostic pop
 	#endif
+
+		template<typename Target, typename Tuple, typename Target::size_type... I>
+		requires(vector_or_matrix_t<Target> || one_or_two_tier_container_ignore_aligned_t<Target>) && (sizeof...(I) <= Target::size) constexpr Target make(Tuple&& tuple, std::index_sequence<I...>) noexcept
+		{
+			return {static_cast<typename Target::value_type>(std::get<I>(std::forward<Tuple>(tuple)))...};
+		}
+
+		template<typename Target, typename... Args>
+		requires(vector_or_matrix_t<Target> || one_or_two_tier_container_ignore_aligned_t<Target>) && (sizeof...(Args) <= Target::size) constexpr Target make(Args... args) noexcept
+		{
+			return make<Target>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Target::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
+		}
 	}// namespace data_types
 
 	inline namespace constants

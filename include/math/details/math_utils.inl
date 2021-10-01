@@ -2,12 +2,12 @@ namespace gal::toolbox::math
 {
 	inline namespace utils
 	{
-		constexpr float degrees2radians(float degrees) noexcept
+		[[nodiscard]] constexpr float degrees2radians(float degrees) noexcept
 		{
 			return degrees * (pi / 180.f);
 		}
 
-		constexpr float radians2degrees(float radians) noexcept
+		[[nodiscard]] constexpr float radians2degrees(float radians) noexcept
 		{
 			return radians * (180.f / pi);
 		}
@@ -168,7 +168,7 @@ namespace gal::toolbox::math
 			return ret;
 		}
 
-		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> ValueType, typename T>
+		template<std::size_t Size, basic_math_type_t ValueType, typename T>
 		constexpr vector consteval_vector_load(T source) noexcept
 		{
 			static_assert(Size >= 1 && Size <= 4);
@@ -219,14 +219,13 @@ namespace gal::toolbox::math
 			return ret;
 		}
 
-
-		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		template<std::size_t Size, basic_math_type_t T>
 		constexpr vector vector_load(const T* source) noexcept
 		{
 			return vector_load<Size, T>(std::span<const T, Size>{source, Size});
 		}
 
-		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> T>
+		template<std::size_t Size, basic_math_type_t T>
 		constexpr vector vector_load(std::span<const T, Size> source) noexcept
 		{
 			static_assert(Size >= 1 && Size <= 4);
@@ -263,8 +262,8 @@ namespace gal::toolbox::math
 			}
 		}
 
-		template<one_tier_container_t T>
-		requires any_of_t<typename T::value_type, float, std::int32_t, std::uint32_t>
+		template<one_tier_container_ignore_aligned_t T>
+		requires basic_math_type_t<typename T::value_type>
 		constexpr vector vector_load(const T& source) noexcept
 		{
 			constexpr auto size = T::size;
@@ -376,83 +375,117 @@ namespace gal::toolbox::math
 			}
 		}
 
-		template<two_tier_container_t T>
+		template<std::size_t FirstTier, std::size_t SecondTier, basic_math_type_t ValueType, typename T>
+		constexpr matrix consteval_matrix_load(T source) noexcept
+		{
+			static_assert(FirstTier == 3 || FirstTier == 4);
+			static_assert(SecondTier == 3 || SecondTier == 4);
+
+			matrix	   ret{};
+
+			ValueType* data0;
+			ValueType* data1;
+			ValueType* data2;
+			ValueType* data3;
+
+			if constexpr (std::is_same_v<float, ValueType>)
+			{
+				data0 = ret.data[0].m128_f32;
+				data1 = ret.data[1].m128_f32;
+				data2 = ret.data[2].m128_f32;
+				data3 = ret.data[3].m128_f32;
+			}
+			else if constexpr (std::is_same_v<std::int32_t, ValueType>)
+			{
+				data0 = ret.data[0].m128_i32;
+				data1 = ret.data[1].m128_i32;
+				data2 = ret.data[2].m128_i32;
+				data3 = ret.data[3].m128_i32;
+			}
+			else
+			{
+				data0 = ret.data[0].m128_u32;
+				data1 = ret.data[1].m128_u32;
+				data2 = ret.data[2].m128_u32;
+				data3 = ret.data[3].m128_u32;
+			}
+
+			data0[0] = source(0, 0);
+			data0[1] = source(0, 1);
+			data0[2] = source(0, 2);
+
+			data1[0] = source(1, 0);
+			data1[1] = source(1, 1);
+			data1[2] = source(1, 2);
+
+			data2[0] = source(2, 0);
+			data2[1] = source(2, 1);
+			data2[2] = source(2, 2);
+
+			if constexpr (SecondTier == 4)
+			{
+				data0[3] = source(0, 3);
+				data1[3] = source(1, 3);
+				data2[3] = source(2, 3);
+			}
+			else
+			{
+				data0[3] = ValueType{0};
+				data1[3] = ValueType{0};
+				data2[3] = ValueType{0};
+			}
+
+			if constexpr (FirstTier == 4)
+			{
+				data3[0] = source(3, 0);
+				data3[1] = source(3, 1);
+				data3[2] = source(3, 2);
+			}
+			else
+			{
+				data3[0] = ValueType{0};
+				data3[1] = ValueType{0};
+				data3[2] = ValueType{0};
+			}
+
+			if constexpr (FirstTier == 4 && SecondTier == 4)
+			{
+				data3[3] = source(3, 3);
+			}
+			else
+			{
+				data3[3] = ValueType{1};
+			}
+
+			return ret;
+		}
+
+		template<two_tier_container_ignore_aligned_t T>
 		constexpr matrix matrix_load(const T& source) noexcept
 		{
-			using T::first_size;
-			using T::second_size;
-			using T::size;
+			constexpr auto first_size  = T::first_size;
+			constexpr auto second_size = T::second_size;
+			constexpr auto size		   = T::size;
+
+			using value_type		   = typename T::value_type;
 
 			static_assert(first_size == 3 || first_size == 4);
 			static_assert(second_size == 3 || second_size == 4);
 
-			if constexpr (is_aligned_one_tier_container_v<T>)
+			if constexpr (is_aligned_two_tier_container_v<T>)
 			{
-				gal::toolbox::utils::gal_assert(
-						(reinterpret_cast<std::uintptr_t>(&source) & 0xF) == 0,
-						"invalid source data");
+				if (!std::is_constant_evaluated())
+				{
+					// we cannot use reinterpret_cast in consteval
+					gal::toolbox::utils::gal_assert(
+							(reinterpret_cast<std::uintptr_t>(&source) & 0xF) == 0,
+							"invalid source data");
+				}
 			}
 
 			if (std::is_constant_evaluated())
 			{
-				matrix ret{};
-
-				auto& [a00, a01, a02, a03] = ret.data[0].m128_f32;
-				auto& [a10, a11, a12, a13] = ret.data[1].m128_f32;
-				auto& [a20, a21, a22, a23] = ret.data[2].m128_f32;
-				auto& [a30, a31, a32, a33] = ret.data[3].m128_f32;
-
-				a00						   = source(0, 0);
-				a01						   = source(0, 1);
-				a02						   = source(0, 2);
-				if constexpr (first_size == 4)
-				{
-					a03 = source(0, 3);
-				}
-				else
-				{
-					a03 = 0.f;
-				}
-
-				a10 = source(1, 0);
-				a11 = source(1, 1);
-				a12 = source(1, 2);
-				if constexpr (first_size == 4)
-				{
-					a13 = source(1, 3);
-				}
-				else
-				{
-					a13 = 0.f;
-				}
-
-				a20 = source(2, 0);
-				a21 = source(2, 1);
-				a22 = source(2, 2);
-				if constexpr (first_size == 4)
-				{
-					a23 = source(2, 3);
-				}
-				else
-				{
-					a23 = 0.f;
-				}
-
-				if constexpr (second_size == 4)
-				{
-					a30 = source(3, 0);
-					a31 = source(3, 1);
-					a32 = source(3, 2);
-					if constexpr (first_size == 4)
-					{
-						a33 = source(3, 3);
-					}
-					else
-					{
-						a33 = 1.f;
-					}
-				}
-				return ret;
+				return consteval_matrix_load<first_size, second_size, value_type, const T&>(source);
 			}
 
 			if constexpr (size == 9)

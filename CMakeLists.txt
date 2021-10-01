@@ -7,12 +7,12 @@ set(
 
 set(
 		GALTOOLBOX_MINOR_VERSION
-		0
+		1
 )
 
 set(
 		GALTOOLBOX_PATCH_VERSION
-		9
+		1
 )
 
 set(
@@ -40,6 +40,7 @@ set(
 		include/utils/random.hpp
 		include/utils/sequence_invoker.hpp
 		include/utils/tuple_maker.hpp
+		include/utils/concepts.hpp
 
 		# string
 		include/string/compile_time_matcher.hpp
