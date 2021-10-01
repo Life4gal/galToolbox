@@ -12,7 +12,7 @@ set(
 
 set(
 		GALTOOLBOX_PATCH_VERSION
-		8
+		9
 )
 
 set(

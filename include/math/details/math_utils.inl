@@ -171,6 +171,8 @@ namespace gal::toolbox::math
 		template<std::size_t Size, any_of_t<float, std::int32_t, std::uint32_t> ValueType, typename T>
 		constexpr vector consteval_vector_load(T source) noexcept
 		{
+			static_assert(Size >= 1 && Size <= 4);
+
 			vector	   ret{};
 
 			ValueType* data;
@@ -245,7 +247,7 @@ namespace gal::toolbox::math
 			{
 				return _mm_load_ss(reinterpret_cast<const float*>(source.data()));
 			}
-			if constexpr (Size == 2)
+			else if constexpr (Size == 2)
 			{
 				return _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data())));
 			}

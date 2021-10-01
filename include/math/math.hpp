@@ -376,7 +376,7 @@ namespace gal::toolbox::math
 
 		/**
 		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
-		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
+		 * It must be guaranteed that 1 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
 		 * and it is only guaranteed that the obtained vector is of the correct type when read with the given type.
 		 * @tparam Size data size
 		 * @tparam T data type
@@ -387,7 +387,7 @@ namespace gal::toolbox::math
 		constexpr vector vector_load(const T* source) noexcept;
 		/**
 		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
-		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
+		 * It must be guaranteed that 1 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
 		 * and it is only guaranteed that the obtained vector is of the correct type when read with the given type.
 		 * @tparam Size data size
 		 * @tparam T data type
@@ -901,7 +901,7 @@ namespace gal::toolbox::math
 		constexpr static u32_vector	   g_vector_neg_zero{0x80000000, 0x80000000, 0x80000000, 0x80000000};
 		constexpr static u32_vector	   g_vector_neg_xyz{0x80000000, 0x80000000, 0x80000000, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_xy{0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000};
-		constexpr static u32_vector	   g_vector_mask_xyz{0x80000000, 0x80000000, 0x80000000, 0x00000000};
+		constexpr static u32_vector	   g_vector_mask_xyz{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_x{0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_y{0x00000000, 0xFFFFFFFF, 0x00000000, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_z{0x00000000, 0x00000000, 0xFFFFFFFF, 0x00000000};
