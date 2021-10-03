@@ -220,16 +220,14 @@ namespace gal::toolbox::math
 		}
 
 		template<std::size_t Size, basic_math_type_t T>
-		constexpr vector vector_load(const T* source) noexcept
+		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(const T* source) noexcept
 		{
 			return vector_load<Size, T>(std::span<const T, Size>{source, Size});
 		}
 
 		template<std::size_t Size, basic_math_type_t T>
-		constexpr vector vector_load(std::span<const T, Size> source) noexcept
+		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(std::span<const T, Size> source) noexcept
 		{
-			static_assert(Size >= 1 && Size <= 4);
-
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_z == 2);
@@ -263,12 +261,10 @@ namespace gal::toolbox::math
 		}
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires basic_math_type_t<typename T::value_type>
-		constexpr vector vector_load(const T& source) noexcept
+		requires basic_math_type_t<typename T::value_type> &&(T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept
 		{
 			constexpr auto size = T::size;
 			using value_type	= typename T::value_type;
-			static_assert(size >= 2 && size <= 4);
 
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
@@ -622,6 +618,31 @@ namespace gal::toolbox::math
 
 				return ret;
 			}
+		}
+
+		template<std::size_t Size, basic_math_type_t T>
+		constexpr void vector_store(T* dest, const vector& source) noexcept
+		{
+			return vector_store<Size, T>(std::span<T, Size>{dest, Size}, source);
+		}
+
+		template<std::size_t Size, basic_math_type_t T>
+		constexpr void vector_store(std::span<T, Size> dest, const vector& source) noexcept
+		{
+			// todo
+		}
+
+		template<one_tier_container_ignore_aligned_t T>
+		requires basic_math_type_t<typename T::value_type>
+		constexpr void vector_store(T& dest, const vector& source) noexcept
+		{
+			// todo
+		}
+
+		template<two_tier_container_ignore_aligned_t T>
+		constexpr void matrix_store(T& dest, const matrix& source) noexcept
+		{
+			// todo
 		}
 	}// namespace utils
 }// namespace gal::toolbox::math

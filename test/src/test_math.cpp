@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <numeric>
 #include <math/math.hpp>
 
 #ifndef GALTOOLBOX_MATH_NOT_SUPPOTED
@@ -1113,6 +1114,608 @@ TEST(TestMath, TestMatrixLoad3x3)
 		ASSERT_FLOAT_EQ(f32a_p2_3[2], 0.f);
 		ASSERT_FLOAT_EQ(f32a_p2_3[3], 1.f);
 	}
+}
+
+TEST(TestMath, TestVectorStore4)
+{
+	// todo
+}
+
+TEST(TestMath, TestVectorStore3)
+{
+	// todo
+}
+
+TEST(TestMath, TestVectorStore2)
+{
+	// todo
+}
+
+TEST(TestMath, TestVectorStore1)
+{
+	// todo
+}
+
+TEST(TestMath, TestMatrixStore4x4)
+{
+	// todo
+}
+
+TEST(TestMath, TestMatrixStore4x3)
+{
+	// todo
+}
+
+TEST(TestMath, TestMatrixStore3x4)
+{
+	// todo
+}
+
+TEST(TestMath, TestMatrixStore3x3)
+{
+	// todo
+}
+
+TEST(TestMath, TestVectorZero)
+{
+	constexpr auto zero1 = vector_zero();
+	constexpr auto* p1 = zero1.m128_f32;
+
+	static_assert(float_eq(p1[0], 0.f));
+	static_assert(float_eq(p1[1], 0.f));
+	static_assert(float_eq(p1[2], 0.f));
+	static_assert(float_eq(p1[3], 0.f));
+
+	auto zero2 = vector_zero();
+	auto* p2 = zero2.m128_f32;
+
+	ASSERT_FLOAT_EQ(p2[0], 0.f);
+	ASSERT_FLOAT_EQ(p2[1], 0.f);
+	ASSERT_FLOAT_EQ(p2[2], 0.f);
+	ASSERT_FLOAT_EQ(p2[3], 0.f);
+}
+
+TEST(TestMath, TestVectorSet)
+{
+	constexpr std::uint32_t u32_1 = 0xFF;
+	constexpr std::uint32_t u32_2 = 0xFF0;
+	constexpr std::uint32_t u32_3 = 0xFF00;
+	constexpr std::uint32_t u32_4 = 0xFF000;
+
+	constexpr std::int32_t i32_1 = 0xFF;
+	constexpr std::int32_t i32_2 = 0xFF0;
+	constexpr std::int32_t i32_3 = 0xFF00;
+	constexpr std::int32_t i32_4 = 0xFF000;
+
+	constexpr float f32_1 = 123.456f;
+	constexpr float f32_2 = 234.456f;
+	constexpr float f32_3 = 345.678f;
+	constexpr float f32_4 = 456.789f;
+
+	{
+		constexpr auto u32_vec1 = vector_set(u32_1, u32_2, u32_3, u32_4);
+		constexpr auto* u32_p1 = u32_vec1.m128_u32;
+
+		static_assert(u32_p1[0] == u32_1);
+		static_assert(u32_p1[1] == u32_2);
+		static_assert(u32_p1[2] == u32_3);
+		static_assert(u32_p1[3] == u32_4);
+
+		auto u32_vec2 = vector_set(u32_1, u32_2, u32_3, u32_4);
+		auto* u32_p2 = u32_vec2.m128_u32;
+
+		ASSERT_EQ(u32_p2[0], u32_1);
+		ASSERT_EQ(u32_p2[1], u32_2);
+		ASSERT_EQ(u32_p2[2], u32_3);
+		ASSERT_EQ(u32_p2[3], u32_4);
+	}
+	{
+		constexpr auto i32_vec1 = vector_set(i32_1, i32_2, i32_3, i32_4);
+		constexpr auto* i32_p1 = i32_vec1.m128_i32;
+
+		static_assert(i32_p1[0] == i32_1);
+		static_assert(i32_p1[1] == i32_2);
+		static_assert(i32_p1[2] == i32_3);
+		static_assert(i32_p1[3] == i32_4);
+
+		auto i32_vec2 = vector_set(i32_1, i32_2, i32_3, i32_4);
+		auto* i32_p2 = i32_vec2.m128_i32;
+
+		ASSERT_EQ(i32_p2[0], i32_1);
+		ASSERT_EQ(i32_p2[1], i32_2);
+		ASSERT_EQ(i32_p2[2], i32_3);
+		ASSERT_EQ(i32_p2[3], i32_4);
+	}
+	{
+		constexpr auto f32_vec1 = vector_set(f32_1, f32_2, f32_3, f32_4);
+		constexpr auto* f32_p1 = f32_vec1.m128_f32;
+
+		static_assert(float_eq(f32_p1[0], f32_1));
+		static_assert(float_eq(f32_p1[1], f32_2));
+		static_assert(float_eq(f32_p1[2], f32_3));
+		static_assert(float_eq(f32_p1[3], f32_4));
+
+		auto f32_vec2 = vector_set(f32_1, f32_2, f32_3, f32_4);
+		auto* f32_p2 = f32_vec2.m128_f32;
+
+		ASSERT_FLOAT_EQ(f32_p2[0], f32_1);
+		ASSERT_FLOAT_EQ(f32_p2[1], f32_2);
+		ASSERT_FLOAT_EQ(f32_p2[2], f32_3);
+		ASSERT_FLOAT_EQ(f32_p2[3], f32_4);
+	}
+}
+
+TEST(TestMath, TestVectorReplicate)
+{
+	constexpr std::uint32_t u32 = 0xFF;
+
+	constexpr std::int32_t i32 = 0xFF;
+
+	constexpr float f32 = 123.456f;
+
+	{
+		constexpr auto u32_vec1 = vector_replicate(u32);
+		constexpr auto* u32_p1 = u32_vec1.m128_u32;
+
+		static_assert(u32_p1[0] == u32);
+		static_assert(u32_p1[1] == u32);
+		static_assert(u32_p1[2] == u32);
+		static_assert(u32_p1[3] == u32);
+
+		auto u32_vec2 = vector_replicate(u32);
+		auto* u32_p2 = u32_vec2.m128_u32;
+
+		ASSERT_EQ(u32_p2[0], u32);
+		ASSERT_EQ(u32_p2[1], u32);
+		ASSERT_EQ(u32_p2[2], u32);
+		ASSERT_EQ(u32_p2[3], u32);
+	}
+	{
+		constexpr auto i32_vec1 = vector_replicate(i32);
+		constexpr auto* i32_p1 = i32_vec1.m128_i32;
+
+		static_assert(i32_p1[0] == i32);
+		static_assert(i32_p1[1] == i32);
+		static_assert(i32_p1[2] == i32);
+		static_assert(i32_p1[3] == i32);
+
+		auto i32_vec2 = vector_replicate(i32);
+		auto* i32_p2 = i32_vec2.m128_i32;
+
+		ASSERT_EQ(i32_p2[0], i32);
+		ASSERT_EQ(i32_p2[1], i32);
+		ASSERT_EQ(i32_p2[2], i32);
+		ASSERT_EQ(i32_p2[3], i32);
+	}
+	{
+		constexpr auto f32_vec1 = vector_replicate(f32);
+		constexpr auto* f32_p1 = f32_vec1.m128_f32;
+
+		static_assert(float_eq(f32_p1[0], f32));
+		static_assert(float_eq(f32_p1[1], f32));
+		static_assert(float_eq(f32_p1[2], f32));
+		static_assert(float_eq(f32_p1[3], f32));
+
+		auto f32_vec2 = vector_replicate(f32);
+		auto* f32_p2 = f32_vec2.m128_f32;
+
+		ASSERT_FLOAT_EQ(f32_p2[0], f32);
+		ASSERT_FLOAT_EQ(f32_p2[1], f32);
+		ASSERT_FLOAT_EQ(f32_p2[2], f32);
+		ASSERT_FLOAT_EQ(f32_p2[3], f32);
+	}
+}
+
+TEST(TestMath, TestVectorReplicatePtr)
+{
+	constexpr std::uint32_t u32[] = {0xFF, 0xFF0};
+
+	constexpr std::int32_t i32[] = {0xFF, 0xFF0};
+
+	constexpr float f32[] = {123.456f, 234.567f};
+
+	{
+		constexpr auto u32_vec1 = vector_replicate(u32);
+		constexpr auto* u32_p1 = u32_vec1.m128_u32;
+
+		static_assert(u32_p1[0] == u32[0]);
+		static_assert(u32_p1[1] == u32[0]);
+		static_assert(u32_p1[2] == u32[0]);
+		static_assert(u32_p1[3] == u32[0]);
+
+		auto u32_vec2 = vector_replicate(u32);
+		auto* u32_p2 = u32_vec2.m128_u32;
+
+		ASSERT_EQ(u32_p2[0], u32[0]);
+		ASSERT_EQ(u32_p2[1], u32[0]);
+		ASSERT_EQ(u32_p2[2], u32[0]);
+		ASSERT_EQ(u32_p2[3], u32[0]);
+	}
+	{
+		constexpr auto i32_vec1 = vector_replicate(i32);
+		constexpr auto* i32_p1 = i32_vec1.m128_i32;
+
+		static_assert(i32_p1[0] == i32[0]);
+		static_assert(i32_p1[1] == i32[0]);
+		static_assert(i32_p1[2] == i32[0]);
+		static_assert(i32_p1[3] == i32[0]);
+
+		auto i32_vec2 = vector_replicate(i32);
+		auto* i32_p2 = i32_vec2.m128_i32;
+
+		ASSERT_EQ(i32_p2[0], i32[0]);
+		ASSERT_EQ(i32_p2[1], i32[0]);
+		ASSERT_EQ(i32_p2[2], i32[0]);
+		ASSERT_EQ(i32_p2[3], i32[0]);
+	}
+	{
+		constexpr auto f32_vec1 = vector_replicate(f32);
+		constexpr auto* f32_p1 = f32_vec1.m128_f32;
+
+		static_assert(float_eq(f32_p1[0], f32[0]));
+		static_assert(float_eq(f32_p1[1], f32[0]));
+		static_assert(float_eq(f32_p1[2], f32[0]));
+		static_assert(float_eq(f32_p1[3], f32[0]));
+
+		auto f32_vec2 = vector_replicate(f32);
+		auto* f32_p2 = f32_vec2.m128_f32;
+
+		ASSERT_FLOAT_EQ(f32_p2[0], f32[0]);
+		ASSERT_FLOAT_EQ(f32_p2[1], f32[0]);
+		ASSERT_FLOAT_EQ(f32_p2[2], f32[0]);
+		ASSERT_FLOAT_EQ(f32_p2[3], f32[0]);
+	}
+}
+
+TEST(TestMath, TestVectorReplicateTrueAndFalse)
+{
+	{
+		constexpr auto vec1 = vector_true();
+		constexpr auto* p1 = vec1.m128_u32;
+
+		static_assert(static_cast<int>(p1[0]) == -1);
+		static_assert(static_cast<int>(p1[1]) == -1);
+		static_assert(static_cast<int>(p1[2]) == -1);
+		static_assert(static_cast<int>(p1[3]) == -1);
+
+		auto vec2 = vector_true();
+		auto* p2 = vec2.m128_i32;
+
+		ASSERT_EQ(p2[0], -1);
+		ASSERT_EQ(p2[1], -1);
+		ASSERT_EQ(p2[2], -1);
+		ASSERT_EQ(p2[3], -1);
+	}
+	{
+		constexpr auto vec1 = vector_false();
+		constexpr auto* p1 = vec1.m128_f32;
+
+		static_assert(float_eq(p1[0], 0.f));
+		static_assert(float_eq(p1[1], 0.f));
+		static_assert(float_eq(p1[2], 0.f));
+		static_assert(float_eq(p1[3], 0.f));
+
+		auto vec2 = vector_false();
+		auto* p2 = vec2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p2[0], 0.f);
+		ASSERT_FLOAT_EQ(p2[1], 0.f);
+		ASSERT_FLOAT_EQ(p2[2], 0.f);
+		ASSERT_FLOAT_EQ(p2[3], 0.f);
+	}
+}
+
+TEST(TestMath, TestVectorSplat)
+{
+	constexpr auto f32_vec = vector_set(123.f, 456, 789, 0);
+	constexpr auto i32_vec = vector_set(static_cast<std::int32_t>(123), 456, 789, 0);
+	constexpr auto u32_vec = vector_set(static_cast<std::uint32_t>(123), 456, 789, 0);
+
+	{
+		constexpr auto vec1_1 = vector_splat<0, float>(f32_vec);
+		constexpr auto* p1_1 = vec1_1.m128_f32;
+
+		static_assert(float_eq(p1_1[0], 123.f));
+		static_assert(float_eq(p1_1[1], 123.f));
+		static_assert(float_eq(p1_1[2], 123.f));
+		static_assert(float_eq(p1_1[3], 123.f));
+
+		auto vec1_2 = vector_splat<0, float>(f32_vec);
+		auto* p1_2 = vec1_2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p1_2[0], 123.f);
+		ASSERT_FLOAT_EQ(p1_2[1], 123.f);
+		ASSERT_FLOAT_EQ(p1_2[2], 123.f);
+		ASSERT_FLOAT_EQ(p1_2[3], 123.f);
+
+		constexpr auto vec2_1 = vector_splat<1, float>(f32_vec);
+		constexpr auto* p2_1 = vec2_1.m128_f32;
+
+		static_assert(float_eq(p2_1[0], 456.f));
+		static_assert(float_eq(p2_1[1], 456.f));
+		static_assert(float_eq(p2_1[2], 456.f));
+		static_assert(float_eq(p2_1[3], 456.f));
+
+		auto vec2_2 = vector_splat<1, float>(f32_vec);
+		auto* p2_2 = vec2_2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p2_2[0], 456.f);
+		ASSERT_FLOAT_EQ(p2_2[1], 456.f);
+		ASSERT_FLOAT_EQ(p2_2[2], 456.f);
+		ASSERT_FLOAT_EQ(p2_2[3], 456.f);
+
+		constexpr auto vec3_1 = vector_splat<2, float>(f32_vec);
+		constexpr auto* p3_1 = vec3_1.m128_f32;
+
+		static_assert(float_eq(p3_1[0], 789.f));
+		static_assert(float_eq(p3_1[1], 789.f));
+		static_assert(float_eq(p3_1[2], 789.f));
+		static_assert(float_eq(p3_1[3], 789.f));
+
+		auto vec3_2 = vector_splat<2, float>(f32_vec);
+		auto* p3_2 = vec3_2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p3_2[0], 789.f);
+		ASSERT_FLOAT_EQ(p3_2[1], 789.f);
+		ASSERT_FLOAT_EQ(p3_2[2], 789.f);
+		ASSERT_FLOAT_EQ(p3_2[3], 789.f);
+
+		constexpr auto vec4_1 = vector_splat<3, float>(f32_vec);
+		constexpr auto* p4_1 = vec4_1.m128_f32;
+
+		static_assert(float_eq(p4_1[0], 0.f));
+		static_assert(float_eq(p4_1[1], 0.f));
+		static_assert(float_eq(p4_1[2], 0.f));
+		static_assert(float_eq(p4_1[3], 0.f));
+
+		auto vec4_2 = vector_splat<3, float>(f32_vec);
+		auto* p4_2 = vec4_2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p4_2[0], 0.f);
+		ASSERT_FLOAT_EQ(p4_2[1], 0.f);
+		ASSERT_FLOAT_EQ(p4_2[2], 0.f);
+		ASSERT_FLOAT_EQ(p4_2[3], 0.f);
+	}
+	{
+		constexpr auto vec1_1 = vector_splat<0, std::int32_t>(i32_vec);
+		constexpr auto* p1_1 = vec1_1.m128_i32;
+
+		static_assert(p1_1[0] == 123);
+		static_assert(p1_1[1] == 123);
+		static_assert(p1_1[2] == 123);
+		static_assert(p1_1[3] == 123);
+
+		auto vec1_2 = vector_splat<0, std::int32_t>(i32_vec);
+		auto* p1_2 = vec1_2.m128_i32;
+
+		ASSERT_EQ(p1_2[0], static_cast<std::int32_t>(123));
+		ASSERT_EQ(p1_2[1], static_cast<std::int32_t>(123));
+		ASSERT_EQ(p1_2[2], static_cast<std::int32_t>(123));
+		ASSERT_EQ(p1_2[3], static_cast<std::int32_t>(123));
+
+		constexpr auto vec2_1 = vector_splat<1, std::int32_t>(i32_vec);
+		constexpr auto* p2_1 = vec2_1.m128_i32;
+
+		static_assert(p2_1[0] == 456);
+		static_assert(p2_1[1] == 456);
+		static_assert(p2_1[2] == 456);
+		static_assert(p2_1[3] == 456);
+
+		auto vec2_2 = vector_splat<1, std::int32_t>(i32_vec);
+		auto* p2_2 = vec2_2.m128_i32;
+
+		ASSERT_EQ(p2_2[0], static_cast<std::int32_t>(456));
+		ASSERT_EQ(p2_2[1], static_cast<std::int32_t>(456));
+		ASSERT_EQ(p2_2[2], static_cast<std::int32_t>(456));
+		ASSERT_EQ(p2_2[3], static_cast<std::int32_t>(456));
+
+		constexpr auto vec3_1 = vector_splat<2, std::int32_t>(i32_vec);
+		constexpr auto* p3_1 = vec3_1.m128_i32;
+
+		static_assert(p3_1[0] == 789);
+		static_assert(p3_1[1] == 789);
+		static_assert(p3_1[2] == 789);
+		static_assert(p3_1[3] == 789);
+
+		auto vec3_2 = vector_splat<2, std::int32_t>(i32_vec);
+		auto* p3_2 = vec3_2.m128_i32;
+
+		ASSERT_EQ(p3_2[0], static_cast<std::int32_t>(789));
+		ASSERT_EQ(p3_2[1], static_cast<std::int32_t>(789));
+		ASSERT_EQ(p3_2[2], static_cast<std::int32_t>(789));
+		ASSERT_EQ(p3_2[3], static_cast<std::int32_t>(789));
+
+		constexpr auto vec4_1 = vector_splat<3, std::int32_t>(i32_vec);
+		constexpr auto* p4_1 = vec4_1.m128_i32;
+
+		static_assert(p4_1[0] == 0);
+		static_assert(p4_1[1] == 0);
+		static_assert(p4_1[2] == 0);
+		static_assert(p4_1[3] == 0);
+
+		auto vec4_2 = vector_splat<3, std::int32_t>(i32_vec);
+		auto* p4_2 = vec4_2.m128_i32;
+
+		ASSERT_EQ(p4_2[0], static_cast<std::int32_t>(0));
+		ASSERT_EQ(p4_2[1], static_cast<std::int32_t>(0));
+		ASSERT_EQ(p4_2[2], static_cast<std::int32_t>(0));
+		ASSERT_EQ(p4_2[3], static_cast<std::int32_t>(0));
+	}
+	{
+		constexpr auto vec1_1 = vector_splat<0, std::uint32_t>(u32_vec);
+		constexpr auto* p1_1 = vec1_1.m128_u32;
+
+		static_assert(p1_1[0] == 123);
+		static_assert(p1_1[1] == 123);
+		static_assert(p1_1[2] == 123);
+		static_assert(p1_1[3] == 123);
+
+		auto vec1_2 = vector_splat<0, std::uint32_t>(u32_vec);
+		auto* p1_2 = vec1_2.m128_u32;
+
+		ASSERT_EQ(p1_2[0], static_cast<std::uint32_t>(123));
+		ASSERT_EQ(p1_2[1], static_cast<std::uint32_t>(123));
+		ASSERT_EQ(p1_2[2], static_cast<std::uint32_t>(123));
+		ASSERT_EQ(p1_2[3], static_cast<std::uint32_t>(123));
+
+		constexpr auto vec2_1 = vector_splat<1, std::uint32_t>(u32_vec);
+		constexpr auto* p2_1 = vec2_1.m128_u32;
+
+		static_assert(p2_1[0] == 456);
+		static_assert(p2_1[1] == 456);
+		static_assert(p2_1[2] == 456);
+		static_assert(p2_1[3] == 456);
+
+		auto vec2_2 = vector_splat<1, std::uint32_t>(u32_vec);
+		auto* p2_2 = vec2_2.m128_u32;
+
+		ASSERT_EQ(p2_2[0], static_cast<std::uint32_t>(456));
+		ASSERT_EQ(p2_2[1], static_cast<std::uint32_t>(456));
+		ASSERT_EQ(p2_2[2], static_cast<std::uint32_t>(456));
+		ASSERT_EQ(p2_2[3], static_cast<std::uint32_t>(456));
+
+		constexpr auto vec3_1 = vector_splat<2, std::uint32_t>(u32_vec);
+		constexpr auto* p3_1 = vec3_1.m128_u32;
+
+		static_assert(p3_1[0] == 789);
+		static_assert(p3_1[1] == 789);
+		static_assert(p3_1[2] == 789);
+		static_assert(p3_1[3] == 789);
+
+		auto vec3_2 = vector_splat<2, std::uint32_t>(u32_vec);
+		auto* p3_2 = vec3_2.m128_u32;
+
+		ASSERT_EQ(p3_2[0], static_cast<std::uint32_t>(789));
+		ASSERT_EQ(p3_2[1], static_cast<std::uint32_t>(789));
+		ASSERT_EQ(p3_2[2], static_cast<std::uint32_t>(789));
+		ASSERT_EQ(p3_2[3], static_cast<std::uint32_t>(789));
+
+		constexpr auto vec4_1 = vector_splat<3, std::uint32_t>(u32_vec);
+		constexpr auto* p4_1 = vec4_1.m128_u32;
+
+		static_assert(p4_1[0] == 0);
+		static_assert(p4_1[1] == 0);
+		static_assert(p4_1[2] == 0);
+		static_assert(p4_1[3] == 0);
+
+		auto vec4_2 = vector_splat<3, std::uint32_t>(u32_vec);
+		auto* p4_2 = vec4_2.m128_u32;
+
+		ASSERT_EQ(p4_2[0], static_cast<std::uint32_t>(0));
+		ASSERT_EQ(p4_2[1], static_cast<std::uint32_t>(0));
+		ASSERT_EQ(p4_2[2], static_cast<std::uint32_t>(0));
+		ASSERT_EQ(p4_2[3], static_cast<std::uint32_t>(0));
+	}
+}
+
+TEST(TestMath, TestVectorSplatOne)
+{
+	constexpr auto vec1 = vector_splat_one();
+	constexpr auto* p1 = vec1.m128_f32;
+
+	static_assert(float_eq(p1[0], 1.f));
+	static_assert(float_eq(p1[1], 1.f));
+	static_assert(float_eq(p1[2], 1.f));
+	static_assert(float_eq(p1[3], 1.f));
+
+	auto vec2 = vector_splat_one();
+	auto* p2 = vec2.m128_f32;
+
+	ASSERT_FLOAT_EQ(p2[0], 1.f);
+	ASSERT_FLOAT_EQ(p2[1], 1.f);
+	ASSERT_FLOAT_EQ(p2[2], 1.f);
+	ASSERT_FLOAT_EQ(p2[3], 1.f);
+}
+
+TEST(TestMath, TestVectorSplatInfinity)
+{
+	constexpr auto vec1 = vector_splat_infinity();
+	constexpr auto* p1 = vec1.m128_i32;
+
+	static_assert(p1[0] == 0x7F800000);
+	static_assert(p1[1] == 0x7F800000);
+	static_assert(p1[2] == 0x7F800000);
+	static_assert(p1[3] == 0x7F800000);
+
+	auto vec2 = vector_splat_infinity();
+	auto* p2 = vec2.m128_f32;
+
+	ASSERT_FLOAT_EQ(p2[0], std::numeric_limits<float>::infinity());
+	ASSERT_FLOAT_EQ(p2[1], std::numeric_limits<float>::infinity());
+	ASSERT_FLOAT_EQ(p2[2], std::numeric_limits<float>::infinity());
+	ASSERT_FLOAT_EQ(p2[3], std::numeric_limits<float>::infinity());
+
+	ASSERT_TRUE(std::isinf(p2[0]));
+	ASSERT_TRUE(std::isinf(p2[1]));
+	ASSERT_TRUE(std::isinf(p2[2]));
+	ASSERT_TRUE(std::isinf(p2[3]));
+}
+
+TEST(TestMath, TestVectorSplatQnan)
+{
+	constexpr auto vec1 = vector_splat_qnan();
+	constexpr auto* p1 = vec1.m128_i32;
+
+	static_assert(p1[0] == 0x7FC00000);
+	static_assert(p1[1] == 0x7FC00000);
+	static_assert(p1[2] == 0x7FC00000);
+	static_assert(p1[3] == 0x7FC00000);
+
+	auto vec2 = vector_splat_qnan();
+	auto* p2 = vec2.m128_f32;
+
+//	ASSERT_FLOAT_EQ(p2[0], std::numeric_limits<float>::quiet_NaN());
+//	ASSERT_FLOAT_EQ(p2[1], std::numeric_limits<float>::quiet_NaN());
+//	ASSERT_FLOAT_EQ(p2[2], std::numeric_limits<float>::quiet_NaN());
+//	ASSERT_FLOAT_EQ(p2[3], std::numeric_limits<float>::quiet_NaN());
+	// bad trick
+	ASSERT_NE(p2[0], p2[0]);
+	ASSERT_NE(p2[1], p2[1]);
+	ASSERT_NE(p2[2], p2[2]);
+	ASSERT_NE(p2[3], p2[3]);
+
+	ASSERT_TRUE(std::isnan(p2[0]));
+	ASSERT_TRUE(std::isnan(p2[1]));
+	ASSERT_TRUE(std::isnan(p2[2]));
+	ASSERT_TRUE(std::isnan(p2[3]));
+}
+
+TEST(TestMath, TestVectorSplatEpsilon)
+{
+	constexpr auto vec1 = vector_splat_epsilon();
+	constexpr auto* p1 = vec1.m128_f32;
+
+	static_assert(float_eq(p1[0], FLT_EPSILON));
+	static_assert(float_eq(p1[1], FLT_EPSILON));
+	static_assert(float_eq(p1[2], FLT_EPSILON));
+	static_assert(float_eq(p1[3], FLT_EPSILON));
+
+	auto vec2 = vector_splat_epsilon();
+	auto* p2 = vec2.m128_f32;
+
+	ASSERT_FLOAT_EQ(p2[0], FLT_EPSILON);
+	ASSERT_FLOAT_EQ(p2[1], FLT_EPSILON);
+	ASSERT_FLOAT_EQ(p2[2], FLT_EPSILON);
+	ASSERT_FLOAT_EQ(p2[3], FLT_EPSILON);
+}
+
+TEST(TestMath, TestVectorSplatSignMask)
+{
+	constexpr auto vec1 = vector_splat_sign_mask();
+	constexpr auto* p1 = vec1.m128_u32;
+
+	static_assert(p1[0] == 0x80000000);
+	static_assert(p1[1] == 0x80000000);
+	static_assert(p1[2] == 0x80000000);
+	static_assert(p1[3] == 0x80000000);
+
+	auto vec2 = vector_splat_sign_mask();
+	auto* p2 = vec2.m128_f32;
+
+	ASSERT_FLOAT_EQ(p2[0], -0.f);
+	ASSERT_FLOAT_EQ(p2[1], -0.f);
+	ASSERT_FLOAT_EQ(p2[2], -0.f);
+	ASSERT_FLOAT_EQ(p2[3], -0.f);
 }
 
 #endif

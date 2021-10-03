@@ -382,6 +382,12 @@ namespace gal::toolbox::math
 		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept;
 		[[nodiscard]] constexpr vector vector_f2ui(const vector& v, std::uint32_t mul_exponent) noexcept;
 
+		/****************************************************************************
+	     *
+	     * Load operations
+	     *
+	     ****************************************************************************/
+
 		/**
 		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
 		 * It must be guaranteed that 1 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
@@ -392,7 +398,8 @@ namespace gal::toolbox::math
 		 * @return vector
 		 */
 		template<std::size_t Size, basic_math_type_t T>
-		constexpr vector vector_load(const T* source) noexcept;
+		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(const T* source) noexcept;
+
 		/**
 		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
 		 * It must be guaranteed that 1 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
@@ -403,7 +410,8 @@ namespace gal::toolbox::math
 		 * @return vector
 		 */
 		template<std::size_t Size, basic_math_type_t T>
-		constexpr vector vector_load(std::span<const T, Size> source) noexcept;
+		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(std::span<const T, Size> source) noexcept;
+
 		/**
 		 * @brief Read `Size` data from a one_tier_container of value_type float/std::int32_t/std::uint32_t to initialize the vector.
 		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
@@ -414,8 +422,7 @@ namespace gal::toolbox::math
 		 * @return vector
 		 */
 		template<one_tier_container_ignore_aligned_t T>
-		requires basic_math_type_t<typename T::value_type>
-		constexpr vector vector_load(const T& source) noexcept;
+		requires basic_math_type_t<typename T::value_type> &&(T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept;
 
 		/**
 		 * @brief Read `Size` data from a two_tier_container of value_type float to initialize the matrix.
@@ -429,15 +436,111 @@ namespace gal::toolbox::math
 		template<two_tier_container_ignore_aligned_t T>
 		constexpr matrix matrix_load(const T& source) noexcept;
 
+		/****************************************************************************
+	     *
+	     * Store operations
+	     *
+	     ****************************************************************************/
+
+		template<std::size_t Size, basic_math_type_t T>
+		constexpr void vector_store(T* dest, const vector& source) noexcept;
+
+		template<std::size_t Size, basic_math_type_t T>
+		constexpr void vector_store(std::span<T, Size> dest, const vector& source) noexcept;
+
 		template<one_tier_container_ignore_aligned_t T>
-		constexpr void vector_store(std::span<float, T::size> dest, const vector& source) noexcept;
-		template<one_tier_container_ignore_aligned_t T>
+		requires basic_math_type_t<typename T::value_type>
 		constexpr void vector_store(T& dest, const vector& source) noexcept;
 
 		template<two_tier_container_ignore_aligned_t T>
-		constexpr void matrix_store(std::span<float, T::size> dest, const matrix& source) noexcept;
-		template<two_tier_container_ignore_aligned_t T>
-		constexpr void matrix_store(T& dest, const matrix& source) noexcept;
+		constexpr void	 matrix_store(T& dest, const matrix& source) noexcept;
+
+		/****************************************************************************
+	     *
+	     * General vector operations
+	     *
+	     ****************************************************************************/
+
+		/**
+		 * @brief Return a vector with all elements equaling zero
+		 * @return vector
+		 */
+		constexpr vector vector_zero() noexcept;
+
+		/**
+		 * @brief Initialize a vector with four basic_math_type_t values
+		 * @tparam T parameters type
+		 * @return vector
+		 */
+		template<basic_math_type_t T>
+		constexpr vector vector_set(T x, std::type_identity_t<T> y, std::type_identity_t<T> z, std::type_identity_t<T> w) noexcept;
+
+		/**
+		 * @brief Initialize a vector with a replicated basic_math_type_t value
+		 * @tparam T parameter type
+		 * @return vector
+		 */
+		template<basic_math_type_t T>
+		constexpr vector vector_replicate(T value) noexcept;
+
+		/**
+		 * @brief Initialize a vector with a replicated basic_math_type_t value passed by pointer
+		 * @tparam T parameter type
+		 * @return vector
+		 */
+		template<basic_math_type_t T>
+		constexpr vector vector_replicate(const T* value) noexcept;
+
+		/**
+		 * @brief Initialize a vector with all bits set (true mask)
+		 * @return vector
+		 */
+		constexpr vector vector_true() noexcept;
+
+		/**
+		 * @brief Initialize a vector with all bits clear (false mask)
+		 * @return vector
+		 */
+		constexpr vector vector_false() noexcept;
+
+		/**
+		 * @brief Replicate the x/y/z/w(depends on Index) component of the vector
+		 * @tparam Index x/y/z/w
+		 * @tparam ExpectType active union member type
+		 * @return vector
+		 */
+		template<std::size_t Index, typename ActiveType = float>
+		requires(Index >= 0 && Index <= 3) && basic_math_type_t<ActiveType> constexpr vector vector_splat(const vector& v) noexcept;
+
+		/**
+		 * @brief Return a vector of 1.0f,1.0f,1.0f,1.0f
+		 * @return vector
+		 */
+		constexpr vector vector_splat_one() noexcept;
+
+		/**
+		 * @brief Return a vector of INF,INF,INF,INF
+		 * @return vector
+		 */
+		constexpr vector vector_splat_infinity() noexcept;
+
+		/**
+		 * @brief Return a vector of Q_NAN,Q_NAN,Q_NAN,Q_NAN
+		 * @return vector
+		 */
+		constexpr vector vector_splat_qnan() noexcept;
+
+		/**
+		 * @brief Return a vector of 1.192092896e-7f,1.192092896e-7f,1.192092896e-7f,1.192092896e-7f
+		 * @return vector
+		 */
+		constexpr vector vector_splat_epsilon() noexcept;
+
+		/**
+		 * @brief Return a vector of -0.0f (0x80000000),-0.0f,-0.0f,-0.0f
+		 * @return vector
+		 */
+		constexpr vector vector_splat_sign_mask() noexcept;
 	}// namespace utils
 
 	inline namespace data_types
@@ -465,19 +568,47 @@ namespace gal::toolbox::math
 				return data.v1;
 			}
 
-			constexpr explicit operator vector() const noexcept
+			[[nodiscard]] constexpr explicit operator vector() const noexcept
+					requires basic_math_type_t<value_type>
 			{
+				// Cannot access an inactive union member in constant expression
+				// copy one by hand
+				if (std::is_constant_evaluated())
+				{
+					vector		v{};
+					value_type* p;
+					if constexpr (std::is_same_v<float, value_type>)
+					{
+						p = v.m128_f32;
+					}
+					else if constexpr (std::is_same_v<std::int32_t, value_type>)
+					{
+						p = v.m128_i32;
+					}
+					else
+					{
+						p = v.m128_u32;
+					}
+
+					p[0] = data.v1[0];
+					p[1] = data.v1[1];
+					p[2] = data.v1[2];
+					p[3] = data.v1[3];
+					return v;
+					//					return std::bit_cast<vector>(data.v1);
+				}
+
 				return data.v2;
 			}
 
-			inline explicit operator __m128i() const noexcept
+			[[nodiscard]] inline explicit operator __m128i() const noexcept
 			{
-				return _mm_castps_si128(data.v2);
+				return _mm_castps_si128(this->operator vector());
 			}
 
-			inline explicit operator __m128d() const noexcept
+			[[nodiscard]] inline explicit operator __m128d() const noexcept
 			{
-				return _mm_castps_pd(data.v2);
+				return _mm_castps_pd(this->operator vector());
 			}
 		};
 
@@ -878,9 +1009,10 @@ namespace gal::toolbox::math
 		constexpr static f32_vector	   g_vector_neg_identity_r2{0.0f, 0.0f, -1.0f, 0.0f};
 		constexpr static f32_vector	   g_vector_neg_identity_r3{0.0f, 0.0f, 0.0f, -1.0f};
 		constexpr static u32_vector	   g_vector_neg_zero{0x80000000, 0x80000000, 0x80000000, 0x80000000};
-		constexpr static u32_vector	   g_vector_neg_xyz{0x80000000, 0x80000000, 0x80000000, 0x00000000};
-		constexpr static u32_vector	   g_vector_mask_xy{0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000};
+		constexpr static u32_vector	   g_vector_neg_zero_xyz{0x80000000, 0x80000000, 0x80000000, 0x00000000};
+		constexpr static u32_vector	   g_vector_mask{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF};
 		constexpr static u32_vector	   g_vector_mask_xyz{0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000};
+		constexpr static u32_vector	   g_vector_mask_xy{0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_x{0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_y{0x00000000, 0xFFFFFFFF, 0x00000000, 0x00000000};
 		constexpr static u32_vector	   g_vector_mask_z{0x00000000, 0x00000000, 0xFFFFFFFF, 0x00000000};
@@ -966,5 +1098,6 @@ namespace gal::toolbox::math
 }// namespace gal::toolbox::math
 
 	#include <math/details/math_utils.inl>
+	#include <math/details/math_vector.hpp>
 
 #endif
