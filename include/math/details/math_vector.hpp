@@ -74,8 +74,8 @@ namespace gal::toolbox::math
 			return vector_zero();
 		}
 
-		template<std::size_t Index, typename Active>
-		requires (Index >= 0 && Index <= 3) && basic_math_type_t<Active>
+		template<std::size_t Index, basic_math_type_t ActiveType>
+		requires (Index >= 0 && Index <= 3)
 		constexpr vector vector_splat(const vector& v) noexcept
 		{
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
@@ -85,12 +85,12 @@ namespace gal::toolbox::math
 
 			if(std::is_constant_evaluated())
 			{
-				Active value{};
-				if constexpr (std::is_same_v<float, Active>)
+				ActiveType value{};
+				if constexpr (std::is_same_v<float, ActiveType>)
 				{
 					value = v.m128_f32[Index];
 				}
-				else if constexpr (std::is_same_v<std::int32_t, Active>)
+				else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
 				{
 					value = v.m128_i32[Index];
 				}
@@ -98,7 +98,7 @@ namespace gal::toolbox::math
 				{
 					value = v.m128_u32[Index];
 				}
-				return make<generic_vector<Active>>(value, value, value, value).operator vector();
+				return make<generic_vector<ActiveType>>(value, value, value, value).operator vector();
 			}
 
 			return _mm_permute_ps(v, _MM_SHUFFLE(Index, Index, Index, Index));
@@ -127,6 +127,45 @@ namespace gal::toolbox::math
 		constexpr vector vector_splat_sign_mask() noexcept
 		{
 			return g_vector_neg_zero.operator vector();
+		}
+
+		template<std::size_t Index, basic_math_type_t ActiveType>
+		requires(Index >= 0 && Index <= 3) constexpr ActiveType vector_get(const vector& v) noexcept
+		{
+			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
+			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
+			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_z == 2);
+			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_w == 3);
+
+			if(std::is_constant_evaluated())
+			{
+				if constexpr (std::is_same_v<float, ActiveType>)
+				{
+					return v.m128_f32[Index];
+				}
+				else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
+				{
+					return v.m128_i32[Index];
+				}
+				else
+				{
+					return v.m128_u32[Index];
+				}
+			}
+
+			auto ret = _mm_permute_ps(v, _MM_SHUFFLE(Index, Index, Index, Index));
+			if constexpr (std::is_same_v<float, ActiveType>)
+			{
+				return _mm_cvtss_f32(ret);
+			}
+			else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
+			{
+				return _mm_cvtss_i32(ret);
+			}
+			else
+			{
+				return _mm_cvtss_u32(ret);
+			}
 		}
 	}
 }

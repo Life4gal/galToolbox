@@ -1718,4 +1718,99 @@ TEST(TestMath, TestVectorSplatSignMask)
 	ASSERT_FLOAT_EQ(p2[3], -0.f);
 }
 
+TEST(TestMath, TestVectorGet)
+{
+	constexpr auto f32_vec = vector_set(123.f, 456, 789, 0);
+	constexpr auto i32_vec = vector_set(static_cast<std::int32_t>(123), 456, 789, 0);
+	constexpr auto u32_vec = vector_set(static_cast<std::uint32_t>(123), 456, 789, 0);
+
+	{
+		constexpr auto v1_1 = vector_get<0, float>(f32_vec);
+		static_assert(float_eq(v1_1, 123.f));
+
+		auto v1_2 = vector_get<0, float>(f32_vec);
+		ASSERT_FLOAT_EQ(v1_2, 123.f);
+
+		constexpr auto v2_1 = vector_get<1, float>(f32_vec);
+		static_assert(float_eq(v2_1, 456.f));
+
+		auto v2_2 = vector_get<1, float>(f32_vec);
+		ASSERT_FLOAT_EQ(v2_2, 456.f);
+
+		constexpr auto v3_1 = vector_get<2, float>(f32_vec);
+		static_assert(float_eq(v3_1, 789.f));
+
+		auto v3_2 = vector_get<2, float>(f32_vec);
+		ASSERT_FLOAT_EQ(v3_2, 789.f);
+
+		constexpr auto v4_1 = vector_get<3, float>(f32_vec);
+		static_assert(float_eq(v4_1, 0.f));
+
+		auto v4_2 = vector_get<3, float>(f32_vec);
+		ASSERT_FLOAT_EQ(v4_2, 0.f);
+	}
+	{
+		constexpr auto v1_1 = vector_get<0, std::int32_t>(i32_vec);
+		static_assert(v1_1 == 123);
+
+		// see vector_get note
+		auto v1_2 = vector_get<0, std::int32_t>(f32_vec);
+		ASSERT_EQ(v1_2, static_cast<std::int32_t>(123));
+
+		constexpr auto v2_1 = vector_get<1, std::int32_t>(i32_vec);
+		static_assert(v2_1 == 456);
+
+		// see vector_get note
+		auto v2_2 = vector_get<1, std::int32_t>(f32_vec);
+		ASSERT_EQ(v2_2, static_cast<std::int32_t>(456));
+
+		constexpr auto v3_1 = vector_get<2, std::int32_t>(i32_vec);
+		static_assert(v3_1 == 789);
+
+		// see vector_get note
+		auto v3_2 = vector_get<2, std::int32_t>(f32_vec);
+		ASSERT_EQ(v3_2, static_cast<std::int32_t>(789));
+
+		constexpr auto v4_1 = vector_get<3, std::int32_t>(i32_vec);
+		static_assert(v4_1 == 0);
+
+		// see vector_get note
+		auto v4_2 = vector_get<3, std::int32_t>(f32_vec);
+		ASSERT_EQ(v4_2, static_cast<std::int32_t>(0));
+	}
+	{
+		// todo: https://godbolt.org/z/csxezd5c5
+		// WSL gcc9 -> not support _mm_cvtss_i32 and _mm_cvtss_u32
+		// but MSVC seem support _mm_cvtss_i32 (not support _mm_cvtss_u32 also)
+
+		constexpr auto v1_1 = vector_get<0, std::uint32_t>(u32_vec);
+		static_assert(v1_1 == 123);
+
+		// see vector_get note
+//		auto v1_2 = vector_get<0, std::uint32_t>(f32_vec);
+//		ASSERT_EQ(v1_2, static_cast<std::uint32_t>(123));
+
+		constexpr auto v2_1 = vector_get<1, std::uint32_t>(u32_vec);
+		static_assert(v2_1 == 456);
+
+		// see vector_get note
+//		auto v2_2 = vector_get<1, std::uint32_t>(f32_vec);
+//		ASSERT_EQ(v2_2, static_cast<std::uint32_t>(456));
+
+		constexpr auto v3_1 = vector_get<2, std::uint32_t>(u32_vec);
+		static_assert(v3_1 == 789);
+
+		// see vector_get note
+//		auto v3_2 = vector_get<2, std::uint32_t>(f32_vec);
+//		ASSERT_EQ(v3_2, static_cast<std::uint32_t>(789));
+
+		constexpr auto v4_1 = vector_get<3, std::uint32_t>(u32_vec);
+		static_assert(v4_1 == 0);
+
+		// see vector_get note
+//		auto v4_2 = vector_get<3, std::uint32_t>(f32_vec);
+//		ASSERT_EQ(v4_2, static_cast<std::uint32_t>(0));
+	}
+}
+
 #endif

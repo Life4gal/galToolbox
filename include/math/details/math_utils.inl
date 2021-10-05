@@ -222,46 +222,40 @@ namespace gal::toolbox::math
 		template<std::size_t Size, basic_math_type_t T>
 		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(const T* source) noexcept
 		{
-			return vector_load<Size, T>(std::span<const T, Size>{source, Size});
-		}
-
-		template<std::size_t Size, basic_math_type_t T>
-		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(std::span<const T, Size> source) noexcept
-		{
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_z == 2);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_w == 3);
 
-			gal::toolbox::utils::gal_assert(source.data(), "invalid source pointer");
+			gal::toolbox::utils::gal_assert(source, "invalid source pointer");
 
 			if (std::is_constant_evaluated())
 			{
-				return consteval_vector_load<Size, T, std::span<const T, Size>>(source);
+				return consteval_vector_load<Size, T, const T*>(source);
 			}
 
 			if constexpr (Size == 1)
 			{
-				return _mm_load_ss(reinterpret_cast<const float*>(source.data()));
+				return _mm_load_ss(reinterpret_cast<const float*>(source));
 			}
 			else if constexpr (Size == 2)
 			{
-				return _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data())));
+				return _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source)));
 			}
 			else if constexpr (Size == 3)
 			{
-				auto xy = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source.data())));
-				auto z	= _mm_load_ss(reinterpret_cast<const float*>(source.data() + uint3::index_of_z));
+				auto xy = _mm_castpd_ps(_mm_load_sd(reinterpret_cast<const double*>(source)));
+				auto z	= _mm_load_ss(reinterpret_cast<const float*>(source + uint3::index_of_z));
 				return _mm_movelh_ps(xy, z);
 			}
 			else
 			{
-				return _mm_castsi128_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(source.data())));
+				return _mm_castsi128_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(source)));
 			}
 		}
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires basic_math_type_t<typename T::value_type> &&(T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept
+		requires (T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept
 		{
 			constexpr auto size = T::size;
 			using value_type	= typename T::value_type;
@@ -371,11 +365,11 @@ namespace gal::toolbox::math
 			}
 		}
 
-		template<std::size_t FirstTier, std::size_t SecondTier, basic_math_type_t ValueType, typename T>
+		template<std::size_t FirstSize, std::size_t SecondSize, basic_math_type_t ValueType, typename T>
 		constexpr matrix consteval_matrix_load(T source) noexcept
 		{
-			static_assert(FirstTier == 3 || FirstTier == 4);
-			static_assert(SecondTier == 3 || SecondTier == 4);
+			static_assert(FirstSize == 3 || FirstSize == 4);
+			static_assert(SecondSize == 3 || SecondSize == 4);
 
 			matrix	   ret{};
 
@@ -418,7 +412,7 @@ namespace gal::toolbox::math
 			data2[1] = source(2, 1);
 			data2[2] = source(2, 2);
 
-			if constexpr (SecondTier == 4)
+			if constexpr (SecondSize == 4)
 			{
 				data0[3] = source(0, 3);
 				data1[3] = source(1, 3);
@@ -431,7 +425,7 @@ namespace gal::toolbox::math
 				data2[3] = ValueType{0};
 			}
 
-			if constexpr (FirstTier == 4)
+			if constexpr (FirstSize == 4)
 			{
 				data3[0] = source(3, 0);
 				data3[1] = source(3, 1);
@@ -444,7 +438,7 @@ namespace gal::toolbox::math
 				data3[2] = ValueType{0};
 			}
 
-			if constexpr (FirstTier == 4 && SecondTier == 4)
+			if constexpr (FirstSize == 4 && SecondSize == 4)
 			{
 				data3[3] = source(3, 3);
 			}
@@ -457,16 +451,13 @@ namespace gal::toolbox::math
 		}
 
 		template<two_tier_container_ignore_aligned_t T>
-		constexpr matrix matrix_load(const T& source) noexcept
+		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::second_size == 4) constexpr matrix matrix_load(const T& source) noexcept
 		{
 			constexpr auto first_size  = T::first_size;
 			constexpr auto second_size = T::second_size;
 			constexpr auto size		   = T::size;
 
 			using value_type		   = typename T::value_type;
-
-			static_assert(first_size == 3 || first_size == 4);
-			static_assert(second_size == 3 || second_size == 4);
 
 			if constexpr (is_aligned_two_tier_container_v<T>)
 			{
@@ -621,26 +612,19 @@ namespace gal::toolbox::math
 		}
 
 		template<std::size_t Size, basic_math_type_t T>
-		constexpr void vector_store(T* dest, const vector& source) noexcept
-		{
-			return vector_store<Size, T>(std::span<T, Size>{dest, Size}, source);
-		}
-
-		template<std::size_t Size, basic_math_type_t T>
-		constexpr void vector_store(std::span<T, Size> dest, const vector& source) noexcept
+		requires(Size >= 1 && Size <= 4) constexpr void vector_store(T* dest, const vector& source) noexcept
 		{
 			// todo
 		}
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires basic_math_type_t<typename T::value_type>
-		constexpr void vector_store(T& dest, const vector& source) noexcept
+		requires (T::size >= 2 && T::size <= 4) constexpr void vector_store(T& dest, const vector& source) noexcept
 		{
 			// todo
 		}
 
 		template<two_tier_container_ignore_aligned_t T>
-		constexpr void matrix_store(T& dest, const matrix& source) noexcept
+		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::secondt_size == 4) constexpr void matrix_store(T& dest, const matrix& source) noexcept
 		{
 			// todo
 		}

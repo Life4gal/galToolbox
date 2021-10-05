@@ -22,7 +22,7 @@
 
 	#include <cfloat>
 	#include <cmath>
-	#include <span>
+	#include <cstdint>
 	#include <utils/assert.hpp>
 	#include <utils/tuple_maker.hpp>
 	#include <utils/concepts.hpp>
@@ -401,40 +401,28 @@ namespace gal::toolbox::math
 		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(const T* source) noexcept;
 
 		/**
-		 * @brief Read `Size` data from a pointer of type float/std::int32_t/std::uint32_t to initialize the vector.
-		 * It must be guaranteed that 1 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
-		 * and it is only guaranteed that the obtained vector is of the correct type when read with the given type.
-		 * @tparam Size data size
-		 * @tparam T data type
-		 * @param source source span
-		 * @return vector
-		 */
-		template<std::size_t Size, basic_math_type_t T>
-		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(std::span<const T, Size> source) noexcept;
-
-		/**
 		 * @brief Read `Size` data from a one_tier_container of value_type float/std::int32_t/std::uint32_t to initialize the vector.
 		 * It must be guaranteed that 2 <= Size <= 4, when the type is std::int32_t and the data is not greater than 0 The behavior is undefined,
 		 * and it is only guaranteed that the obtained vector is of the correct type when read with the float.
 		 * @note it is only guaranteed that the obtained vector is of the correct type when read with the float.
-		 * @tparam T one_tier_container type
+		 * @tparam T one_tier_container_ignore_aligned type
 		 * @param source one_tier_container source
 		 * @return vector
 		 */
 		template<one_tier_container_ignore_aligned_t T>
-		requires basic_math_type_t<typename T::value_type> &&(T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept;
+		requires (T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept;
 
 		/**
 		 * @brief Read `Size` data from a two_tier_container of value_type float to initialize the matrix.
 		 * It must be guaranteed that 3 <= FirstTier <= 4 and 3 <= SecondTier,
 		 * and it is only guaranteed that the obtained vector is of the correct type when read with the float.
 		 * @note need to be transposed before use if source type is float3x4
-		 * @tparam T two_tier_container type
+		 * @tparam T two_tier_container_ignore_aligned type
 		 * @param source two_tier_container source
 		 * @return matrix
 		 */
 		template<two_tier_container_ignore_aligned_t T>
-		constexpr matrix matrix_load(const T& source) noexcept;
+		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::second_size == 4) constexpr matrix matrix_load(const T& source) noexcept;
 
 		/****************************************************************************
 	     *
@@ -443,17 +431,13 @@ namespace gal::toolbox::math
 	     ****************************************************************************/
 
 		template<std::size_t Size, basic_math_type_t T>
-		constexpr void vector_store(T* dest, const vector& source) noexcept;
-
-		template<std::size_t Size, basic_math_type_t T>
-		constexpr void vector_store(std::span<T, Size> dest, const vector& source) noexcept;
+		requires(Size >= 1 && Size <= 4) constexpr void vector_store(T* dest, const vector& source) noexcept;
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires basic_math_type_t<typename T::value_type>
-		constexpr void vector_store(T& dest, const vector& source) noexcept;
+		requires (T::size >= 2 && T::size <= 4) constexpr void vector_store(T& dest, const vector& source) noexcept;
 
 		template<two_tier_container_ignore_aligned_t T>
-		constexpr void	 matrix_store(T& dest, const matrix& source) noexcept;
+		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::secondt_size == 4) constexpr void matrix_store(T& dest, const matrix& source) noexcept;
 
 		/****************************************************************************
 	     *
@@ -505,12 +489,12 @@ namespace gal::toolbox::math
 
 		/**
 		 * @brief Replicate the x/y/z/w(depends on Index) component of the vector
-		 * @tparam Index x/y/z/w
+		 * @tparam Index x/y/z/w -> 0/1/2/3
 		 * @tparam ExpectType active union member type
 		 * @return vector
 		 */
-		template<std::size_t Index, typename ActiveType = float>
-		requires(Index >= 0 && Index <= 3) && basic_math_type_t<ActiveType> constexpr vector vector_splat(const vector& v) noexcept;
+		template<std::size_t Index, basic_math_type_t ActiveType = float>
+		requires(Index >= 0 && Index <= 3) constexpr vector vector_splat(const vector& v) noexcept;
 
 		/**
 		 * @brief Return a vector of 1.0f,1.0f,1.0f,1.0f
@@ -541,6 +525,16 @@ namespace gal::toolbox::math
 		 * @return vector
 		 */
 		constexpr vector vector_splat_sign_mask() noexcept;
+
+		/**
+		 * @brief Return a floating point value via an index.
+		 * @note active union member of vector must be m128_f32
+		 * @tparam Index x/y/z/w -> 0/1/2/3
+		 * @tparam ActiveType active union member type
+		 * @return ActiveType value
+		 */
+		template<std::size_t Index, basic_math_type_t ActiveType = float>
+		requires(Index >= 0 && Index <= 3) constexpr ActiveType vector_get(const vector& v) noexcept;
 	}// namespace utils
 
 	inline namespace data_types
