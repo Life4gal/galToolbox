@@ -12,7 +12,7 @@ namespace gal::toolbox::math
 			return radians * (180.f / pi);
 		}
 
-		[[nodiscard]] constexpr vector vector_i2f(const vector& v, std::uint32_t div_exponent) noexcept
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_i2f(vector_f v, std::uint32_t div_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(div_exponent < 32);
 
@@ -39,7 +39,7 @@ namespace gal::toolbox::math
 			return ret;
 		}
 
-		[[nodiscard]] constexpr vector vector_f2i(const vector& v, std::uint32_t mul_exponent) noexcept
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_f2i(vector_f v, std::uint32_t mul_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(mul_exponent < 32);
 
@@ -81,7 +81,7 @@ namespace gal::toolbox::math
 			return overflow;
 		}
 
-		[[nodiscard]] constexpr vector vector_ui2f(const vector& v, std::uint32_t div_exponent) noexcept
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_ui2f(vector_f v, std::uint32_t div_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(div_exponent < 32);
 
@@ -117,7 +117,7 @@ namespace gal::toolbox::math
 			return ret;
 		}
 
-		[[nodiscard]] constexpr vector vector_f2ui(const vector& v, std::uint32_t mul_exponent) noexcept
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_f2ui(vector_f v, std::uint32_t mul_exponent) noexcept
 		{
 			gal::toolbox::utils::gal_assert(mul_exponent < 32);
 
@@ -169,7 +169,7 @@ namespace gal::toolbox::math
 		}
 
 		template<std::size_t Size, basic_math_type_t ValueType, typename T>
-		constexpr vector consteval_vector_load(T source) noexcept
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV consteval_vector_load(T source) noexcept
 		{
 			static_assert(Size >= 1 && Size <= 4);
 
@@ -220,7 +220,7 @@ namespace gal::toolbox::math
 		}
 
 		template<std::size_t Size, basic_math_type_t T>
-		requires(Size >= 1 && Size <= 4) constexpr vector vector_load(const T* source) noexcept
+		requires(Size >= 1 && Size <= 4) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_load(const T* source) noexcept
 		{
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
 			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
@@ -255,7 +255,7 @@ namespace gal::toolbox::math
 		}
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires (T::size >= 2 && T::size <= 4) constexpr vector vector_load(const T& source) noexcept
+		requires(T::size >= 2 && T::size <= 4) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_load(const T& source) noexcept
 		{
 			constexpr auto size = T::size;
 			using value_type	= typename T::value_type;
@@ -366,7 +366,7 @@ namespace gal::toolbox::math
 		}
 
 		template<std::size_t FirstSize, std::size_t SecondSize, basic_math_type_t ValueType, typename T>
-		constexpr matrix consteval_matrix_load(T source) noexcept
+		[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV consteval_matrix_load(T source) noexcept
 		{
 			static_assert(FirstSize == 3 || FirstSize == 4);
 			static_assert(SecondSize == 3 || SecondSize == 4);
@@ -451,7 +451,7 @@ namespace gal::toolbox::math
 		}
 
 		template<two_tier_container_ignore_aligned_t T>
-		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::second_size == 4) constexpr matrix matrix_load(const T& source) noexcept
+		requires(T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::second_size == 4) [[nodiscard]] constexpr matrix GAL_MATH_CALLCONV matrix_load(const T& source) noexcept
 		{
 			constexpr auto first_size  = T::first_size;
 			constexpr auto second_size = T::second_size;
@@ -612,19 +612,19 @@ namespace gal::toolbox::math
 		}
 
 		template<std::size_t Size, basic_math_type_t T>
-		requires(Size >= 1 && Size <= 4) constexpr void vector_store(T* dest, const vector& source) noexcept
+		requires(Size >= 1 && Size <= 4) constexpr void GAL_MATH_CALLCONV vector_store(T* dest, vector_f source) noexcept
 		{
 			// todo
 		}
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires (T::size >= 2 && T::size <= 4) constexpr void vector_store(T& dest, const vector& source) noexcept
+		requires(T::size >= 2 && T::size <= 4) constexpr void GAL_MATH_CALLCONV vector_store(T& dest, vector_f source) noexcept
 		{
 			// todo
 		}
 
 		template<two_tier_container_ignore_aligned_t T>
-		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::secondt_size == 4) constexpr void matrix_store(T& dest, const matrix& source) noexcept
+		requires(T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::secondt_size == 4) constexpr void GAL_MATH_CALLCONV matrix_store(T& dest, matrix_f source) noexcept
 		{
 			// todo
 		}
