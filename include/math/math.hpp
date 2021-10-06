@@ -30,7 +30,6 @@
 	#include <cmath>
 	#include <cstdint>
 	#include <utils/assert.hpp>
-	#include <utils/tuple_maker.hpp>
 	#include <utils/concepts.hpp>
 
 namespace gal::toolbox::math
@@ -40,11 +39,11 @@ namespace gal::toolbox::math
 		template<typename T>
 		concept basic_math_type_t = gal::toolbox::utils::any_type_of_t<T, float, std::int32_t, std::uint32_t>;
 
-		//=======================================================
-		// for operations
-		//=======================================================
-		#define GAL_MATH_CALLCONV __vectorcall
-		using vector			  = __m128;
+	//=======================================================
+	// for operations
+	//=======================================================
+	#define GAL_MATH_CALLCONV __vectorcall
+		using vector   = __m128;
 		// 1st -> 3rd pass-in-register
 		using vector_f = const vector;
 		// 4th pass-in-register
@@ -333,22 +332,22 @@ namespace gal::toolbox::math
 		concept aligned_one_or_two_tier_container_t = is_aligned_one_or_two_tier_container_v<T>;
 		template<typename T>
 		concept one_or_two_tier_container_ignore_aligned_t = is_one_or_two_tier_container_ignore_aligned_v<T>;
-	}
+	}// namespace type_traits
 
 	inline namespace operations
 	{
 		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV operator+(vector_f v) noexcept;
 		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV operator-(vector_f v) noexcept;
 
-		constexpr vector& GAL_MATH_CALLCONV			   operator+=(vector& v1, vector_f v2) noexcept;
-		constexpr vector& GAL_MATH_CALLCONV			   operator-=(vector& v1, vector_f v2) noexcept;
-		constexpr vector& GAL_MATH_CALLCONV			   operator*=(vector& v1, vector_f v2) noexcept;
-		constexpr vector& GAL_MATH_CALLCONV			   operator/=(vector& v1, vector_f v2) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator+=(vector& v1, vector_f v2) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator-=(vector& v1, vector_f v2) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator*=(vector& v1, vector_f v2) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator/=(vector& v1, vector_f v2) noexcept;
 
-		constexpr vector& GAL_MATH_CALLCONV			   operator+=(vector& v, float scalar) noexcept;
-		constexpr vector& GAL_MATH_CALLCONV			   operator-=(vector& v, float scalar) noexcept;
-		constexpr vector& GAL_MATH_CALLCONV			   operator*=(vector& v, float scalar) noexcept;
-		constexpr vector& GAL_MATH_CALLCONV			   operator/=(vector& v, float scalar) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator+=(vector& v, float scalar) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator-=(vector& v, float scalar) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator*=(vector& v, float scalar) noexcept;
+		constexpr vector& GAL_MATH_CALLCONV				 operator/=(vector& v, float scalar) noexcept;
 
 		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV operator+(vector_f v1, vector_f v2) noexcept;
 		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV operator-(vector_f v1, vector_f v2) noexcept;
@@ -368,9 +367,9 @@ namespace gal::toolbox::math
 
 	inline namespace utils
 	{
-		[[nodiscard]] constexpr float degrees2radians(float degrees) noexcept;
+		[[nodiscard]] constexpr float					 degrees2radians(float degrees) noexcept;
 
-		[[nodiscard]] constexpr float radians2degrees(float radians) noexcept;
+		[[nodiscard]] constexpr float					 radians2degrees(float radians) noexcept;
 
 		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_i2f(vector_f v, std::uint32_t div_exponent) noexcept;
 		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_f2i(vector_f v, std::uint32_t mul_exponent) noexcept;
@@ -405,7 +404,7 @@ namespace gal::toolbox::math
 		 * @return vector
 		 */
 		template<one_tier_container_ignore_aligned_t T>
-		requires (T::size >= 2 && T::size <= 4) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_load(const T& source) noexcept;
+		requires(T::size >= 2 && T::size <= 4) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_load(const T& source) noexcept;
 
 		/**
 		 * @brief Read `Size` data from a two_tier_container of value_type float to initialize the matrix.
@@ -417,7 +416,7 @@ namespace gal::toolbox::math
 		 * @return matrix
 		 */
 		template<two_tier_container_ignore_aligned_t T>
-		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::second_size == 4) [[nodiscard]] constexpr matrix GAL_MATH_CALLCONV matrix_load(const T& source) noexcept;
+		requires(T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::second_size == 4) [[nodiscard]] constexpr matrix GAL_MATH_CALLCONV matrix_load(const T& source) noexcept;
 
 		/****************************************************************************
 	     *
@@ -429,10 +428,10 @@ namespace gal::toolbox::math
 		requires(Size >= 1 && Size <= 4) constexpr void GAL_MATH_CALLCONV vector_store(T* dest, vector_f source) noexcept;
 
 		template<one_tier_container_ignore_aligned_t T>
-		requires (T::size >= 2 && T::size <= 4) constexpr void GAL_MATH_CALLCONV vector_store(T& dest, vector_f source) noexcept;
+		requires(T::size >= 2 && T::size <= 4) constexpr void GAL_MATH_CALLCONV vector_store(T& dest, vector_f source) noexcept;
 
 		template<two_tier_container_ignore_aligned_t T>
-		requires (T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::secondt_size == 4) constexpr void GAL_MATH_CALLCONV matrix_store(T& dest, matrix_f source) noexcept;
+		requires(T::first_size == 3 || T::first_size == 4) && (T::second_size == 3 || T::secondt_size == 4) constexpr void GAL_MATH_CALLCONV matrix_store(T& dest, matrix_f source) noexcept;
 
 		/****************************************************************************
 	     *
@@ -538,8 +537,41 @@ namespace gal::toolbox::math
 		template<std::size_t Index, basic_math_type_t ActiveType = float>
 		requires(Index >= 0 && Index <= 3) constexpr void GAL_MATH_CALLCONV vector_get(ActiveType* dest, vector_f v) noexcept;
 
+		/**
+		 * @brief Sets a component of a vector(a copy) to a passed ActiveType value and return it
+		 * @tparam Index x/y/z/w -> 0/1/2/3
+		 * @tparam ActiveType active union member type
+		 * @return vector
+		 */
 		template<std::size_t Index, basic_math_type_t ActiveType = float>
 		requires(Index >= 0 && Index <= 3) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_set(vector_f v, ActiveType value) noexcept;
+
+		/**
+		 * @brief Sets a component of a vector to an ActiveType value passed by pointer and return it
+		 * @tparam Index x/y/z/w -> 0/1/2/3
+		 * @tparam ActiveType active union member type
+		 * @return vector
+		 */
+		template<std::size_t Index, basic_math_type_t ActiveType = float>
+		requires(Index >= 0 && Index <= 3) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_set(vector_f v, const ActiveType* value) noexcept;
+
+		/**
+		 * @brief Get a vector, the four elements of which are determined by index0/index1/index2/index3, which respectively refer to which element of the parameter vector
+		 * @note index must less than 4 (0/1/2/3 of the vector)
+		 * @tparam ActiveType active union member type
+		 * @return vector
+		 */
+		template<basic_math_type_t ActiveType = float>
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_swizzle(vector_f v, std::uint32_t index0, std::uint32_t index1, std::uint32_t index2, std::uint32_t index3) noexcept;
+
+		/**
+		 * @brief Get a vector, the four elements of which are determined by index0/index1/index2/index3, which respectively refer to which element of the two parameter vectors
+		 * @note index must less than 8 (0/1/2/3 of the first vector, 4/5/6/7 of the second vector)
+		 * @tparam ActiveType active union member type
+		 * @return vector
+		 */
+		template<basic_math_type_t ActiveType = float>
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_permute(vector_f v1, vector_f v2, std::uint32_t index0, std::uint32_t index1, std::uint32_t index2, std::uint32_t index3) noexcept;
 	}// namespace utils
 
 	inline namespace data_types
@@ -646,15 +678,15 @@ namespace gal::toolbox::math
 			[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV operator+() noexcept;
 			[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV operator-() noexcept;
 
-			constexpr matrix& GAL_MATH_CALLCONV			   operator+=(matrix_f m2) noexcept;
-			constexpr matrix& GAL_MATH_CALLCONV			   operator-=(matrix_f m2) noexcept;
-			constexpr matrix& GAL_MATH_CALLCONV			   operator*=(matrix_f m2) noexcept;
-			constexpr matrix& GAL_MATH_CALLCONV			   operator/=(matrix_f m2) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator+=(matrix_f m2) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator-=(matrix_f m2) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator*=(matrix_f m2) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator/=(matrix_f m2) noexcept;
 
-			constexpr matrix& GAL_MATH_CALLCONV			   operator+=(float scalar) noexcept;
-			constexpr matrix& GAL_MATH_CALLCONV			   operator-=(float scalar) noexcept;
-			constexpr matrix& GAL_MATH_CALLCONV			   operator*=(float scalar) noexcept;
-			constexpr matrix& GAL_MATH_CALLCONV			   operator/=(float scalar) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator+=(float scalar) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator-=(float scalar) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator*=(float scalar) noexcept;
+			constexpr matrix& GAL_MATH_CALLCONV				 operator/=(float scalar) noexcept;
 
 			[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV operator+(matrix_f m2) const noexcept;
 			[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV operator-(matrix_f m2) const noexcept;
@@ -666,10 +698,10 @@ namespace gal::toolbox::math
 			[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV operator*(float scalar) const noexcept;
 			[[nodiscard]] constexpr matrix GAL_MATH_CALLCONV operator/(float scalar) const noexcept;
 
-			friend constexpr matrix GAL_MATH_CALLCONV operator+(float scalar, matrix_f m) noexcept;
-			friend constexpr matrix GAL_MATH_CALLCONV operator-(float scalar, matrix_f m) noexcept;
-			friend constexpr matrix GAL_MATH_CALLCONV operator*(float scalar, matrix_f m) noexcept;
-			friend constexpr matrix GAL_MATH_CALLCONV operator/(float scalar, matrix_f m) noexcept;
+			friend constexpr matrix GAL_MATH_CALLCONV		 operator+(float scalar, matrix_f m) noexcept;
+			friend constexpr matrix GAL_MATH_CALLCONV		 operator-(float scalar, matrix_f m) noexcept;
+			friend constexpr matrix GAL_MATH_CALLCONV		 operator*(float scalar, matrix_f m) noexcept;
+			friend constexpr matrix GAL_MATH_CALLCONV		 operator/(float scalar, matrix_f m) noexcept;
 		};
 
 		template<typename T, std::size_t Size>
@@ -980,16 +1012,10 @@ namespace gal::toolbox::math
 		#pragma clang diagnostic pop
 	#endif
 
-		template<typename Target, typename Tuple, typename Target::size_type... I>
-		requires(vector_or_matrix_t<Target> || one_or_two_tier_container_ignore_aligned_t<Target>) && (sizeof...(I) <= Target::size) constexpr Target make(Tuple&& tuple, std::index_sequence<I...>) noexcept
-		{
-			return {static_cast<typename Target::value_type>(std::get<I>(std::forward<Tuple>(tuple)))...};
-		}
-
 		template<typename Target, typename... Args>
 		requires(vector_or_matrix_t<Target> || one_or_two_tier_container_ignore_aligned_t<Target>) && (sizeof...(Args) <= Target::size) constexpr Target make(Args... args) noexcept
 		{
-			return make<Target>(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...), std::make_index_sequence<std::min(Target::size, std::tuple_size_v<decltype(std::tuple_cat(gal::toolbox::utils::tuple_maker::to_tuple(args)...))>)>{});
+			return {static_cast<typename Target::value_type>(args)...};
 		}
 	}// namespace data_types
 

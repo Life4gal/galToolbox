@@ -77,11 +77,6 @@ namespace gal::toolbox::math
 		template<std::size_t Index, basic_math_type_t ActiveType>
 		requires(Index >= 0 && Index <= 3) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_splat(vector_f v) noexcept
 		{
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_z == 2);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_w == 3);
-
 			if (std::is_constant_evaluated())
 			{
 				ActiveType value{};
@@ -131,11 +126,6 @@ namespace gal::toolbox::math
 		template<std::size_t Index, basic_math_type_t ActiveType>
 		requires(Index >= 0 && Index <= 3) [[nodiscard]] constexpr ActiveType GAL_MATH_CALLCONV vector_get(vector_f v) noexcept
 		{
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_z == 2);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_w == 3);
-
 			if (std::is_constant_evaluated())
 			{
 				if constexpr (std::is_same_v<float, ActiveType>)
@@ -183,17 +173,29 @@ namespace gal::toolbox::math
 			// todo: use proprietary instructions
 			*dest = vector_get<Index, ActiveType>(v);
 
-			// _mm_store_ss(reinterpret_cast<float*>(dest), _mm_permute_ps(v, _MM_SHUFFLE(Index, Index, Index, Index)));
+			//			if (std::is_constant_evaluated())
+			//			{
+			//				if constexpr (std::is_same_v<float, ActiveType>)
+			//				{
+			//					*dest = v.m128_f32[Index];
+			//				}
+			//				else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
+			//				{
+			//					*dest = v.m128_i32[Index];
+			//				}
+			//				else
+			//				{
+			//					*dest = v.m128_u32[Index];
+			//				}
+			//				return;
+			//			}
+			//
+			//			_mm_store_ss(reinterpret_cast<float*>(dest), _mm_permute_ps(v, _MM_SHUFFLE(Index, Index, Index, Index)));
 		}
 
 		template<std::size_t Index, basic_math_type_t ActiveType>
 		requires(Index >= 0 && Index <= 3) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_set(vector_f v, ActiveType value) noexcept
 		{
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_x == 0);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_y == 1);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_z == 2);
-			static_assert(generic_one_tier_container<std::uint32_t, 4>::index_of_w == 3);
-
 			if (std::is_constant_evaluated())
 			{
 				auto ret = v;
@@ -225,16 +227,16 @@ namespace gal::toolbox::math
 
 			vector ret{};
 
-			if constexpr(Index == 0)
+			if constexpr (Index == 0)
 			{
 				ret = v;
 			}
-			else if constexpr(Index == 1)
+			else if constexpr (Index == 1)
 			{
 				// Swap y and x
 				ret = _mm_permute_ps(v, _MM_SHUFFLE(3, 2, 0, 1));
 			}
-			else if constexpr(Index == 2)
+			else if constexpr (Index == 2)
 			{
 				// Swap z and x
 				ret = _mm_permute_ps(v, _MM_SHUFFLE(3, 0, 1, 2));
@@ -257,7 +259,7 @@ namespace gal::toolbox::math
 				// Swap y and x again
 				ret = _mm_permute_ps(ret, _MM_SHUFFLE(3, 2, 0, 1));
 			}
-			else if constexpr(Index == 2)
+			else if constexpr (Index == 2)
 			{
 				// Swap z and x again
 				ret = _mm_permute_ps(ret, _MM_SHUFFLE(3, 0, 1, 2));
@@ -269,6 +271,167 @@ namespace gal::toolbox::math
 			}
 
 			return ret;
+		}
+
+		template<std::size_t Index, basic_math_type_t ActiveType>
+		requires(Index >= 0 && Index <= 3) [[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_set(vector_f v, const ActiveType* value) noexcept
+		{
+			gal::toolbox::utils::gal_assert(value, "invalid value pointer");
+
+			// todo: use proprietary instructions
+			return vector_set<Index, ActiveType>(v, *value);
+
+			//			if (std::is_constant_evaluated())
+			//			{
+			//				auto ret = v;
+			//				if constexpr (std::is_same_v<float, ActiveType>)
+			//				{
+			//					ret.m128_f32[Index] = *value;
+			//				}
+			//				else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
+			//				{
+			//					ret.m128_i32[Index] = *value;
+			//				}
+			//				else
+			//				{
+			//					ret.m128_u32[Index] = *value;
+			//				}
+			//				return ret;
+			//			}
+			//
+			//			// Convert input to vector
+			//			vector temp = _mm_load_ss(reinterpret_cast<const float*>(value));
+			//
+			//			vector ret{};
+			//
+			//			if constexpr(Index == 0)
+			//			{
+			//				ret = v;
+			//			}
+			//			else if constexpr(Index == 1)
+			//			{
+			//				// Swap y and x
+			//				ret = _mm_permute_ps(v, _MM_SHUFFLE(3, 2, 0, 1));
+			//			}
+			//			else if constexpr(Index == 2)
+			//			{
+			//				// Swap z and x
+			//				ret = _mm_permute_ps(v, _MM_SHUFFLE(3, 0, 1, 2));
+			//			}
+			//			else
+			//			{
+			//				// Swap w and x
+			//				ret = _mm_permute_ps(v, _MM_SHUFFLE(0, 2, 1, 3));
+			//			}
+			//
+			//			// Replace the component
+			//			ret = _mm_move_ss(ret, temp);
+			//
+			//			if constexpr (Index == 0)
+			//			{
+			//				// do nothing
+			//			}
+			//			else if constexpr (Index == 1)
+			//			{
+			//				// Swap y and x again
+			//				ret = _mm_permute_ps(ret, _MM_SHUFFLE(3, 2, 0, 1));
+			//			}
+			//			else if constexpr(Index == 2)
+			//			{
+			//				// Swap z and x again
+			//				ret = _mm_permute_ps(ret, _MM_SHUFFLE(3, 0, 1, 2));
+			//			}
+			//			else
+			//			{
+			//				// Swap w and x again
+			//				ret = _mm_permute_ps(ret, _MM_SHUFFLE(0, 2, 1, 3));
+			//			}
+			//
+			//			return ret;
+		}
+
+		template<basic_math_type_t ActiveType>
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_swizzle(vector_f v, std::uint32_t index0, std::uint32_t index1, std::uint32_t index2, std::uint32_t index3) noexcept
+		{
+			gal::toolbox::utils::gal_assert((index0 < 4) && (index1 < 4) && (index2 < 4) && (index3 < 4));
+
+			if (std::is_constant_evaluated())
+			{
+				const ActiveType* value;
+
+				if constexpr (std::is_same_v<float, ActiveType>)
+				{
+					value = v.m128_f32;
+				}
+				else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
+				{
+					value = v.m128_i32;
+				}
+				else
+				{
+					value = v.m128_u32;
+				}
+
+				return make<generic_vector<ActiveType>>(value[index0], value[index1], value[index2], value[index3]).operator vector();
+			}
+
+			std::uint32_t control_elements[4]{index0, index1, index2, index3};
+			return _mm_permutevar_ps(v, _mm_loadu_si128(reinterpret_cast<const __m128i*>(control_elements)));
+		}
+
+		template<basic_math_type_t ActiveType>
+		[[nodiscard]] constexpr vector GAL_MATH_CALLCONV vector_permute(vector_f v1, vector_f v2, std::uint32_t index0, std::uint32_t index1, std::uint32_t index2, std::uint32_t index3) noexcept
+		{
+			gal::toolbox::utils::gal_assert((index0 < 8) && (index1 < 8) && (index2 < 8) && (index3 < 8));
+
+			if (std::is_constant_evaluated())
+			{
+				vector			  ret{};
+
+				const ActiveType* p[2]{};
+				ActiveType*		  pr;
+
+				if constexpr (std::is_same_v<float, ActiveType>)
+				{
+					p[0] = v1.m128_f32;
+					p[1] = v2.m128_f32;
+					pr	 = ret.m128_f32;
+				}
+				else if constexpr (std::is_same_v<std::int32_t, ActiveType>)
+				{
+					p[0] = v1.m128_i32;
+					p[1] = v2.m128_i32;
+					pr	 = ret.m128_i32;
+				}
+				else
+				{
+					p[0] = v1.m128_u32;
+					p[1] = v2.m128_u32;
+					pr	 = ret.m128_u32;
+				}
+
+				pr[0] = p[index0 >> 2][index0 & 3];
+				pr[1] = p[index1 >> 2][index1 & 3];
+				pr[2] = p[index2 >> 2][index2 & 3];
+				pr[3] = p[index3 >> 2][index3 & 3];
+
+				return ret;
+			}
+
+			constexpr u32_vector					   three{3, 3, 3, 3};
+			alignas(math_type_alignment) std::uint32_t control_elements[4]{index0, index1, index2, index3};
+
+			auto									   control = _mm_load_si128(reinterpret_cast<const __m128i*>(control_elements));
+			auto									   select  = _mm_castsi128_ps(_mm_cmpgt_epi32(control, three.operator __m128i()));
+			control											   = _mm_castps_si128(_mm_and_ps(_mm_castsi128_ps(control), three.operator vector()));
+
+			auto shuffled1									   = _mm_permutevar_ps(v1, control);
+			auto shuffled2									   = _mm_permutevar_ps(v2, control);
+
+			auto masked1									   = _mm_andnot_ps(select, shuffled1);
+			auto masked2									   = _mm_and_ps(select, shuffled2);
+
+			return _mm_or_ps(masked1, masked2);
 		}
 	}// namespace utils
 }// namespace gal::toolbox::math
