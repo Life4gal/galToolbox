@@ -2583,4 +2583,114 @@ TEST(TestMath, TestVectorPermute)
 	}
 }
 
+TEST(TestMath, TestVectorSelect)
+{
+	constexpr auto f32_vec1 = vector_set(123.f, 456, 789, 0);
+	constexpr auto f32_vec2 = vector_set(1.f, 987, 654, 321);
+	constexpr auto i32_vec1 = vector_set(static_cast<std::int32_t>(123), 456, 789, 0);
+	constexpr auto i32_vec2 = vector_set(static_cast<std::int32_t>(1), 987, 654, 321);
+	constexpr auto u32_vec1 = vector_set(static_cast<std::uint32_t>(123), 456, 789, 0);
+	constexpr auto u32_vec2 = vector_set(static_cast<std::uint32_t>(1), 987, 654, 321);
+
+	{
+		constexpr auto	vec1_1 = vector_select<float>(f32_vec1, f32_vec2, vector_select_control<float>(1, 0, 1, 0));
+		constexpr auto* p1_1   = vec1_1.m128_f32;
+
+		static_assert(float_eq(p1_1[0], 1.f));
+		static_assert(float_eq(p1_1[1], 456.f));
+		static_assert(float_eq(p1_1[2], 654.f));
+		static_assert(float_eq(p1_1[3], 0.f));
+
+		auto  vec1_2 = vector_select<float>(f32_vec1, f32_vec2, vector_select_control<float>(1, 0, 1, 0));
+		auto* p1_2	 = vec1_2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p1_2[0], 1.f);
+		ASSERT_FLOAT_EQ(p1_2[1], 456.f);
+		ASSERT_FLOAT_EQ(p1_2[2], 654.f);
+		ASSERT_FLOAT_EQ(p1_2[3], 0.f);
+
+		constexpr auto	vec2_1 = vector_select<float>(f32_vec1, f32_vec2, vector_select_control<float>(0, 1, 0, 1));
+		constexpr auto* p2_1   = vec2_1.m128_f32;
+
+		static_assert(float_eq(p2_1[0], 123.f));
+		static_assert(float_eq(p2_1[1], 987.f));
+		static_assert(float_eq(p2_1[2], 789.f));
+		static_assert(float_eq(p2_1[3], 321.f));
+
+		auto  vec2_2 = vector_select<float>(f32_vec1, f32_vec2, vector_select_control<float>(0, 1, 0, 1));
+		auto* p2_2	 = vec2_2.m128_f32;
+
+		ASSERT_FLOAT_EQ(p2_2[0], 123.f);
+		ASSERT_FLOAT_EQ(p2_2[1], 987.f);
+		ASSERT_FLOAT_EQ(p2_2[2], 789.f);
+		ASSERT_FLOAT_EQ(p2_2[3], 321.f);
+	}
+	{
+		constexpr auto	vec1_1 = vector_select<std::int32_t>(i32_vec1, i32_vec2, vector_select_control<std::int32_t>(1, 0, 1, 0));
+		constexpr auto* p1_1   = vec1_1.m128_i32;
+
+		static_assert(p1_1[0] == 1);
+		static_assert(p1_1[1] == 456);
+		static_assert(p1_1[2] == 654);
+		static_assert(p1_1[3] == 0);
+
+		auto  vec1_2 = vector_select<std::int32_t>(i32_vec1, i32_vec2, vector_select_control<std::int32_t>(1, 0, 1, 0));
+		auto* p1_2	 = vec1_2.m128_i32;
+
+		ASSERT_EQ(p1_2[0], static_cast<std::int32_t>(1));
+		ASSERT_EQ(p1_2[1], static_cast<std::int32_t>(456));
+		ASSERT_EQ(p1_2[2], static_cast<std::int32_t>(654));
+		ASSERT_EQ(p1_2[3], static_cast<std::int32_t>(0));
+
+		constexpr auto	vec2_1 = vector_select<std::int32_t>(i32_vec1, i32_vec2, vector_select_control<std::int32_t>(0, 1, 0, 1));
+		constexpr auto* p2_1   = vec2_1.m128_i32;
+
+		static_assert(p2_1[0] == 123);
+		static_assert(p2_1[1] == 987);
+		static_assert(p2_1[2] == 789);
+		static_assert(p2_1[3] == 321);
+
+		auto  vec2_2 = vector_select<std::int32_t>(i32_vec1, i32_vec2, vector_select_control<std::int32_t>(0, 1, 0, 1));
+		auto* p2_2	 = vec2_2.m128_i32;
+
+		ASSERT_EQ(p2_2[0], static_cast<std::int32_t>(123));
+		ASSERT_EQ(p2_2[1], static_cast<std::int32_t>(987));
+		ASSERT_EQ(p2_2[2], static_cast<std::int32_t>(789));
+		ASSERT_EQ(p2_2[3], static_cast<std::int32_t>(321));
+	}
+	{
+		constexpr auto	vec1_1 = vector_select<std::uint32_t>(u32_vec1, u32_vec2, vector_select_control<std::uint32_t>(1, 0, 1, 0));
+		constexpr auto* p1_1   = vec1_1.m128_u32;
+
+		static_assert(p1_1[0] == 1);
+		static_assert(p1_1[1] == 456);
+		static_assert(p1_1[2] == 654);
+		static_assert(p1_1[3] == 0);
+
+		auto  vec1_2 = vector_select<std::uint32_t>(u32_vec1, u32_vec2, vector_select_control<std::uint32_t>(1, 0, 1, 0));
+		auto* p1_2	 = vec1_2.m128_u32;
+
+		ASSERT_EQ(p1_2[0], static_cast<std::uint32_t>(1));
+		ASSERT_EQ(p1_2[1], static_cast<std::uint32_t>(456));
+		ASSERT_EQ(p1_2[2], static_cast<std::uint32_t>(654));
+		ASSERT_EQ(p1_2[3], static_cast<std::uint32_t>(0));
+
+		constexpr auto	vec2_1 = vector_select<std::uint32_t>(u32_vec1, u32_vec2, vector_select_control<std::uint32_t>(0, 1, 0, 1));
+		constexpr auto* p2_1   = vec2_1.m128_u32;
+
+		static_assert(p2_1[0] == 123);
+		static_assert(p2_1[1] == 987);
+		static_assert(p2_1[2] == 789);
+		static_assert(p2_1[3] == 321);
+
+		auto  vec2_2 = vector_select<std::uint32_t>(u32_vec1, u32_vec2, vector_select_control<std::uint32_t>(0, 1, 0, 1));
+		auto* p2_2	 = vec2_2.m128_u32;
+
+		ASSERT_EQ(p2_2[0], static_cast<std::uint32_t>(123));
+		ASSERT_EQ(p2_2[1], static_cast<std::uint32_t>(987));
+		ASSERT_EQ(p2_2[2], static_cast<std::uint32_t>(789));
+		ASSERT_EQ(p2_2[3], static_cast<std::uint32_t>(321));
+	}
+}
+
 #endif
