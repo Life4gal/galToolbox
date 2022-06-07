@@ -13,7 +13,10 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <ranges>
+#include <numeric>
 
+#include <galToolbox/functional/zip_invoke.hpp>
 #include <galToolbox/utils/assert.hpp>
 
 namespace gal::toolbox::container
@@ -194,7 +197,7 @@ namespace gal::toolbox::container
 				  mask_(other.mask_) {}
 
 		public:
-			// let IDE stop prompting us that 'Do not overload unary operator bitand, it is dangerous'
+			// let IDE stop prompting us that 'Do not overload unary operator bit-and, it is dangerous'
 			auto operator bitand() = delete;/* NOLINT */
 
 			// let IDE stop prompting us to add explicit for implicit conversion
@@ -227,7 +230,7 @@ namespace gal::toolbox::container
 				  mask_(value_type{1} << offset) {}
 
 		public:
-			// let IDE stop prompting us that 'Do not overload unary operator bitand, it is dangerous'
+			// let IDE stop prompting us that 'Do not overload unary operator bit-and, it is dangerous'
 			auto operator bitand() = delete;/* NOLINT */
 
 			// let IDE stop prompting us to add explicit for implicit conversion
@@ -328,7 +331,7 @@ namespace gal::toolbox::container
 
 			[[nodiscard]] constexpr value_type operator*() const noexcept// NOLINT(clang-diagnostic-invalid-constexpr)
 			{
-				return {*std::next(iterator_, static_cast<std::iter_difference_t<const_iterator>>(bit_trait::block_index(index_))), bit_trait::bit_index(index_)};
+				return {*std::ranges::next(iterator_, static_cast<std::iter_difference_t<const_iterator>>(bit_trait::block_index(index_))), bit_trait::bit_index(index_)};
 			}
 
 		private:
@@ -593,7 +596,7 @@ namespace gal::toolbox::container
 				auto is_one = str_trait_type::eq(c, one);
 				if (not is_one and not str_trait_type::eq(c, zero)) { break; }
 
-				if (is_one) { set(i); }
+				if (is_one) { this->set(i); }
 			}
 		}
 
@@ -621,7 +624,7 @@ namespace gal::toolbox::container
 			auto num_bits = size not_eq npos
 				                ? size
 				                : len;
-			container_.resize(calc_blocks_needed(num_bits));
+			container_.resize(basic_dynamic_bitset::calc_blocks_needed(num_bits));
 			total_ = num_bits;
 
 			auto& fac = std::use_facet<std::ctype<Char>>(std::locale());
@@ -638,7 +641,7 @@ namespace gal::toolbox::container
 				auto is_one = str_trait_type::eq(c, one);
 				if (not is_one and not str_trait_type::eq(c, zero)) { break; }
 
-				if (is_one) { set(i); }
+				if (is_one) { this->set(i); }
 			}
 		}
 
@@ -926,7 +929,7 @@ namespace gal::toolbox::container
 		 * @brief move ctor
 		 * @param other another dynamic_bitset for move
 		 */
-		GAL_ASSERT_CONSTEXPR			basic_dynamic_bitset(basic_dynamic_bitset&& other) noexcept(std::is_nothrow_move_constructible_v<container>)
+		GAL_ASSERT_CONSTEXPR basic_dynamic_bitset(basic_dynamic_bitset&& other) noexcept(std::is_nothrow_move_constructible_v<container>)
 			: container_(std::move(other.container_)),
 			  total_(other.total_)
 		{
@@ -958,8 +961,9 @@ namespace gal::toolbox::container
 		constexpr void swap(basic_dynamic_bitset& other)// NOLINT(clang-diagnostic-invalid-constexpr)
 		noexcept(std::is_nothrow_swappable_v<container>)
 		{
-			std::swap(container_, other.container_);
-			std::swap(total_, other.total_);
+			using std::swap;
+			swap(container_, other.container_);
+			swap(total_, other.total_);
 		}
 
 		/**
@@ -990,7 +994,7 @@ namespace gal::toolbox::container
 		 * @return self
 		 */
 		GAL_ASSERT_CONSTEXPR basic_dynamic_bitset& reset(const size_type pos,
-		                                      const size_type len) noexcept(
+		                                                 const size_type len) noexcept(
 			noexcept(
 				std::declval<basic_dynamic_bitset>().range_operation(
 						std::declval<size_type>(),
@@ -1019,7 +1023,7 @@ namespace gal::toolbox::container
 		constexpr basic_dynamic_bitset& reset() noexcept(
 			noexcept(std::declval<container>().begin()))
 		{
-			for (auto& it: container_) { it = static_cast<value_type>(0); }
+			std::ranges::fill(container_, static_cast<value_type>(0));
 			return *this;
 		}
 
@@ -1060,7 +1064,7 @@ namespace gal::toolbox::container
 		GAL_ASSERT_CONSTEXPR basic_dynamic_bitset& set() noexcept(
 			noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits()))
 		{
-			for (auto& it: container_) { it = ~static_cast<value_type>(0); }
+			std::ranges::fill(container_, ~static_cast<value_type>(0));
 			zero_unused_bits();
 			return *this;
 		}
@@ -1072,7 +1076,7 @@ namespace gal::toolbox::container
 		 * @return self
 		 */
 		GAL_ASSERT_CONSTEXPR basic_dynamic_bitset& flip(const size_type pos,
-		                                     const size_type len) noexcept(
+		                                                const size_type len) noexcept(
 			noexcept(
 				std::declval<basic_dynamic_bitset>().range_operation(
 						std::declval<size_type>(),
@@ -1101,7 +1105,7 @@ namespace gal::toolbox::container
 		GAL_ASSERT_CONSTEXPR basic_dynamic_bitset& flip() noexcept(
 			noexcept(std::declval<basic_dynamic_bitset>().zero_unused_bits()))
 		{
-			for (size_type i = 0; i < container_size(); ++i) { container_[i] = compl container_[i]; }
+			std::ranges::for_each(container_, [](auto& value) { value = compl value; });
 			zero_unused_bits();
 			return *this;
 		}
@@ -1125,7 +1129,7 @@ namespace gal::toolbox::container
 		 * @return tested value
 		 */
 		[[nodiscard]] GAL_ASSERT_CONSTEXPR bool test_and_set(const size_type pos,
-		                                          const bool value) noexcept(
+		                                                     const bool value) noexcept(
 			noexcept(std::declval<basic_dynamic_bitset>().set(std::declval<size_type>(), std::declval<bool>())))
 		{
 			const auto b = test(pos);
@@ -1146,10 +1150,10 @@ namespace gal::toolbox::container
 			const auto extra = count_extra_bits();
 
 			if (constexpr auto all_one = ~static_cast<value_type>(0);
-				extra == 0) { for (size_type i = 0; i < container_size(); ++i) { if (container_[i] not_eq all_one) { return false; } } }
+				extra == 0) { if (not std::ranges::all_of(container_, [all_one](const auto& v) { return v == all_one; })) { return false; } }
 			else
 			{
-				for (size_type i = 0; i < container_size() - 1; ++i) { if (container_[i] not_eq all_one) { return false; } }
+				if (std::ranges::all_of(container_ | std::views::take(container_size() - 1), [all_one](const auto& v) { return v == all_one; })) { return false; }
 				if (highest_block() not_eq (value_type{1} << extra) - 1) { return false; }
 			}
 			return true;
@@ -1164,8 +1168,7 @@ namespace gal::toolbox::container
 			noexcept(std::declval<container>()[0]))
 		{
 			if (empty()) { return false; }
-			for (size_type i = 0; i < container_size(); ++i) { if (container_[i]) { return true; } }
-			return false;
+			return std::ranges::any_of(container_, [](const auto& v) { return v; });
 		}
 
 		/**
@@ -1209,9 +1212,7 @@ namespace gal::toolbox::container
 				return num;
 			};
 
-			size_type total{};
-			for (size_type i = 0; i < container_size(); ++i) { total += pop_count(container_[i]); }
-			return total;
+			return std::accumulate(container_.begin(), container_.end(), size_type{0}, [](const auto& total, const auto& v) { return total + pop_count(v); });
 		}
 
 		/**
@@ -1309,11 +1310,7 @@ namespace gal::toolbox::container
 		 * @param value bit's value
 		 */
 		GAL_ASSERT_CONSTEXPR void push_back(const bool value) noexcept(
-			noexcept(std::declval<basic_dynamic_bitset>().resize(std::declval<size_type>(), std::declval<bool>())))
-		{
-			const auto sz = size();
-			resize(sz + 1, value);
-		}
+			noexcept(std::declval<basic_dynamic_bitset>().resize(std::declval<size_type>(), std::declval<bool>()))) { resize(size() + 1, value); }
 
 		/**
 		 * @brief pop a bit from back
@@ -1349,6 +1346,17 @@ namespace gal::toolbox::container
 			gal_assert(check_invariants(), "check_invariants failed");
 		}
 
+	private:
+		template<typename Function>
+		constexpr void operator_invoker(Function&& function, const basic_dynamic_bitset& other) noexcept
+		{
+			functional::zip_invoke(
+					std::forward<Function>(function),
+					container_,
+					other.container_.begin());
+		}
+
+	public:
 		/**
 		 * @brief and_eq with another dynamic_bitset, get all bits' intersection set
 		 * @param other another dynamic_bitset
@@ -1358,7 +1366,10 @@ namespace gal::toolbox::container
 			noexcept(std::declval<container>()[0]))
 		{
 			gal_assert(size() == other.size(), "the two containers are not the same size");
-			for (size_type i = 0; i < container_size(); ++i) { container_[i] and_eq other.container_[i]; }
+
+			operator_invoker([](auto& lhs, const auto& rhs) { lhs and_eq rhs; },
+			                 other);
+
 			return *this;
 		}
 
@@ -1371,7 +1382,10 @@ namespace gal::toolbox::container
 			noexcept(std::declval<container>()[0]))
 		{
 			gal_assert(size() == other.size(), "the two containers are not the same size");
-			for (size_type i = 0; i < container_size(); ++i) { container_[i] or_eq other.container_[i]; }
+
+			operator_invoker([](auto& lhs, const auto& rhs) { lhs or_eq rhs; },
+			                 other);
+
 			return *this;
 		}
 
@@ -1384,7 +1398,10 @@ namespace gal::toolbox::container
 			noexcept(std::declval<container>()[0]))
 		{
 			gal_assert(size() == other.size(), "the two containers are not the same size");
-			for (size_type i = 0; i < container_size(); ++i) { container_[i] xor_eq other.container_[i]; }
+
+			operator_invoker([](auto& lhs, const auto& rhs) { lhs xor_eq rhs; },
+			                 other);
+
 			return *this;
 		}
 
@@ -1397,7 +1414,10 @@ namespace gal::toolbox::container
 			noexcept(std::declval<container>()[0]))
 		{
 			gal_assert(size() == other.size(), "the two containers are not the same size");
-			for (size_type i = 0; i < container_size(); ++i) { container_[i] and_eq compl other.container_[i]; }
+
+			operator_invoker([](auto& lhs, const auto& rhs) { lhs and_eq compl rhs; },
+			                 other);
+
 			return *this;
 		}
 
@@ -1414,14 +1434,17 @@ namespace gal::toolbox::container
 			// note that we store every bit from back to front, it means left shift actually is right shift
 			// from blocks_need_discard to total_blocks is the part we need save
 			// or container[blocks_need_discard : total_blocks]
-			auto total_blocks = container_size() - 1;
-			auto blocks_need_discard = bit_trait::block_index(n);
+			const auto total_blocks = container_size() - 1;
+			const auto blocks_need_discard = bit_trait::block_index(n);
 
 			if (const auto remained_bits = bit_trait::bit_index(n); remained_bits == 0)
 			{
 				// it is full fit a block
 				// copy remained part which we needed
-				for (decltype(blocks_need_discard) i = 0; i <= total_blocks - blocks_need_discard; ++i) { container_[blocks_need_discard + i] = container_[i]; }
+				std::ranges::copy_n(
+						container_.begin(),
+						static_cast<container::difference_type>(total_blocks - blocks_need_discard + 1),
+						container_.begin() + static_cast<container::difference_type>(blocks_need_discard));
 			}
 			else
 			{
@@ -1439,19 +1462,25 @@ namespace gal::toolbox::container
 
 				const auto extra_bits_in_block = bits_of_type - remained_bits;
 
-				for (decltype(blocks_need_discard) i = 1; i <= total_blocks - blocks_need_discard; ++i)
-				{
-					// store this block's remained_bits part and last (actually, is next block, but we store every bit from back to front) block's extra_bits_in_block part
-					container_[blocks_need_discard + i] =
-							(container_[i - 1] >> extra_bits_in_block) bitor
-							(container_[i] << remained_bits);
-				}
+				functional::zip_invoke(
+						[extra_bits_in_block, remained_bits](auto& v, const auto& extra, const auto& remained)
+						{
+							// store this block's remained_bits part and last (actually, is next block, but we store every bit from back to front) block's extra_bits_in_block part
+							v = (extra >> extra_bits_in_block) bitor (remained << remained_bits);
+						},
+						container_.begin() + 1 + static_cast<container::difference_type>(blocks_need_discard),
+						container_.begin() + 1 + static_cast<container::difference_type>(blocks_need_discard + total_blocks - blocks_need_discard),
+						container_.begin(),
+						container_.begin() + 1);
+
 				container_[blocks_need_discard] = container_[0] << remained_bits;
 			}
 
 			// zero out front part
-			for (decltype(total_blocks) i = 0; i < blocks_need_discard; ++i) { container_[i] = static_cast<value_type>(0); }
-
+			std::ranges::fill_n(
+					container_.begin(),
+					static_cast<container::difference_type>(blocks_need_discard),
+					value_type{0});
 			// zero out any 1 bit that flowed into the unused part
 			zero_unused_bits();
 
@@ -1471,14 +1500,17 @@ namespace gal::toolbox::container
 			// note that we store every bit from back to front, it means right shift actually is left shift
 			// from 0 to blocks_need_discard is the part we need save
 			// or container[0 : blocks_need_discard]
-			auto total_blocks = container_size() - 1;
-			auto blocks_need_discard = bit_trait::block_index(n);
+			const auto total_blocks = container_size() - 1;
+			const auto blocks_need_discard = bit_trait::block_index(n);
 
 			if (const auto remained_bits = bit_trait::bit_index(n); remained_bits == 0)
 			{
 				// it is full fit a block
 				// copy remained part which we needed
-				for (decltype(blocks_need_discard) i = blocks_need_discard; i <= total_blocks; ++i) { container_[i - blocks_need_discard] = container_[i]; }
+				std::ranges::copy_n(
+						container_.begin() + static_cast<container::difference_type>(blocks_need_discard),
+						static_cast<container::difference_type>(total_blocks - blocks_need_discard + 1),
+						container_.begin());
 			}
 			else
 			{
@@ -1495,17 +1527,25 @@ namespace gal::toolbox::container
 				 */
 				const auto extra_bits_in_block = bits_of_type - bit_trait::bit_index(n);
 
-				for (decltype(blocks_need_discard) i = blocks_need_discard; i < total_blocks; ++i)
-				{
-					// store this block's remained_bits part and next (actually, is last block, but we store every bit from back to front) block's extra_bits_in_block part
-					container_[i - blocks_need_discard] = (container_[i + 1] << extra_bits_in_block) | (container_[i] >>
-					                                                                                    remained_bits);
-				}
+				functional::zip_invoke(
+						[extra_bits_in_block, remained_bits](auto& v, const auto& extra, const auto& remained)
+						{
+							// store this block's remained_bits part and next (actually, is last block, but we store every bit from back to front) block's extra_bits_in_block part
+							v = (extra >> extra_bits_in_block) bitor (remained << remained_bits);
+						},
+						container_.begin(),
+						container_.begin() + static_cast<container::difference_type>(total_blocks - blocks_need_discard),
+						container_.begin() + 1 + static_cast<container::difference_type>(blocks_need_discard),
+						container_.begin() + static_cast<container::difference_type>(blocks_need_discard));
+
 				container_[total_blocks - blocks_need_discard] = container_[total_blocks] >> remained_bits;
 			}
 
 			// zero out back part
-			for (decltype(total_blocks) i = 0, begin = total_blocks - blocks_need_discard; i < blocks_need_discard; ++i) { container_[begin + i] = static_cast<value_type>(0); }
+			std::ranges::fill_n(
+					container_.begin() + static_cast<container::difference_type>(total_blocks - blocks_need_discard),
+					static_cast<container::difference_type>(blocks_need_discard),
+					value_type{0});
 
 			return *this;
 		}
