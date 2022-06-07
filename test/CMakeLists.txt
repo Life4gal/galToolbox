@@ -10,6 +10,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(
 		TEST_CONTAINER_SOURCE
+
 		src/test_ring_buffer.cpp
 		src/test_fifo.cpp
 		src/test_dynamic_bitset.cpp
@@ -17,24 +18,34 @@ set(
 
 set(
 		TEST_UTILS_SOURCE
+
 		src/test_random.cpp
 		src/test_sequence_invoker.cpp
 )
 
 set(
 		TEST_STRING_SOURCE
+
 		src/test_compile_time_matcher.cpp
 		src/test_string_pool.cpp
 )
 
 set(
 		TEST_ITERATOR_SOURCE
+
 		src/test_stride_iterator.cpp
 )
 
 set(
 		TEST_MATH_SOURCE
+
 		src/test_math.cpp
+)
+
+set(
+	TEST_FUNCTIONAL_SOURCE
+
+	src/test_proxy.cpp
 )
 
 add_executable(
@@ -45,6 +56,7 @@ add_executable(
 		${TEST_STRING_SOURCE}
 		${TEST_ITERATOR_SOURCE}
 		${TEST_MATH_SOURCE}
+		${TEST_FUNCTIONAL_SOURCE}
 )
 
 target_compile_features(
