@@ -21,6 +21,7 @@ set(
 
 		src/test_random.cpp
 		src/test_sequence_invoker.cpp
+		src/test_point.cpp
 )
 
 set(
