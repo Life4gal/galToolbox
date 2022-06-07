@@ -1,34 +1,27 @@
 #include <galToolbox/utils/assert.hpp>
 #include <galToolbox/utils/macro.hpp>
 
-#ifdef GAL_FMT_NOT_SUPPORT
-	#include <fmt/format.h>
-#else
-	#include <format>
-#endif
+#include <galToolbox/string/format.hpp>
 
 #include <iostream>
 
 namespace gal
 {
-#ifndef GAL_NO_ASSERT
+	#ifndef GAL_NO_ASSERT
 	void gal_assert(
-			const bool				   condition,
-			std::string_view		   message,
+			const bool condition,
+			std::string_view message,
 			const std_source_location& location) noexcept
 	{
 		if (not condition)
 		{
 			// todo: output to other places, or you can specify the output location
 
-	#ifdef GAL_FMT_NOT_SUPPORT
-			std::cerr << fmt::format("[FILE: {} -> FUNCTION: {} -> LINE: {}] assert failed: {}\n", location.file_name(), location.function_name(), location.line(), message);
-	#else
-			std::cerr << std::format("[FILE: {} -> FUNCTION: {} -> LINE: {}] assert failed: {}\n", location.file_name(), location.function_name(), location.line(), message);
-	#endif
+			std::cerr << std_format::format("[FILE: {} -> FUNCTION: {} -> LINE: {}] assert failed: {}\n", location.file_name(), location.function_name(), location.line(), message);
+
 			DEBUG_TRAP();
 			std::abort();
 		}
 	}
-#endif
+	#endif
 }// namespace gal
