@@ -138,17 +138,18 @@ else()
 	message("${PROJECT_NAME} info: drop fmtlib.")
 endif(${INLCUDE_FMTLIB})
 
-#if(${INLCUDE_SPDLOG})
-#	message("${PROJECT_NAME} info: make spdlog as a ${PROJECT_NAME} dependency.")
-#	target_link_libraries(
-#				${PROJECT_NAME}
-#				PUBLIC
-#				spdlog
-#				# spdlog_header_only
-#	)
-#else()
-#	message("${PROJECT_NAME} info: drop spdlog.")
-#endif(${INLCUDE_SPDLOG})
+if(${INLCUDE_SPDLOG})
+	message("${PROJECT_NAME} info: make spdlog as a ${PROJECT_NAME} dependency.")
+	include(${GAL_3RDPARTY_PATH}/spdlog.cmake)
+	target_link_libraries(
+				${PROJECT_NAME}
+				PUBLIC
+				spdlog
+				# spdlog_header_only
+	)
+else()
+	message("${PROJECT_NAME} info: drop spdlog.")
+endif(${INLCUDE_SPDLOG})
 
 include(${GAL_MODULE_PATH}/config_build_type.cmake)
 BuildAsPrivate()
