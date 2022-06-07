@@ -2,7 +2,7 @@
 
 #include <array>
 
-#include <utils/sequence_invoker.hpp>
+#include <galToolbox/utils/sequence_invoker.hpp>
 
 using namespace gal::toolbox::utils;
 

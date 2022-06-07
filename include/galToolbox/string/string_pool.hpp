@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <string_view>
-#include <utils/assert.hpp>
+#include <galToolbox/utils/assert.hpp>
 #include <vector>
 
 namespace gal::toolbox::string
@@ -38,7 +38,7 @@ namespace gal::toolbox::string
 		[[nodiscard]] constexpr view_type append(view_type str)
 		{
 			// todo: shall we re-alloc more memory?
-			utils::gal_assert(storable(str), "There is not enough space for this string.");
+			gal_assert(storable(str), "There is not enough space for this string.");
 
 			const auto dest = memory_.get() + size_;
 			std::ranges::copy(str, dest);

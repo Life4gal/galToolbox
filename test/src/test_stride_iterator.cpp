@@ -2,7 +2,8 @@
 
 #include <ranges>
 #include <array>
-#include <iterator/stride_iterator.hpp>
+#define GAL_NO_ASSERT
+#include <galToolbox/iterator/stride_iterator.hpp>
 
 using namespace gal::toolbox::iterator;
 

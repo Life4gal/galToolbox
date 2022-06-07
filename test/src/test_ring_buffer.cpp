@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <container/ring_buffer.hpp>
+#include <galToolbox/container/ring_buffer.hpp>
 
 using namespace gal::toolbox::container;
 
@@ -48,7 +48,7 @@ TEST(TestRingBuffer, TestGetOrSet)
 
 TEST(TestRingBuffer, TestIndexOfAndDistance)
 {
-	ring_buffer<char, 32>                 buffer_c10{};
+	ring_buffer<char, 32> buffer_c10{};
 	constexpr decltype(buffer_c10)::size_type mask = 32 - 1;
 
 	ASSERT_EQ(buffer_c10.index_of(1), 1 bitand mask);

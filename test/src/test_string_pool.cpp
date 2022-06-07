@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <string/string_pool.hpp>
+#include <galToolbox/string/string_pool.hpp>
 #include <vector>
 
 using namespace gal::toolbox::string;
@@ -14,7 +14,7 @@ TEST(TestStringPool, TestNotNullTerminatedStrings)
 		using char_type = char;
 
 		std::vector<std::basic_string_view<char_type>> strings;
-		string_pool<char_type, is_null_terminated>	   pool;
+		string_pool<char_type, is_null_terminated> pool;
 
 		strings.emplace_back(pool.append("one"));
 
@@ -52,7 +52,7 @@ TEST(TestStringPool, TestNullTerminatedStringsChar)
 		using char_type = char;
 
 		std::vector<std::basic_string_view<char_type>> strings;
-		string_pool<char_type, is_null_terminated>	   pool;
+		string_pool<char_type, is_null_terminated> pool;
 
 		strings.emplace_back(pool.append("one"));
 
@@ -83,7 +83,7 @@ TEST(TestStringPool, TestNullTerminatedStringsWChar)
 		using char_type = wchar_t;
 
 		std::vector<std::basic_string_view<char_type>> strings;
-		string_pool<char_type, is_null_terminated>	   pool;
+		string_pool<char_type, is_null_terminated> pool;
 
 		strings.emplace_back(pool.append(L"one"));
 
@@ -114,7 +114,7 @@ TEST(TestStringPool, TestNullTerminatedStringsChar8)
 		using char_type = char8_t;
 
 		std::vector<std::basic_string_view<char_type>> strings;
-		string_pool<char_type, is_null_terminated>	   pool;
+		string_pool<char_type, is_null_terminated> pool;
 
 		strings.emplace_back(pool.append(u8"one"));
 
@@ -139,7 +139,7 @@ TEST(TestStringPool, TestNullTerminatedStringsChar16)
 		using char_type = char16_t;
 
 		std::vector<std::basic_string_view<char_type>> strings;
-		string_pool<char_type, is_null_terminated>	   pool;
+		string_pool<char_type, is_null_terminated> pool;
 
 		strings.emplace_back(pool.append(u"one"));
 
@@ -164,7 +164,7 @@ TEST(TestStringPool, TestNullTerminatedStringsChar32)
 		using char_type = char32_t;
 
 		std::vector<std::basic_string_view<char_type>> strings;
-		string_pool<char_type, is_null_terminated>	   pool;
+		string_pool<char_type, is_null_terminated> pool;
 
 		strings.emplace_back(pool.append(U"one"));
 
@@ -185,30 +185,30 @@ TEST(TestStringPool, TestCustomeCapacity)
 {
 	// string_pool uses default block capacity of 8192 characters, but a custom value can be specified
 	{
-		constexpr static bool					 is_null_terminated = false;
+		constexpr static bool is_null_terminated = false;
 
-		constexpr std::size_t					 so_big_size		= 1'000'000;
+		constexpr std::size_t so_big_size = 1'000'000;
 		string_pool<wchar_t, is_null_terminated> so_big_pool{so_big_size};
 
-		const auto								 str = so_big_pool.append(L"a long long long long long long long long str");
+		const auto str = so_big_pool.append(L"a long long long long long long long long str");
 		string_pool<wchar_t, is_null_terminated> so_small_pool{str.length() / 2};
 
 		// if you try to add a string exceeding default block capacity, string_pool will allocate a new block capable of storing the string
-		const auto								 put_it_in = so_small_pool.append(str);
+		const auto put_it_in = so_small_pool.append(str);
 
 		// cannot use C API
 		ASSERT_EQ(put_it_in, L"a long long long long long long long long str");
 	}
 	{
-		constexpr static bool					 is_null_terminated = true;
+		constexpr static bool is_null_terminated = true;
 
-		constexpr std::size_t					 so_big_size		= 1'000'000'000;
+		constexpr std::size_t so_big_size = 1'000'000'000;
 		string_pool<wchar_t, is_null_terminated> so_big_pool{so_big_size};
 
-		const auto								 str = so_big_pool.append(L"a long long long long long long long long str");
+		const auto str = so_big_pool.append(L"a long long long long long long long long str");
 		string_pool<wchar_t, is_null_terminated> so_small_pool{str.length() / 2};
 
-		const auto								 put_it_in = so_small_pool.append(str);
+		const auto put_it_in = so_small_pool.append(str);
 
 		// use C API
 		ASSERT_EQ(std::wcscmp(put_it_in.data(), L"a long long long long long long long long str"), 0);

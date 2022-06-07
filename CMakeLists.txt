@@ -7,12 +7,12 @@ set(
 
 set(
 		GALTOOLBOX_MINOR_VERSION
-		1
+		2
 )
 
 set(
 		GALTOOLBOX_PATCH_VERSION
-		5
+		0
 )
 
 set(
@@ -28,108 +28,127 @@ project(
 		LANGUAGES CXX
 )
 
-set(GALTOOLBOX_GLOBAL_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-set(GALTOOLBOX_CONFIG_PATH ${GALTOOLBOX_GLOBAL_SOURCE_PATH}/config)
-set(GALTOOLBOX_MODULE_PATH ${GALTOOLBOX_GLOBAL_SOURCE_PATH}/cmake)
+set(GAL_GLOBAL_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(GAL_CONFIG_PATH ${GAL_GLOBAL_SOURCE_PATH}/config)
+set(GAL_MODULE_PATH ${GAL_GLOBAL_SOURCE_PATH}/cmake)
+set(GAL_3RDPARTY_PATH ${GAL_GLOBAL_SOURCE_PATH}/3rd-party)
+
+option(INCLUDE_GOOGLETEST_CASES "make googletest as a ${PROJECT_NAME} test cases" ON)
+option(INLCUDE_RANGE_V3 "make range_v3 as a ${PROJECT_NAME} dependency" ON)
+option(INLCUDE_FMTLIB "make fmtlib as a ${PROJECT_NAME} dependency (if the current compiler does not support std::format)" ON)
+option(INLCUDE_SPDLOG "make spdlog as a ${PROJECT_NAME} dependency" ON)
+
 
 set(
-		GALTOOLBOX_LIBRARY_HEADERS
+	${PROJECT_NAME}_SOURCE
 
-		# utils
-		include/utils/assert.hpp
-		include/utils/random.hpp
-		include/utils/sequence_invoker.hpp
-		include/utils/tuple_maker.hpp
-		include/utils/concepts.hpp
-
-		# string
-		include/string/compile_time_matcher.hpp
-		include/string/string_pool.hpp
-
-		# iterator
-		include/iterator/stride_iterator.hpp
-
-		# container
-		include/container/ring_buffer.hpp
-		include/container/fifo.hpp
-		include/container/dynamic_bitset.hpp
-
-		#math
-		include/math/math.hpp
+	src/utils/assert.cpp
 )
 
-add_library(${PROJECT_NAME} INTERFACE)
+add_library(
+	${PROJECT_NAME} 
+	STATIC
+	${${PROJECT_NAME}_SOURCE}
+)
+
+add_library(
+		gal::toolbox
+		ALIAS
+		${PROJECT_NAME}
+)
 
 target_include_directories(
 		${PROJECT_NAME}
-		INTERFACE
-		$<BUILD_INTERFACE:${GALTOOLBOX_GLOBAL_SOURCE_PATH}/include>
-		$<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+		PUBLIC
+		${PROJECT_SOURCE_DIR}/include
 )
 
-target_compile_options(
-		${PROJECT_NAME}
-		INTERFACE
-		$<$<CXX_COMPILER_ID:MSVC>:/std:c++latest /W4 /WX>
-		$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-std=c++2a -Wall -Wextra -Wpedantic -Werror>
-)
+if(MSVC)
+	target_compile_features(
+			${PROJECT_NAME}
+			PRIVATE
+			cxx_std_23
+	)
+else()
+	target_compile_features(
+			${PROJECT_NAME}
+			PRIVATE
+			cxx_std_20
+	)
+endif(MSVC)
 
-option(
-		GALTOOLBOX_NEED_BUILD_TEST
-		"build galToolbox test cases"
-		ON
-)
-
-if(${GALTOOLBOX_NEED_BUILD_TEST})
-	include(${GALTOOLBOX_MODULE_PATH}/prepare-3rd-party.cmake)
-	# enable test
+if(${INCLUDE_GOOGLETEST_CASES})
+	message("${PROJECT_NAME} info: build ${PROJECT_NAME}'s test cases.")
+	include(${GAL_3RDPARTY_PATH}/google-test.cmake)
+	#target_link_libraries(
+	#	${PROJECT_NAME}
+	#	PUBLIC
+	#	gtest_main
+	#)
 	enable_testing()
-	# Include google test
-	include(${GOOGLE_TEST_PATH}/google-test.cmake)
 	add_subdirectory(test)
-endif(${GALTOOLBOX_NEED_BUILD_TEST})
+else()
+	message("${PROJECT_NAME} info: drop ${PROJECT_NAME}'s test cases.")
+endif(${INCLUDE_GOOGLETEST_CASES})
 
-#--- Package
-include(CMakePackageConfigHelpers)
+if(${INLCUDE_RANGE_V3})
+	message("${PROJECT_NAME} info: make range-v3 as a ${PROJECT_NAME} dependency.")
+	include(${GAL_3RDPARTY_PATH}/range-v3.cmake)
+	target_link_libraries(
+			${PROJECT_NAME}
+			PUBLIC
+			range-v3
+	)
+else()
+	message("${PROJECT_NAME} info: drop range-v3.")
+endif(${INLCUDE_RANGE_V3})
 
-string(TOLOWER ${PROJECT_NAME} PACKAGE_NAME)
+if(${INLCUDE_FMTLIB})
+	include(CheckCXXSourceCompiles)
+	CHECK_CXX_SOURCE_COMPILES(
+			"
+			#include <format>
+			#include <iostream>
 
-write_basic_package_version_file(
-		${PROJECT_BINARY_DIR}/cmake/${PACKAGE_NAME}-config-version.cmake
-		VERSION ${GALTOOLBOX_VERSION}
-		COMPATIBILITY AnyNewerVersion
-)
+			int main()
+			{
+				std::cout << std::format(\"hello {}!\", \"world\");
+			}
+		"
+			COMPILER_SUPPORT_FORMAT
+	)
 
-install(
-		TARGETS ${PROJECT_NAME}
-		EXPORT ${PROJECT_NAME}-targets
-		ARCHIVE DESTINATION lib
-		LIBRARY DESTINATION lib
-		RUNTIME DESTINATION bin
-)
+	if (${COMPILER_SUPPORT_FORMAT})
+		message("${PROJECT_NAME} info: current compiler ${CMAKE_CXX_COMPILER} support std::format.")
+	else ()
+		message("${PROJECT_NAME} info: current compiler does not support std::format, make fmtlib as a ${PROJECT_NAME} dependency.")
+		target_compile_definitions(
+				${PROJECT_NAME}
+				PUBLIC # todo: should be PRIVATE
+				GAL_FMT_NOT_SUPPORT
+		)
+		include(${GAL_3RDPARTY_PATH}/fmtlib.cmake)
+		target_link_libraries(
+				${PROJECT_NAME}
+				PUBLIC
+				fmt
+		)
+	endif (${COMPILER_SUPPORT_FORMAT})
+else()
+	message("${PROJECT_NAME} info: drop fmtlib.")
+endif(${INLCUDE_FMTLIB})
 
-configure_package_config_file(
-		${GALTOOLBOX_CONFIG_PATH}/${PROJECT_NAME}-config.cmake.in
-		${PROJECT_BINARY_DIR}/cmake/${PACKAGE_NAME}-config.cmake
-		INSTALL_DESTINATION cmake/}
-)
+#if(${INLCUDE_SPDLOG})
+#	message("${PROJECT_NAME} info: make spdlog as a ${PROJECT_NAME} dependency.")
+#	target_link_libraries(
+#				${PROJECT_NAME}
+#				PUBLIC
+#				spdlog
+#				# spdlog_header_only
+#	)
+#else()
+#	message("${PROJECT_NAME} info: drop spdlog.")
+#endif(${INLCUDE_SPDLOG})
 
-install(
-		EXPORT ${PROJECT_NAME}-targets
-		FILE ${PROJECT_NAME}-targets.cmake
-		NAMESPACE gal::
-		DESTINATION cmake/
-)
-
-install(
-		FILES ${GALTOOLBOX_LIBRARY_HEADERS}
-		DESTINATION include/${PROJECT_NAME}
-)
-
-install(
-		FILES
-		${PROJECT_BINARY_DIR}/cmake/${PACKAGE_NAME}-config.cmake
-		${PROJECT_BINARY_DIR}/cmake/${PACKAGE_NAME}-config-version.cmake
-		DESTINATION cmake/
-)
-
+include(${GAL_MODULE_PATH}/config_build_type.cmake)
+BuildAsPrivate()

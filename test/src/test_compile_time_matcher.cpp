@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <string/compile_time_matcher.hpp>
+#include <galToolbox/string/compile_time_matcher.hpp>
 
 using namespace gal::toolbox::string;
-using namespace gal::toolbox::string::literals;
+using namespace literals;
 
 TEST(TestCompileTimeMatcher, TestCheckSetExist)
 {
